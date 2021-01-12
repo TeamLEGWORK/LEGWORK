@@ -1,7 +1,7 @@
 """Computes several types of gravitational wave strains"""
 
 from astropy import constants as c
-from lisa_quick_calcs.utils import peters_g
+from calcs.utils import peters_g
 import numpy as np
 
 def h_0_n(m_c, f_orb, ecc, n, dist):
