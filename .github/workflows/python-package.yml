@@ -40,3 +40,4 @@ jobs:
     - name: Check coverage with coverage
       run: |
         coverage run -m --source=./calcs pytest
+        coverage report -m
