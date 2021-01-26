@@ -19,4 +19,4 @@ class TestStationary(unittest.TestCase):
 
     def test_snr_circular(self):
         snr_circ = STATIONARYCLASS.get_snr(t_obs=t_obs)
-        self.assertEqual(np.round(snr_circ.value[0], 8), SNR_CIRC_STAT[0])
+        self.assertEqual(np.round(snr_circ[0], 8), SNR_CIRC_STAT[0])
