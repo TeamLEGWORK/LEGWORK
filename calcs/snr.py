@@ -124,8 +124,8 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
     # calculate minimum of observation time and merger time
-    t_merge = evol.get_t_merge_circ(m_1=m_1,\
-                                    m_2=m_2,\
+    t_merge = evol.get_t_merge_circ(m_1=m_1,
+                                    m_2=m_2,
                                     f_orb_i=f_orb_i)
     t_evol = t_obs*np.ones(len(m_1))
     ind_switch, = np.where(t_evol > t_merge)
@@ -133,19 +133,19 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
 
 
     # get forb, ecc evolution
-    f_evol, e_evol = evol.get_f_and_e(m_1=m_1,\
-                                      m_2=m_2,\
-                                      f_orb_i=f_orb_i,\
-                                      e_i=0,\
-                                      t_evol=t_evol,\
-                                      circ_tol=0.1,\
+    f_evol, e_evol = evol.get_f_and_e(m_1=m_1,
+                                      m_2=m_2,
+                                      f_orb_i=f_orb_i,
+                                      e_i=0,
+                                      t_evol=t_evol,
+                                      circ_tol=0.1,
                                       n_step=n_step)
 
     # calculate the characteristic power
-    h_c_n_2 = strain.h_c_n_2(m_c=m_c,\
-                             f_orb=f_evol,\
-                             ecc=np.zeros(len(m_c)),\
-                             n=2,\
+    h_c_n_2 = strain.h_c_n_2(m_c=m_c,
+                             f_orb=f_evol,
+                             ecc=np.zeros(len(m_c)),
+                             n=2,
                              dist=dist)
     # calculate the characteristic noise power
     h_f_lisa_2 = lisa.power_spec_sens(f_gw = 2*f_evol/u.s**(-1))
