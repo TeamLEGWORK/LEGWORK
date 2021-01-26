@@ -34,7 +34,7 @@ def h_0_n_2(m_c, f_orb, ecc, n, dist):
     """
 
     prefac = (128/5)**(0.5) * 2**(5/3) * c.G**(5/3) / c.c**4
-    h_0 = prefac * m_c**(5/3) * (np.pi * f_orb)**(2/3) / dist *
+    h_0 = prefac * m_c**(5/3) * (np.pi * f_orb)**(2/3) / dist *\
           peters_g(n, ecc)**(1/2) / n
     return h_0**2
 
