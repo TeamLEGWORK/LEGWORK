@@ -1,7 +1,8 @@
 """`utils` for gw calcs"""
 
 from scipy.special import jv
-
+from astropy import constants as c
+import numpy as np
 
 def chirp_mass(m_1, m_2):
     """Computes chirp mass of a binary system
@@ -10,6 +11,7 @@ def chirp_mass(m_1, m_2):
     ------
     m_1 : `float/array`
         more massive binary component in units of kg
+
     m_2 : `float/array`
         less massive binary component in units of kg
 
@@ -23,13 +25,14 @@ def chirp_mass(m_1, m_2):
     return m_c
 
 def peters_g(n, e):
-    """Fourier decomposition of the gravitational wave signal
-    from Peters and Matthews (1963)
+    """relative power of gravitational radiation at nth harmonic
+    from Peters and Mathews (1963)
 
     Params
     ------
     n : `int`
         harmonic of interest
+
     e : `array`
         eccentricity
 
@@ -49,3 +52,121 @@ def peters_g(n, e):
         4/(3*n**3) * bracket_3**2)
 
     return g
+
+def peters_f(e):
+    """integrated enhancement factor of gravitational radiation
+    from an eccentric source from Peters and Mathews (1963)
+
+    Params
+    ------
+    e : `array`
+        eccentricity
+
+    Returns
+    -------
+    f : `array`
+        enhancement factor
+    """
+
+    numerator = 1 + (73/24)*e**2 + (37/96)*e**4
+    denominator = (1 - e**2)**(7/2)
+
+    f = numerator/denominator
+
+    return f
+
+def get_a_from_f_orb(f_orb, m_1, m_2):
+    """Converts orbital frequency to separation using Kepler's
+    third law all units are SI
+
+    Params
+    ------
+    f_orb : `array`
+        orbital frequency
+
+    m_1 : `array`
+        primary mass
+
+    m_2 : `array`
+        secondary mass
+
+    Returns
+    -------
+    a : `array`
+        separation
+    """
+
+    p_orb = 1/f_orb
+    a_3 = (c.G * (m_1 + m_2)) / (4*np.pi**2) * (p_orb)**2
+    a = a_3**(1/3)
+
+    return a
+
+def get_f_orb_from_a(a, m_1, m_2):
+    """Converts orbital frequency to separation using Kepler's
+    third law where all units are SI
+
+    Params
+    ------
+    a : `array`
+        separation
+
+    m_1 : `array`
+        primary mass
+
+    m_2 : `array`
+        secondary mass
+
+    Returns
+    -------
+    f_orb : `array`
+        orbital frequency
+    """
+
+    p_orb_2 = (4*np.pi**2) / (c.G * (m_1 + m_2)) * (a)**3
+    p_orb = p_orb_2**0.5
+    f_orb = 1/p_orb
+
+    return f_orb
+
+def beta(m_1, m_2):
+    """Computes the beta factor in Peters & Mathews calculations
+    with all units in SI
+
+    Params
+    ------
+    m_1 : `array`
+        primary mass
+
+    m_2 : `array`
+        secondary mass
+
+    Returns
+    -------
+    beta : `array`
+        beta factor in SI units
+    """
+
+    beta = 64/5 * c.G**3/c.c**5 * m_1*m_2 * (m_1 + m_2)
+    return beta
+
+def c_0(a_i, e_i):
+    """Computes the c_0 factor in Peters and Mathews calculations
+
+    Params
+    ------
+    a_i : `array`
+        initial separation with astropy units
+
+    e_i : `array`
+        initial eccentricity
+
+    Returns
+    -------
+    c_0 : `array`
+        c_0 factor in SI units
+    """
+
+    c_0 = a_i * (1-e_i**2) * e_i**(-12/19) *\
+          (1 + (121/304)*e_i**2)**(-870/2299)
+    return c_0
