@@ -7,7 +7,7 @@ import numpy as np
 import astropy.units as u
 
 @jit
-def de_dt(beta, c_0, e_i):
+def de_dt(beta, c_0, e):
     """Computes the evolution of the eccentricity from the emission
     of gravitational waves following Peters & Mathews 1964
 
