@@ -11,15 +11,15 @@ def chirp_mass(m_1, m_2):
     Params
     ------
     m_1 : `float/array`
-        more massive binary component in units of kg
+        more massive binary component
 
     m_2 : `float/array`
-        less massive binary component in units of kg
+        less massive binary component
 
     Returns
     -------
     m_c : `float/array`
-        chirp mass of the binary in units of kg
+        chirp mass of the binary
     """
 
     m_c = (m_1 * m_2)**(3/5) / (m_1 + m_2)**(1/5)
@@ -100,9 +100,7 @@ def get_a_from_f_orb(f_orb, m_1, m_2):
         separation
     """
 
-    p_orb = 1/f_orb
-    a_3 = (c.G * (m_1 + m_2)) / (4*np.pi**2) * p_orb**2
-    a = a_3**(1/3)
+    a = (c.G * (m_1 + m_2) / (2 * np.pi * f_orb)**2)**(1/3)
 
     return a
 
@@ -128,9 +126,7 @@ def get_f_orb_from_a(a, m_1, m_2):
         orbital frequency
     """
 
-    p_orb_2 = (4*np.pi**2) / (c.G * (m_1 + m_2)) * a**3
-    p_orb = p_orb_2**0.5
-    f_orb = 1/p_orb
+    f_orb = (c.G * (m_1 + m_2) / a**3) / (2 * np.pi)
 
     return f_orb
 
