@@ -13,10 +13,10 @@ def h_0_n_2(m_c, f_orb, ecc, n, dist):
     Params
     ------
     m_c : `float/array`
-        chirp mass of the binary in units of kg
+        chirp mass of the binary
 
     f_orb : `float/array`
-        orbital frequency in units of Hz
+        orbital frequency
 
     ecc : `float/array`
         eccentricity
@@ -25,7 +25,7 @@ def h_0_n_2(m_c, f_orb, ecc, n, dist):
         harmonic of the orbital frequency
 
     dist : `float/array`
-        distance to the binary in units of meters
+        distance to the binary
 
     Returns
     -------
@@ -47,10 +47,10 @@ def h_c_n_2(m_c, f_orb, ecc, n, dist):
     Params
     ------
     m_c : `float/array`
-        chirp mass of the binary in units of kg
+        chirp mass of the binary
 
     f_orb : `float/array`
-        orbital frequency in units of Hz
+        orbital frequency
 
     ecc : `float/array`
         eccentricity
@@ -59,10 +59,10 @@ def h_c_n_2(m_c, f_orb, ecc, n, dist):
         harmonic of the orbital frequency 
 
     dist : `float/array`
-        distance to the binary in units ofmeters
+        distance to the binary
 
     t_obs : `float/array`
-        observation duration in units of seconds
+        observation duration
 
     Returns
     -------
@@ -70,7 +70,7 @@ def h_c_n_2(m_c, f_orb, ecc, n, dist):
         dimensionless strain in the quadrupole approximation (unitless)
     """
 
-    prefac = 2/(3*np.pi**(4/3)) * c.G**(5/3) / c.c**3
-    h_c_2 = prefac * m_c**(5/3) / dist**2 * (n*f_orb)**(-1/3) *\
-            (2/n)**(2/3) * peters_g(n, ecc) / peters_f(ecc)
+    prefac = 2 / (3 * np.pi**(4/3)) * c.G**(5/3) / c.c**3
+    h_c_2 = prefac * m_c**(5/3) / dist**2 * (n * f_orb)**(-1/3) *\
+            (2 / n)**(2/3) * peters_g(n, ecc) / peters_f(ecc)
     return h_c_2
