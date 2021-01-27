@@ -6,6 +6,7 @@ import calcs.strain as strain
 import calcs.lisa as lisa
 import calcs.utils as utils
 
+
 def snr_circ_stationary(m_c, f_orb, dist, t_obs):
     """Computes the signal to noise ratio for stationary and
     circular binaries
@@ -22,7 +23,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
         distance to the source in units of meters
 
     t_obs : `array`
-        total duration of the observatio in units of seconds
+        total duration of the observation in units of seconds
 
     Returns
     -------
@@ -30,22 +31,24 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
         snr for each binary
     """
 
-    #only need to compute n=2 harmonic for circular
-    h_0_circ_2 = strain.h_0_n_2(m_c = m_c,
+    # only need to compute n=2 harmonic for circular
+    h_0_circ_2 = strain.h_0_n_2(m_c=m_c,
                                 f_orb=f_orb, 
                                 ecc=np.zeros(len(m_c)),
                                 n=2, 
                                 dist=dist)
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
-    h_f_lisa_2 = lisa.power_spec_sens(f_gw = (2*f_orb/u.s**(-1)))
+    h_f_lisa_2 = lisa.power_spec_sens(f_gw=(2*f_orb/u.s**(-1)))
     sn = (h_f_src_circ_2 / (4*h_f_lisa_2))**0.5
 
     return sn
 
+
 def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
     """Computes the signal to noise ratio for stationary and
     eccentric binaries
+
 
     Params
     ------
@@ -77,22 +80,24 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
     h_f_lisa_n_2 = np.zeros((len(m_c), n_max))
     n_range = np.arange(1, n_max+1)
     for n in n_range:    
-        h_0_ecc_n_2[:, n-1] = strain.h_0_n_2(m_c = m_c,
+        h_0_ecc_n_2[:, n-1] = strain.h_0_n_2(m_c=m_c,
                                              f_orb=f_orb,
                                              ecc=ecc,
                                              n=n,
                                              dist=dist)
 
-        h_f_lisa_n_2[:, n-1] = lisa.power_spec_sens(f_gw = n*f_orb/u.s**(-1))
+        h_f_lisa_n_2[:, n-1] = lisa.power_spec_sens(f_gw=n*f_orb/u.s**(-1))
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
     sn = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
 
     return sn
 
+
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     """Computes the signal to noise ratio for stationary and
     circular binaries
+
 
     Params
     ------
@@ -131,8 +136,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     ind_switch, = np.where(t_evol > t_merge)
     t_evol[ind_switch] = t_merge[ind_switch]    
 
-
-    # get forb, ecc evolution
+    # get f_orb, ecc evolution
     f_evol, e_evol = evol.get_f_and_e(m_1=m_1,
                                       m_2=m_2,
                                       f_orb_i=f_orb_i,
@@ -148,9 +152,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
                              n=2,
                              dist=dist)
     # calculate the characteristic noise power
-    h_f_lisa_2 = lisa.power_spec_sens(f_gw = 2*f_evol/u.s**(-1))
+    h_f_lisa_2 = lisa.power_spec_sens(f_gw=2*f_evol/u.s**(-1))
     h_c_lisa_2 = 4 * (2*f_evol)**2 * h_f_lisa_2
 
-    SNR_2 = np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * (f_evol.value[1:] - f_evol.value[:-1]), axis=0)
+    snr_2 = np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * (f_evol.value[1:] - f_evol.value[:-1]), axis=0)
 
-    return SNR_2**0.5
+    return snr_2**0.5

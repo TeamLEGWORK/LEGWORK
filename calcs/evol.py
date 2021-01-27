@@ -6,6 +6,7 @@ from scipy.integrate import odeint
 import numpy as np
 import astropy.units as u
 
+
 @jit
 def de_dt(beta, c_0, e):
     """Computes the evolution of the eccentricity from the emission
@@ -24,13 +25,14 @@ def de_dt(beta, c_0, e):
 
     Returns
     -------
-    de_dt : `array`
+    dedt : `array`
         eccentricity evolution
     """
-    de_dt = -19/12 * beta/c_0**4 * (e**(29/19)*(1 - e**2)**(3/2))/\
+    dedt = -19/12 * beta/c_0**4 * (e**(29/19)*(1 - e**2)**(3/2))/\
                                    (1+(121/304)*e**2)**(1181/2299)
 
-    return de_dt
+    return dedt
+
 
 def get_a_evol(a_i, e_i, e_evol, beta, c_0, times):
     """Calculates the separation evolution of a binary following
@@ -72,6 +74,7 @@ def get_a_evol(a_i, e_i, e_evol, beta, c_0, times):
 
     return a_evol
 
+
 def get_e_evol(beta, c_0, ecc_i, times):
     """Calculates the eccentricity evolution of a binary
     with beta and c_0 factors and evolution times following
@@ -94,7 +97,7 @@ def get_e_evol(beta, c_0, ecc_i, times):
     Returns
     -------
     e_evol : `array`
-        array of eccentricites evolved for the times provided
+        array of eccentricities evolved for the times provided
     """
 
     e_evol = odeint(ecc_i, times, args=(beta.value, c_0.value))
@@ -135,7 +138,7 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, circ_tol, n_step):
         frequency evolution for n_step times up to t_evol
 
     e_evol : `float`
-        eccentircity evolution for n_step times up to t_evol
+        eccentricity evolution for n_step times up to t_evol
     """
 
     a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
@@ -147,17 +150,18 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, circ_tol, n_step):
     times = np.linspace(0, t_evol, n_step)
 
     if e_i <= circ_tol:
-        #treat as circular
+        # treat as circular
         e_evol = np.zeros_like(n_step)
     else:
-        #treat as eccentric
+        # treat as eccentric
         e_evol = get_e_evol(beta=beta, c_0=c_0, ecc_i=e_i, times=times)
 
-    a_evol = get_a_evol(a_i=a_i, e_i=e_i, e_evol=e_evol,\
+    a_evol = get_a_evol(a_i=a_i, e_i=e_i, e_evol=e_evol,
                         beta=beta, c_0=c_0, times=times)
     f_orb_evol = utils.get_f_orb_from_a(a=a_evol, m_1=m_1, m_2=m_2)
 
     return f_orb_evol, e_evol
+
 
 def get_t_merge_circ(m_1, m_2, f_orb_i):
     """Computes the merger time in seconds for a circular binary

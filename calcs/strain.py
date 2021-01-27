@@ -1,6 +1,6 @@
 """Computes several types of gravitational wave strains"""
 
-from astropy import constants as c
+import astropy.constants as c
 from calcs.utils import peters_g, peters_f
 import numpy as np
 

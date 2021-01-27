@@ -4,6 +4,7 @@ from scipy.special import jv
 from astropy import constants as c
 import numpy as np
 
+
 def chirp_mass(m_1, m_2):
     """Computes chirp mass of a binary system
 
@@ -24,6 +25,7 @@ def chirp_mass(m_1, m_2):
     m_c = (m_1 * m_2)**(3/5) / (m_1 + m_2)**(1/5)
     return m_c
 
+
 def peters_g(n, e):
     """relative power of gravitational radiation at nth harmonic
     from Peters and Mathews (1963)
@@ -43,15 +45,16 @@ def peters_g(n, e):
     """
 
     bracket_1 = jv(n-2, n*e) - 2*e*jv(n-1, n*e) +\
-                2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) -\
-                jv(n+2, n*e)
+        2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) -\
+        jv(n+2, n*e)
     bracket_2 = jv(n-2, n*e) - 2*jv(n, n*e) + jv(n+2, n*e)
     bracket_3 = jv(n, n*e)
 
-    g = n**4/32 * (bracket_1**2 + (1-e**2) * bracket_2**2 +\
-        4/(3*n**3) * bracket_3**2)
+    g = n**4/32 * (bracket_1**2 + (1-e**2) * bracket_2**2 +
+                   4/(3*n**3) * bracket_3**2)
 
     return g
+
 
 def peters_f(e):
     """integrated enhancement factor of gravitational radiation
@@ -75,6 +78,7 @@ def peters_f(e):
 
     return f
 
+
 def get_a_from_f_orb(f_orb, m_1, m_2):
     """Converts orbital frequency to separation using Kepler's
     third law all units are SI
@@ -97,10 +101,11 @@ def get_a_from_f_orb(f_orb, m_1, m_2):
     """
 
     p_orb = 1/f_orb
-    a_3 = (c.G * (m_1 + m_2)) / (4*np.pi**2) * (p_orb)**2
+    a_3 = (c.G * (m_1 + m_2)) / (4*np.pi**2) * p_orb**2
     a = a_3**(1/3)
 
     return a
+
 
 def get_f_orb_from_a(a, m_1, m_2):
     """Converts orbital frequency to separation using Kepler's
@@ -123,11 +128,12 @@ def get_f_orb_from_a(a, m_1, m_2):
         orbital frequency
     """
 
-    p_orb_2 = (4*np.pi**2) / (c.G * (m_1 + m_2)) * (a)**3
+    p_orb_2 = (4*np.pi**2) / (c.G * (m_1 + m_2)) * a**3
     p_orb = p_orb_2**0.5
     f_orb = 1/p_orb
 
     return f_orb
+
 
 def beta(m_1, m_2):
     """Computes the beta factor in Peters & Mathews calculations
@@ -143,12 +149,13 @@ def beta(m_1, m_2):
 
     Returns
     -------
-    beta : `array`
+    b : `array`
         beta factor in SI units
     """
 
-    beta = 64/5 * c.G**3/c.c**5 * m_1*m_2 * (m_1 + m_2)
-    return beta
+    b = 64/5 * c.G**3/c.c**5 * m_1*m_2 * (m_1 + m_2)
+    return b
+
 
 def c_0(a_i, e_i):
     """Computes the c_0 factor in Peters and Mathews calculations
@@ -163,10 +170,10 @@ def c_0(a_i, e_i):
 
     Returns
     -------
-    c_0 : `array`
-        c_0 factor in SI units
+    c0 : `array`
+        c factor in SI units
     """
 
-    c_0 = a_i * (1-e_i**2) * e_i**(-12/19) *\
-          (1 + (121/304)*e_i**2)**(-870/2299)
-    return c_0
+    c0 = a_i * (1-e_i**2) * e_i**(-12/19) *\
+        (1 + (121/304)*e_i**2)**(-870/2299)
+    return c0

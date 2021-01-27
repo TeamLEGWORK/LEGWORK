@@ -44,7 +44,7 @@ class Stationary:
         ind_ecc, = np.where(self.ecc > ecc_tol)
         ind_circ, = np.where(self.ecc <= ecc_tol)
 
-        #Treat circular first
+        # Treat circular first
         snr[ind_circ] = sn.snr_circ_stationary(m_c=m_c[ind_circ].to(u.kg), 
                                                f_orb=self.f_orb[ind_circ], 
                                                dist=self.dist[ind_circ].to(u.m), 
@@ -58,6 +58,7 @@ class Stationary:
                                              n_max=n_max)
 
         return snr
+
 
 class Evolving:
     """Treats evolving sources"""
@@ -85,7 +86,7 @@ class Evolving:
             maximum integer harmonic to consider for eccentric sources
 
         n_step : `int`
-            number of timesteps during observation duration
+            number of time steps during observation duration
 
         Returns
         -------
