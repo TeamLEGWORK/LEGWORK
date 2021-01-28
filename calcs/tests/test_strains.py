@@ -12,12 +12,12 @@ dist = np.random.uniform(0, 30, n_values) * u.kpc
 f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
 e = np.random.uniform(0, 0.9, n_values)
 n = 2
-
-class TestStrain(unittest.TestCase):
-    """This test checks whether the strain and characteristic strain are
-    related as hc^2 = (2 * fn^2 / fn_dot) h0^2"""
+class Test(unittest.TestCase):
+    """Tests that the code is functioning properly"""
 
     def test_strain_conversion(self):
+        """This test checks whether the strain and characteristic strain are
+        related as hc^2 = (2 * fn^2 / fn_dot) h0^2"""
         h0 = strain.h_0_n(m_c, f_orb, e, n, dist)
         hc = strain.h_c_n(m_c, f_orb, e, n, dist)
 
