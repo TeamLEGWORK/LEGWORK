@@ -77,7 +77,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
     """
 
     h_0_ecc_n_2 = np.zeros((len(m_c), n_max))
-    h_f_lisa_n_2 = np.zeros((len(m_c), n_max))
+    h_f_lisa_n_2 = np.zeros((len(m_c), n_max)) / u.Hz
     n_range = np.arange(1, n_max+1)
     for n in n_range:    
         h_0_ecc_n_2[:, n-1] = strain.h_0_n(m_c=m_c,
