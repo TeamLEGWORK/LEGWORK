@@ -34,13 +34,13 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
     # only need to compute n=2 harmonic for circular
     h_0_circ_2 = strain.h_0_n(m_c=m_c,
                                 f_orb=f_orb, 
-                                ecc=np.zeros(len(m_c)),
+                                ecc=0.0,
                                 n=2, 
                                 dist=dist)**2
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
-    h_f_lisa_2 = lisa.power_spec_sens(f_gw=(2*f_orb/u.s**(-1)))
-    sn = (h_f_src_circ_2 / (4*h_f_lisa_2))**0.5
+    h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_orb, t_obs=t_obs)
+    sn = (h_f_src_circ_2 / (4 * h_f_lisa_2))**0.5
 
     return sn
 
@@ -86,7 +86,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
                                              n=n,
                                              dist=dist)**2
 
-        h_f_lisa_n_2[:, n-1] = lisa.power_spec_sens(f_gw=n*f_orb/u.s**(-1))
+        h_f_lisa_n_2[:, n-1] = lisa.power_spectral_density(f=n * f_orb, t_obs=t_obs)
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
     sn = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
@@ -152,7 +152,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
                              n=2,
                              dist=dist)**2
     # calculate the characteristic noise power
-    h_f_lisa_2 = lisa.power_spec_sens(f_gw=2*f_evol/u.s**(-1))
+    h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
     h_c_lisa_2 = 4 * (2*f_evol)**2 * h_f_lisa_2
 
     snr_2 = np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * (f_evol.value[1:] - f_evol.value[:-1]), axis=0)
