@@ -160,7 +160,7 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, circ_tol, n_step):
                         beta=beta, c_0=c_0, times=times)
     f_orb_evol = utils.get_f_orb_from_a(a=a_evol, m_1=m_1, m_2=m_2)
 
-    return f_orb_evol, e_evol
+    return f_orb_evol.to(u.Hz), e_evol
 
 
 def get_t_merge_circ(m_1, m_2, f_orb_i):
@@ -189,4 +189,4 @@ def get_t_merge_circ(m_1, m_2, f_orb_i):
 
     t_merge = a_i**4 / (4*beta)
 
-    return t_merge
+    return t_merge.to(u.Gyr)
