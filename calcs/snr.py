@@ -45,7 +45,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
     return sn
 
 
-def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
+def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
     """Computes the signal to noise ratio for stationary and
     eccentric binaries
 
@@ -67,7 +67,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
     t_obs : `array`
         total duration of the observatio in units of seconds
 
-    n_max : `array
+    max_harmonic : `array
         maximum integer harmonic to compute
 
     Returns
@@ -76,9 +76,9 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
         sn for each binary
     """
 
-    h_0_ecc_n_2 = np.zeros((len(m_c), n_max))
-    h_f_lisa_n_2 = np.zeros((len(m_c), n_max))
-    n_range = np.arange(1, n_max+1)
+    h_0_ecc_n_2 = np.zeros((len(m_c), max_harmonic))
+    h_f_lisa_n_2 = np.zeros((len(m_c), max_harmonic))
+    n_range = np.arange(1, max_harmonic+1)
     for n in n_range:    
         h_0_ecc_n_2[:, n-1] = strain.h_0_n(m_c=m_c,
                                              f_orb=f_orb,

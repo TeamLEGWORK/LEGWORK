@@ -5,7 +5,7 @@ import numpy as np
 import calcs.utils as utils
 import calcs.snr as sn
 
-__all__ = ['Stationary', 'Evolving']
+__all__ = ['Source', 'Stationary', 'Evolving']
 
 class Source():
     """Superclass for generic sources"""
@@ -16,12 +16,13 @@ class Source():
         self.ecc = ecc
         self.dist = dist
 
-    def get_snr(self, t_obs, ecc_tol=0.1, n_max=50, n_step=100):
+    def get_snr(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100):
         raise NotImplementedError("Haven't done this yet")
+
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs, ecc_tol=0.1, n_max=50):
+    def get_snr(self, t_obs, ecc_tol=0.1, max_harmonic=50):
         """Computes the SNR assuming a stationary binary
 
         Params
@@ -32,7 +33,7 @@ class Stationary(Source):
         ecc_tol : `float`
             tolerance for treating a binary as eccentric
 
-        n_max : `int`
+        max_harmonic : `int`
             maximum integer harmonic to consider for eccentric sources
 
         Returns
@@ -57,7 +58,7 @@ class Stationary(Source):
                                              ecc=self.ecc[ind_ecc],
                                              dist=self.dist[ind_ecc].to(u.m),
                                              t_obs=t_obs.to(u.s),
-                                             n_max=n_max)
+                                             max_harmonic=max_harmonic)
 
         return snr
 
@@ -73,7 +74,7 @@ class Evolving(Source):
         self.dist = dist * u.kpc
         self.ecc = ecc
 
-    def get_snr(self, t_obs, ecc_tol=0.1, n_max=50, n_step=100):
+    def get_snr(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100):
         """Computes the SNR assuming an evolving binary
 
         Params
@@ -84,7 +85,7 @@ class Evolving(Source):
         ecc_tol : `float`
             tolerance for treating a binary as eccentric
 
-        n_max : `int`
+        max_harmonic : `int`
             maximum integer harmonic to consider for eccentric sources
 
         n_step : `int`
