@@ -74,16 +74,7 @@ class Source():
 
         return snr.decompose()
 
-class Stationary(Source):
-    """Subclass for sources that are stationary"""
-
-    def get_snr(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100):
-        return self.get_snr_stationary(t_obs=t_obs, ecc_tol=ecc_tol, max_harmonic=max_harmonic)
-        
-class Evolving(Source):
-    """Subclass for sources that are evolving"""
-
-    def get_snr(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100):
+    def get_snr_evolving(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100):
         """Computes the SNR assuming an evolving binary
 
         Params
@@ -107,13 +98,57 @@ class Evolving(Source):
         """
         m_c = utils.chirp_mass(m_1=self.m_1, m_2=self.m_2)
         snr = np.zeros(self.n_sources)
-        ind_ecc, = np.where(self.ecc > ecc_tol)
+        ind_ecc = self.ecc > ecc_tol
         ind_circ = np.logical_not(ind_ecc)
 
-        snr[ind_circ] = sn.snr_circ_evolving(m_1=self.m_1[ind_circ],
-                                             m_2=self.m_2[ind_circ],
-                                             f_orb_i=self.f_orb[ind_circ],
-                                             dist=self.dist[ind_circ],
+        # check if everything is circular
+        if len(snr) == len(snr[ind_circ]):
+            snr = sn.snr_circ_evolving(m_1=self.m_1,
+                                             m_2=self.m_2,
+                                             f_orb_i=self.f_orb,
+                                             dist=self.dist,
                                              t_obs=t_obs,
                                              n_step=n_step)
+        # or everything is eccentric
+        elif len(snr[ind_circ]) == 0:
+            snr = sn.snr_ecc_evolving(m_1=self.m_1,
+                                      m_2=self.m_2,
+                                      f_orb_i=self.f_orb,
+                                      dist=self.dist,
+                                      ecc=self.ecc,
+                                      max_harmonic=max_harmonic,
+                                      t_obs=t_obs,
+                                      n_step=n_step)
+        # or something in between
+        else:
+            snr[ind_circ] = sn.snr_circ_evolving(m_1=self.m_1[ind_circ],
+                                                 m_2=self.m_2[ind_circ],
+                                                 f_orb_i=self.f_orb[ind_circ],
+                                                 dist=self.dist[ind_circ],
+                                                 t_obs=t_obs,
+                                                 n_step=n_step)
+
+            snr[ind_ecc] = sn.snr_ecc_evolving(m_1=self.m_1[ind_ecc],
+                                               m_2=self.m_2[ind_ecc],
+                                               f_orb_i=self.f_orb[ind_ecc],
+                                               dist=self.dist[ind_ecc],
+                                               ecc=self.ecc[ind_ecc],
+                                               max_harmonic=max_harmonic,
+                                               t_obs=t_obs,
+                                               n_step=n_step)
+
         return snr.decompose()
+
+class Stationary(Source):
+    """Subclass for sources that are stationary"""
+
+    def get_snr(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100):
+        return self.get_snr_stationary(t_obs=t_obs, ecc_tol=ecc_tol,
+                                       max_harmonic=max_harmonic)
+        
+class Evolving(Source):
+    """Subclass for sources that are evolving"""
+
+    def get_snr(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100):
+        return self.get_snr_evolving(t_obs=t_obs, ecc_tol=ecc_tol,
+                                     max_harmonic=max_harmonic, n_step=n_step)
