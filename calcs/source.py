@@ -7,17 +7,19 @@ import calcs.snr as sn
 
 __all__ = ['Stationary', 'Evolving']
 
-
-class Stationary:
-    """Treats stationary sources"""
-
+class Source():
+    """Superclass for generic sources"""
     def __init__(self, m_1, m_2, f_orb, ecc, dist):
-        """Initialize!"""
-        self.m_1 = m_1 * u.Msun
-        self.m_2 = m_2 * u.Msun
-        self.f_orb = f_orb * u.s**(-1)
+        self.m_1 = m_1
+        self.m_2 = m_2
+        self.f_orb = f_orb
         self.ecc = ecc
-        self.dist = dist * u.kpc
+        self.dist = dist
+
+    def get_snr(self, t_obs, ecc_tol=0.1, n_max=50, n_step=100):
+        raise NotImplementedError("Haven't done this yet")
+class Stationary(Source):
+    """Subclass for sources that are stationary"""
 
     def get_snr(self, t_obs, ecc_tol=0.1, n_max=50):
         """Computes the SNR assuming a stationary binary
@@ -60,8 +62,8 @@ class Stationary:
         return snr
 
 
-class Evolving:
-    """Treats evolving sources"""
+class Evolving(Source):
+    """Subclass for sources that are evolving"""
 
     def __init__(self, m_1, m_2, f_orb, ecc, dist):
         """Initialize!"""
