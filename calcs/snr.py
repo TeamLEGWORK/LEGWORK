@@ -132,9 +132,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     t_merge = evol.get_t_merge_circ(m_1=m_1,
                                     m_2=m_2,
                                     f_orb_i=f_orb_i)
-    t_evol = t_obs*np.ones(len(m_1))
-    ind_switch, = np.where(t_evol > t_merge)
-    t_evol[ind_switch] = t_merge[ind_switch]    
+    t_evol = np.where(t_merge < t_obs, t_merge, t_obs)
 
     # get f_orb, ecc evolution
     f_evol, e_evol = evol.get_f_and_e(m_1=m_1,
