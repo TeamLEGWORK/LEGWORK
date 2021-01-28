@@ -9,7 +9,7 @@ dist = np.array([1.0])
 t_obs = np.array([4.0])
 ecc = np.array([0.0])
 
-SNR_CIRC_STAT = np.array([10.21795672])
+SNR_CIRC_STAT = np.array([10.21795672]) / 2
 
 STATIONARYCLASS = source.Stationary(m_1=m1, m_2=m2, f_orb=f_orb, dist=dist, ecc=ecc)
 
