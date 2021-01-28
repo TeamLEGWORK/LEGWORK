@@ -158,3 +158,41 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     snr_2 = np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * (f_evol.value[1:] - f_evol.value[:-1]), axis=0)
 
     return snr_2**0.5
+
+def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step):
+    """Computes the signal to noise ratio for stationary and
+    eccentric binaries
+
+
+    Params
+    ------
+    m_1 : `array`
+        primary mass in units of kg
+
+    m_2 : `array`
+        secondary mass in units of kg
+
+    f_orb_i : `array`
+        initial orbital frequency in units of Hz
+
+    dist : `array`
+        distance to the source in units of meters
+
+    ecc : `array`
+        eccentricity
+
+    max_harmonic : `array
+        maximum integer harmonic to compute
+
+    t_obs : `float`
+        total duration of the observation in units of seconds
+
+    n_step : `int`
+        number of timesteps during obsrvation duration
+
+    Returns
+    -------
+    sn : `array`
+        snr for each binary
+    """
+    raise NotImplementedError("Katie todo")
