@@ -126,7 +126,7 @@ def get_f_orb_from_a(a, m_1, m_2):
         orbital frequency
     """
 
-    f_orb = (c.G * (m_1 + m_2) / a**3) / (2 * np.pi)
+    f_orb = ((c.G * (m_1 + m_2) / a**3))**(0.5) / (2 * np.pi)
 
     return f_orb
 
