@@ -19,7 +19,32 @@ class Source():
         self.stat_tol = stat_tol
         self.n_sources = len(m_1)
 
-    def get_snr(self, t_obs, ecc_tol=0.1, stat_tol=1e-2,
+    def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
+        if circular is None:
+            circular_mask = np.repeat(True, self.n_sources)
+        elif circular is True:
+            circular_mask = self.ecc <= self.ecc_tol
+        elif circular is False:
+            circular_mask = self.ecc > self.ecc_tol
+        else:
+            raise ValueError("`circular` must be None, True or False")
+
+        if stationary is None:
+            stationary_mask = np.repeat(True, self.n_sources)
+        elif stationary is True:
+            stationary_mask = utils.determine_stationarity(self.m_1, self.m_2,
+                                                           self.f_orb, t_obs,
+                                                           self.ecc, self.stat_tol)
+        elif stationary is False:
+            stationary_mask = np.logical_not(utils.determine_stationarity(self.m_1, self.m_2,
+                                                           self.f_orb, t_obs,
+                                                           self.ecc, self.stat_tol))
+        else:
+            raise ValueError("`stationary` must be None, True or False")
+
+        return np.logical_and(circular_mask, stationary_mask)
+
+    def get_snr(self, t_obs=4 * u.yr, ecc_tol=0.1, stat_tol=1e-2,
                 max_harmonic=50, n_step=100):
         """Computes the SNR for a generic binary
 
@@ -48,7 +73,7 @@ class Source():
         """
         raise NotImplementedError()
 
-    def get_snr_stationary(self, t_obs, ecc_tol=0.1, max_harmonic=50, which_sources=None):
+    def get_snr_stationary(self, t_obs=4 * u.yr, ecc_tol=0.1, max_harmonic=50, which_sources=None):
         """Computes the SNR assuming a stationary binary
 
         Params
