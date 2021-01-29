@@ -10,6 +10,32 @@ __all__ = ['Source', 'Stationary', 'Evolving']
 class Source():
     """Superclass for generic sources"""
     def __init__(self, m_1, m_2, f_orb, ecc, dist, ecc_tol=0.1, stat_tol=1e-2):
+        """Initialise all parameters
+        Params
+        ------
+        m_1 : `float/array`
+            primary mass
+
+        m_2 : `float/array`
+            secondary mass
+
+        forb : `float/array`
+            orbital frequency
+
+        ecc : `float/array`
+            initial eccentricity
+
+        dist : `float/array`
+            luminosity distance to source
+
+        ecc_tol : `float`
+            eccentricity above which a binary should be
+            considered eccentric
+
+        stat_tol : `float`
+            fractional change in frequency above which a
+            binary should be considered to be stationary
+        """
         self.m_1 = m_1
         self.m_2 = m_2
         self.f_orb = f_orb
@@ -20,6 +46,28 @@ class Source():
         self.n_sources = len(m_1)
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
+        """Produce a mask of the sources based on whether binaries
+        are circular or eccentric and stationary or evolving.
+        Tolerance levels are defined in the class.
+
+        Params
+        ------
+        circular : `bool`
+            `None` means either, `True` means only circular
+            binaries and `False` means only eccentric
+
+        stationary : `bool`
+            `None` means either, `True` means only stationary
+            binaries and `False` means only evolving
+
+        t_obs : `float`
+            observation time
+
+        Returns
+        -------
+        mask : `bool/array`
+            mask for the sources
+        """
         if circular is None:
             circular_mask = np.repeat(True, self.n_sources)
         elif circular is True:
@@ -44,8 +92,7 @@ class Source():
 
         return np.logical_and(circular_mask, stationary_mask)
 
-    def get_snr(self, t_obs=4 * u.yr, ecc_tol=0.1, stat_tol=1e-2,
-                max_harmonic=50, n_step=100):
+    def get_snr(self, t_obs=4 * u.yr, max_harmonic=50, n_step=100):
         """Computes the SNR for a generic binary
 
         Params
@@ -71,9 +118,26 @@ class Source():
         SNR : `array`
             the signal to noise ratio
         """
-        raise NotImplementedError()
+        
+        snr = np.zeros(self.n_sources)
+        stationary_mask = self.get_source_mask(circular=None, stationary=True, t_obs=t_obs)
+        evolving_mask = np.logical_not(stationary_mask)
 
-    def get_snr_stationary(self, t_obs=4 * u.yr, ecc_tol=0.1, max_harmonic=50, which_sources=None):
+        if stationary_mask.any():
+            snr[stationary_mask] = self.get_snr_stationary(t_obs=t_obs,
+                                                           ecc_tol=self.ecc_tol,
+                                                           max_harmonic=50,
+                                                           which_sources=stationary_mask)
+        if evolving_mask.any():
+            snr[evolving_mask] = self.get_snr_evolving(t_obs=t_obs,
+                                                       ecc_tol=self.ecc_tol,
+                                                       max_harmonic=50,
+                                                       which_sources=evolving_mask,
+                                                       n_step=n_step)
+        return snr
+
+    def get_snr_stationary(self, t_obs=4 * u.yr, ecc_tol=0.1,
+                           max_harmonic=50, which_sources=None):
         """Computes the SNR assuming a stationary binary
 
         Params
@@ -100,17 +164,17 @@ class Source():
 
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
-        snr = np.zeros(len(self.m_1[which_sources]))
+        snr = np.zeros(self.n_sources)
         ind_ecc = np.logical_and(self.ecc > ecc_tol, which_sources)
         ind_circ = np.logical_and(self.ecc <= ecc_tol, which_sources)
 
         # only compute snr if there is at least one binary in mask
-        if len(snr[ind_circ]) > 0:
+        if ind_circ.any():
             snr[ind_circ] = sn.snr_circ_stationary(m_c=m_c[ind_circ], 
                                                    f_orb=self.f_orb[ind_circ], 
                                                    dist=self.dist[ind_circ], 
                                                    t_obs=t_obs)
-        if len(snr[ind_ecc]) > 0:
+        if ind_ecc.any():
             snr[ind_ecc] = sn.snr_ecc_stationary(m_c=m_c[ind_ecc],
                                                  f_orb=self.f_orb[ind_ecc],
                                                  ecc=self.ecc[ind_ecc],
@@ -118,9 +182,10 @@ class Source():
                                                  t_obs=t_obs,
                                                  max_harmonic=max_harmonic)
 
-        return snr
+        return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs, ecc_tol=0.1, max_harmonic=50, n_step=100, which_sources=None):
+    def get_snr_evolving(self, t_obs, ecc_tol=0.1, max_harmonic=50,
+                         n_step=100, which_sources=None):
         """Computes the SNR assuming an evolving binary
 
         Params
@@ -154,33 +219,14 @@ class Source():
         ind_ecc = np.logical_and(self.ecc > ecc_tol, which_sources)
         ind_circ = np.logical_and(self.ecc <= ecc_tol, which_sources)
 
-        # check if everything is circular
-        if len(snr) == len(snr[ind_circ]):
-            snr = sn.snr_circ_evolving(m_1=self.m_1,
-                                             m_2=self.m_2,
-                                             f_orb_i=self.f_orb,
-                                             dist=self.dist,
-                                             t_obs=t_obs,
-                                             n_step=n_step)
-        # or everything is eccentric
-        elif len(snr[ind_circ]) == 0:
-            snr = sn.snr_ecc_evolving(m_1=self.m_1,
-                                      m_2=self.m_2,
-                                      f_orb_i=self.f_orb,
-                                      dist=self.dist,
-                                      ecc=self.ecc,
-                                      max_harmonic=max_harmonic,
-                                      t_obs=t_obs,
-                                      n_step=n_step)
-        # or something in between
-        else:
+        if ind_circ.any():
             snr[ind_circ] = sn.snr_circ_evolving(m_1=self.m_1[ind_circ],
                                                  m_2=self.m_2[ind_circ],
                                                  f_orb_i=self.f_orb[ind_circ],
                                                  dist=self.dist[ind_circ],
                                                  t_obs=t_obs,
                                                  n_step=n_step)
-
+        if ind_ecc.any():
             snr[ind_ecc] = sn.snr_ecc_evolving(m_1=self.m_1[ind_ecc],
                                                m_2=self.m_2[ind_ecc],
                                                f_orb_i=self.f_orb[ind_ecc],
@@ -190,7 +236,7 @@ class Source():
                                                t_obs=t_obs,
                                                n_step=n_step)
 
-        return snr
+        return snr[which_sources]
 
 class Stationary(Source):
     """Subclass for sources that are stationary"""
