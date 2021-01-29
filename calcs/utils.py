@@ -126,8 +126,9 @@ def get_f_orb_from_a(a, m_1, m_2):
         orbital frequency
     """
 
-    f_orb = (c.G * (m_1 + m_2) / a**3) / (2 * np.pi)
-    return f_orb.to(u.Hz)
+    f_orb = ((c.G * (m_1 + m_2) / a**3))**(0.5) / (2 * np.pi)
+
+    return f_orb
 
 
 def beta(m_1, m_2):
@@ -173,6 +174,61 @@ def c_0(a_i, e_i):
          * (1 + (121/304)*e_i**2)**(-870/2299)
     return c0
 
+def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
+    """Determine whether a binary is stationary by checking how
+    much its orbital frequency changes over t_evol time
+
+    This function provides a conservative estimate in that some
+    binaries that are stationary may be marked as evolving. This
+    is because the eccentricity also evolves but only use the
+    initial value. Solving this in full would require the same
+    amount of time as assuming the binary is evolving.
+
+    Params
+    ------
+    m_1 : `float/array`
+        primary mass
+
+    m_2 : `float/array`
+        secondary mass
+
+    forb_i : `float/array`
+        initial orbital frequency
+
+    t_evol : `float`
+        time over which the frequency evolves
+
+    ecc : `float/array`
+        initial eccentricity
+
+    stat_tol : `float`
+        fractional change in frequency above which we do not
+        consider a binary to be stationary
+
+    Returns
+    -------
+    stationary : `bool/array`
+        mask of whether each binary is stationary
+    """
+    m_c = chirp_mass(m_1, m_2)
+    # calculate the inner part of the final frequency equation
+    inner_part = forb_i**(-8/3) - 2**(32/3) * np.pi**(8/3) \
+                 * t_evol / (5 * c.c**5) * (c.G * m_c)**(5/3) * peters_f(ecc)
+
+    # any merged binaries will have a negative inner part
+    merged = inner_part < 0.0
+    inspiral = np.logical_not(merged)
+
+    delta_f = np.zeros(len(forb_i)) * u.Hz
+
+    # calculate the final frequency (set to 1 Hz if merged)
+    delta_f[merged] = 1e10 * u.Hz
+    delta_f[inspiral] = np.power(inner_part[inspiral], -3/8) - forb_i[inspiral]
+
+    stationary = delta_f / forb_i <= stat_tol
+
+    return stationary
+    
 def fn_dot(m_c, f_orb, e, n):
     """Rate of change of nth frequency of a binary
 

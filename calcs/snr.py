@@ -5,6 +5,7 @@ import astropy.units as u
 import calcs.strain as strain
 import calcs.lisa as lisa
 import calcs.utils as utils
+import calcs.evol as evol
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs):
@@ -13,21 +14,21 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
 
     Params
     ------
-    m_c : `array`
-        chirp mass in unites of kg
+    m_c : `float/array`
+        chirp mass
 
-    f_orb : `array`
-        orbital frequency in units of Hz
+    f_orb : `float/array`
+        orbital frequency
 
-    dist : `array`
-        distance to the source in units of meters
+    dist : `float/array`
+        distance to the source
 
-    t_obs : `array`
-        total duration of the observation in units of seconds
+    t_obs : `float`
+        total duration of the observation
 
     Returns
     -------
-    sn : `array`
+    sn : `float/array`
         snr for each binary
     """
 
@@ -40,45 +41,45 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_orb, t_obs=t_obs)
-    sn = (h_f_src_circ_2 / (4 * h_f_lisa_2))**0.5
+    snr = (h_f_src_circ_2 / (4 * h_f_lisa_2))**0.5
 
-    return sn
+    return snr.decompose()
 
 
-def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
+def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
     """Computes the signal to noise ratio for stationary and
     eccentric binaries
 
 
     Params
     ------
-    m_c : `array`
-        chirp mass in unites of kg
+    m_c : `float/array`
+        chirp mass
 
-    f_orb : `array`
-        orbital frequency in units of Hz
+    f_orb : `float/array`
+        orbital frequency
 
-    ecc : `array`
+    ecc : `float/array`
         eccentricity
 
-    dist : `array`
-        distance to the source in units of meters
+    dist : `float/array`
+        distance to the source
 
-    t_obs : `array`
-        total duration of the observatio in units of seconds
+    t_obs : `float`
+        total duration of the observation
 
-    n_max : `array
+    max_harmonic : `integer`
         maximum integer harmonic to compute
 
     Returns
     -------
-    sn : `array`
+    sn : `float/array`
         sn for each binary
     """
 
-    h_0_ecc_n_2 = np.zeros((len(m_c), n_max))
-    h_f_lisa_n_2 = np.zeros((len(m_c), n_max)) / u.Hz
-    n_range = np.arange(1, n_max+1)
+    h_0_ecc_n_2 = np.zeros((len(m_c), max_harmonic))
+    h_f_lisa_n_2 = np.zeros((len(m_c), max_harmonic)) / u.Hz
+    n_range = np.arange(1, max_harmonic+1)
     for n in n_range:    
         h_0_ecc_n_2[:, n-1] = strain.h_0_n(m_c=m_c,
                                              f_orb=f_orb,
@@ -89,42 +90,40 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, n_max):
         h_f_lisa_n_2[:, n-1] = lisa.power_spectral_density(f=n * f_orb, t_obs=t_obs)
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
-    sn = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
+    snr = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
 
-    return sn
+    return snr.decompose()
 
 
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     """Computes the signal to noise ratio for stationary and
     circular binaries
 
-
     Params
     ------
-    m_1 : `array`
-        primary mass in units of kg
+    m_1 : `float/array`
+        primary mass
 
-    m_2 : `array`
-        secondary mass in units of kg
+    m_2 : `float/array`
+        secondary mass
 
-    f_orb_i : `array`
-        initial orbital frequency in units of Hz
+    f_orb_i : `float/array`
+        initial orbital frequency
 
-    dist : `array`
-        distance to the source in units of meters
+    dist : `float/array`
+        distance to the source
 
     t_obs : `float`
-        total duration of the observation in units of seconds
+        total duration of the observation
 
     n_step : `int`
         number of timesteps during obsrvation duration
 
     Returns
     -------
-    sn : `array`
+    sn : `float/array`
         snr for each binary
     """
-    import calcs.evol as evol
 
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
@@ -132,9 +131,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     t_merge = evol.get_t_merge_circ(m_1=m_1,
                                     m_2=m_2,
                                     f_orb_i=f_orb_i)
-    t_evol = t_obs*np.ones(len(m_1))
-    ind_switch, = np.where(t_evol > t_merge)
-    t_evol[ind_switch] = t_merge[ind_switch]    
+    t_evol = np.where(t_merge < t_obs, t_merge, t_obs)
 
     # get f_orb, ecc evolution
     f_evol, e_evol = evol.get_f_and_e(m_1=m_1,
@@ -155,6 +152,44 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
     h_c_lisa_2 = 4 * (2*f_evol)**2 * h_f_lisa_2
 
-    snr_2 = np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * (f_evol.value[1:] - f_evol.value[:-1]), axis=0)
+    snr = (np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * (f_evol[1:] - f_evol[:-1]), axis=0))**(0.5)
 
-    return snr_2**0.5
+    return snr.decompose()
+
+def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step):
+    """Computes the signal to noise ratio for stationary and
+    eccentric binaries
+
+
+    Params
+    ------
+    m_1 : `float/array`
+        primary mass
+
+    m_2 : `float/array`
+        secondary mass
+
+    f_orb_i : `float/array`
+        initial orbital frequency
+
+    dist : `float/array`
+        distance to the source
+
+    ecc : `float/array`
+        eccentricity
+
+    max_harmonic : `int`
+        maximum integer harmonic to compute
+
+    t_obs : `float`
+        total duration of the observation
+
+    n_step : `int`
+        number of timesteps during obsrvation duration
+
+    Returns
+    -------
+    sn : `array`
+        snr for each binary
+    """
+    raise NotImplementedError("Katie todo")
