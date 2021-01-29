@@ -66,7 +66,9 @@ def get_a_evol(a_i, e_i, e_evol, beta, c_0, times):
     """
 
     if e_evol.all() == 0.0:
-        a_evol = (a_i**4 - 4*beta*times)**(1/4)
+        difference = a_i**4 - 4*beta*times
+        difference = np.where(difference.value <= 0.0, 0.0, difference)
+        a_evol = difference**(1/4)
     else:
         term_1 = c_0 * e_evol**(12/19) / (1-e_evol**2)
         term_2 = (1 + (121/304)*e_evol**2)**(870/2299)
