@@ -32,9 +32,11 @@ class Test(unittest.TestCase):
         # repeat the same test for eccentric systems
         ecc = np.random.uniform(0, 0.05, n_values)
 
-        true_snr = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb, ecc=ecc, dist=dist, t_obs=t_obs, max_harmonic=50)
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
-                                ecc=ecc, dist=dist, ecc_tol=1e-5)
+                                ecc=ecc, dist=dist)
+        true_snr = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb, ecc=ecc,
+                                          dist=dist, t_obs=t_obs,
+                                          max_harmonic=sources.max_harmonic(ecc).max())
         difference = true_snr - sources.get_snr()
 
         self.assertTrue(all(difference.value < 1e-5))
