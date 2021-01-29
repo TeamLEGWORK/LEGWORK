@@ -319,13 +319,12 @@ class Source():
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs=4*u.yr, ecc_tol=0.1, max_harmonic=50, n_step=100):
-        return self.get_snr_stationary(t_obs=t_obs, ecc_tol=ecc_tol,
-                                       max_harmonic=max_harmonic)
+    def get_snr(self, t_obs=4*u.yr, verbose=False):
+        return self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
         
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
-    def get_snr(self, t_obs=4*u.yr, ecc_tol=0.1, max_harmonic=50, n_step=100):
-        return self.get_snr_evolving(t_obs=t_obs, ecc_tol=ecc_tol,
-                                     max_harmonic=max_harmonic, n_step=n_step)
+    def get_snr(self, t_obs=4*u.yr, n_step=100, verbose=False):
+        return self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
+                                     verbose=verbose)
