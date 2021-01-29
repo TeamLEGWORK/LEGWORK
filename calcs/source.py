@@ -98,7 +98,7 @@ class Source():
         Params
         ------
         t_obs : `array`
-            observation duration in units of yr
+            observation duration (default: 4 years)
 
         ecc_tol : `float`
             tolerance for treating a binary as eccentric
@@ -191,7 +191,7 @@ class Source():
         Params
         ------
         t_obs : `array`
-            observation duration in units of yr
+            observation duration (default: 4 years)
 
         ecc_tol : `float`
             tolerance for treating a binary as eccentric
