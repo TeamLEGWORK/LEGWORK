@@ -168,16 +168,13 @@ class Source():
 
         return np.logical_and(circular_mask, stationary_mask)
 
-    def get_snr(self, t_obs=4 * u.yr, max_harmonic=50, n_step=100):
+    def get_snr(self, t_obs=4 * u.yr, n_step=100):
         """Computes the SNR for a generic binary
 
         Params
         ------
         t_obs : `array`
             observation duration (default: 4 years)
-
-        max_harmonic : `int`
-            maximum integer harmonic to consider for eccentric sources
 
         n_step : `int`
             number of time steps during observation duration
@@ -194,31 +191,20 @@ class Source():
 
         if stationary_mask.any():
             snr[stationary_mask] = self.get_snr_stationary(t_obs=t_obs,
-                                                           ecc_tol=self.ecc_tol,
-                                                           max_harmonic=max_harmonic,
                                                            which_sources=stationary_mask)
         if evolving_mask.any():
             snr[evolving_mask] = self.get_snr_evolving(t_obs=t_obs,
-                                                       ecc_tol=self.ecc_tol,
-                                                       max_harmonic=max_harmonic,
                                                        which_sources=evolving_mask,
                                                        n_step=n_step)
         return snr
 
-    def get_snr_stationary(self, t_obs=4 * u.yr, ecc_tol=0.1,
-                           max_harmonic=50, which_sources=None):
+    def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None):
         """Computes the SNR assuming a stationary binary
 
         Params
         ------
         t_obs : `array`
             observation duration in units of yr
-
-        ecc_tol : `float`
-            tolerance for treating a binary as eccentric
-
-        max_harmonic : `int`
-            maximum integer harmonic to consider for eccentric sources
 
         which_sources : `bool/array`
             mask on which sources to consider stationary and calculate
@@ -234,8 +220,8 @@ class Source():
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
         snr = np.zeros(self.n_sources)
-        ind_ecc = np.logical_and(self.ecc > ecc_tol, which_sources)
-        ind_circ = np.logical_and(self.ecc <= ecc_tol, which_sources)
+        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
+        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
 
         # only compute snr if there is at least one binary in mask
         if ind_circ.any():
@@ -244,6 +230,10 @@ class Source():
                                                    dist=self.dist[ind_circ], 
                                                    t_obs=t_obs)
         if ind_ecc.any():
+            max_harmonic = np.max(self.max_harmonic(self.ecc[ind_ecc]))
+            print("here are some prints")
+            print(self.max_harmonic(self.ecc[ind_ecc]))
+            print(max_harmonic)
             snr[ind_ecc] = sn.snr_ecc_stationary(m_c=m_c[ind_ecc],
                                                  f_orb=self.f_orb[ind_ecc],
                                                  ecc=self.ecc[ind_ecc],
@@ -253,20 +243,13 @@ class Source():
 
         return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs, ecc_tol=0.1, max_harmonic=50,
-                         n_step=100, which_sources=None):
+    def get_snr_evolving(self, t_obs, n_step=100, which_sources=None):
         """Computes the SNR assuming an evolving binary
 
         Params
         ------
         t_obs : `array`
             observation duration (default: 4 years)
-
-        ecc_tol : `float`
-            tolerance for treating a binary as eccentric
-
-        max_harmonic : `int`
-            maximum integer harmonic to consider for eccentric sources
 
         n_step : `int`
             number of time steps during observation duration
@@ -285,8 +268,8 @@ class Source():
         
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
-        ind_ecc = np.logical_and(self.ecc > ecc_tol, which_sources)
-        ind_circ = np.logical_and(self.ecc <= ecc_tol, which_sources)
+        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
+        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
 
         if ind_circ.any():
             snr[ind_circ] = sn.snr_circ_evolving(m_1=self.m_1[ind_circ],
@@ -296,6 +279,7 @@ class Source():
                                                  t_obs=t_obs,
                                                  n_step=n_step)
         if ind_ecc.any():
+            max_harmonic = np.max(self.max_harmonic(self.ecc[ind_ecc]))
             snr[ind_ecc] = sn.snr_ecc_evolving(m_1=self.m_1[ind_ecc],
                                                m_2=self.m_2[ind_ecc],
                                                f_orb_i=self.f_orb[ind_ecc],
