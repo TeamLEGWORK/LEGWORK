@@ -126,12 +126,12 @@ class Source():
         if stationary_mask.any():
             snr[stationary_mask] = self.get_snr_stationary(t_obs=t_obs,
                                                            ecc_tol=self.ecc_tol,
-                                                           max_harmonic=50,
+                                                           max_harmonic=max_harmonic,
                                                            which_sources=stationary_mask)
         if evolving_mask.any():
             snr[evolving_mask] = self.get_snr_evolving(t_obs=t_obs,
                                                        ecc_tol=self.ecc_tol,
-                                                       max_harmonic=50,
+                                                       max_harmonic=max_harmonic,
                                                        which_sources=evolving_mask,
                                                        n_step=n_step)
         return snr
