@@ -160,8 +160,13 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, circ_tol, n_step):
 
     a_evol = get_a_evol(a_i=a_i, e_i=e_i, e_evol=e_evol,
                         beta=beta, c_0=c_0, times=times)
+    
+    # change merged binaries to extremely small separations
+    a_evol = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
     f_orb_evol = utils.get_f_orb_from_a(a=a_evol, m_1=m_1, m_2=m_2)
-    f_orb_evol = np.nan_to_num(f_orb_evol, copy=False, nan=1 * u.Hz)
+
+    # change frequencies back to 1Hz since LISA can't measure above
+    f_orb_evol = np.where(a_evol.value == 1e-30, 1 * u.Hz, f_orb_evol)
 
     return f_orb_evol.to(u.Hz), e_evol
 
