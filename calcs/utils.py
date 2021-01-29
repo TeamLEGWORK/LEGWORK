@@ -45,14 +45,14 @@ def peters_g(n, e):
         Fourier decomposition
     """
 
-    bracket_1 = jv(n-2, n*e) - 2*e*jv(n-1, n*e) +\
-        2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) -\
-        jv(n+2, n*e)
+    bracket_1 = jv(n-2, n*e) - 2*e*jv(n-1, n*e) \
+                + 2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) \
+                - jv(n+2, n*e)
     bracket_2 = jv(n-2, n*e) - 2*jv(n, n*e) + jv(n+2, n*e)
     bracket_3 = jv(n, n*e)
 
-    g = n**4/32 * (bracket_1**2 + (1-e**2) * bracket_2**2 +
-                   4/(3*n**3) * bracket_3**2)
+    g = n**4/32 * (bracket_1**2 + (1 - e**2) * bracket_2**2 +
+                   4 / (3 * n**3) * bracket_3**2)
 
     return g
 
@@ -102,8 +102,7 @@ def get_a_from_f_orb(f_orb, m_1, m_2):
     """
 
     a = (c.G * (m_1 + m_2) / (2 * np.pi * f_orb)**2)**(1/3)
-
-    return a
+    return a.to(u.AU)
 
 
 def get_f_orb_from_a(a, m_1, m_2):
@@ -150,7 +149,7 @@ def beta(m_1, m_2):
         beta factor in SI units
     """
 
-    b = 64/5 * c.G**3/c.c**5 * m_1*m_2 * (m_1 + m_2)
+    b = 64/5 * c.G**3/c.c**5 * m_1 * m_2 * (m_1 + m_2)
     return b
 
 
@@ -171,8 +170,8 @@ def c_0(a_i, e_i):
         c factor in SI units
     """
 
-    c0 = a_i * (1-e_i**2) * e_i**(-12/19) *\
-        (1 + (121/304)*e_i**2)**(-870/2299)
+    c0 = a_i * (1-e_i**2) * e_i**(-12/19) \
+         * (1 + (121/304)*e_i**2)**(-870/2299)
     return c0
 
 def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
@@ -229,3 +228,29 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     stationary = delta_f / forb_i <= stat_tol
 
     return stationary
+    
+def fn_dot(m_c, f_orb, e, n):
+    """Rate of change of nth frequency of a binary
+
+    Params
+    ------
+    m_c : `float/array`
+        chirp mass
+
+    f_orb : `float/array`
+        orbital frequency
+
+    e : `float/array`
+        eccentricity
+
+    n : `int`
+        harmonic of interest
+
+    Returns
+    -------
+    fn_dot : `float/array`
+        rate of change of nth frequency
+    """
+    fn_dot = (48 * n) / (5 * np.pi) * (c.G * m_c)**(5/3) / c.c**5 \
+             * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
+    return fn_dot.to(u.Hz / u.yr)
