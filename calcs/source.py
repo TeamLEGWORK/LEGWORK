@@ -1,15 +1,18 @@
 """`circular binary stuff!`"""
 from astropy import units as u
 import numpy as np
+from scipy import interpolate
 
 import calcs.utils as utils
 import calcs.snr as sn
+from importlib import resources
+from scipy.interpolate import interp1d
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
 class Source():
     """Superclass for generic sources"""
-    def __init__(self, m_1, m_2, f_orb, ecc, dist, ecc_tol=0.1, stat_tol=1e-2):
+    def __init__(self, m_1, m_2, f_orb, ecc, dist, gw_lum_tol=0.05, stat_tol=1e-2):
         """Initialise all parameters
         Params
         ------
@@ -28,9 +31,13 @@ class Source():
         dist : `float/array`
             luminosity distance to source
 
-        ecc_tol : `float`
-            eccentricity above which a binary should be
-            considered eccentric
+        gw_lum_tol : `float`
+            allowed error on the GW luminosity when calculating snrs.
+            This is used to calculate maximum harmonics needed and
+            transition between 'eccentric' and 'circular'.
+            This variable should be updated using the function
+            `update_gw_lum_tol` (not Source.gw_lum_tol =) to ensure
+            the cached calculations match the current tolerance.
 
         stat_tol : `float`
             fractional change in frequency above which a
@@ -41,9 +48,78 @@ class Source():
         self.f_orb = f_orb
         self.ecc = ecc
         self.dist = dist
-        self.ecc_tol = ecc_tol
         self.stat_tol = stat_tol
         self.n_sources = len(m_1)
+
+        self.update_gw_lum_tol(gw_lum_tol)
+
+    def create_max_harmonics_function(self):
+        """Create a function to calculate the maximum harmonics required
+        to calculate the SNRs assuming provided tolerance `gw_lum_tol`"""
+
+        # open file containing pre-calculating g(n,e) and F(e) values
+        with resources.path(package="calcs", resource="harmonics.npz") as path:
+            lum_info = np.load(path)
+
+        e_min, e_max, e_len = lum_info["e_lims"]
+        e_len = e_len.astype(int)
+        n_max = lum_info["n_max"]
+        g_vals = lum_info["g_vals"]
+            
+        # reconstruct arrays
+        e_range = 1 - np.logspace(np.log10(1 - e_min), np.log10(1 - e_max), e_len)
+        n_range = np.arange(1, n_max.astype(int) + 1)
+
+        f_vals = utils.peters_f(e_range)
+
+        # set harmonics needed to 2 for a truly circular system (base case)
+        harmonics_needed = np.zeros(e_len).astype(int)
+        harmonics_needed[0] = 2
+
+        for i in range(1, e_len):
+            # harmonics needed are at least as many as lower eccentricity
+            harmonics_needed[i] = harmonics_needed[i - 1]
+            total_lum = g_vals[i][:harmonics_needed[i]].sum()
+
+            # keep adding harmonics until gw luminosity is within errors
+            while total_lum < (1 - self.gw_lum_tol) * f_vals[i] \
+                and harmonics_needed[i] < len(n_range):
+                harmonics_needed[i] += 1
+                total_lum += g_vals[i][harmonics_needed[i] - 1]
+
+        # interpolate the answer and return the max if e > e_max
+        interpolated = interp1d(e_range, harmonics_needed, bounds_error=False,
+                                fill_value=(2, np.max(harmonics_needed)))
+
+        # conservatively round up to nearest integer
+        def max_harmonic(e):
+            return np.ceil(interpolated(e)).astype(int)
+        self.max_harmonic = max_harmonic
+
+    def find_eccentric_transition(self):
+        """Find the eccentricity at which we must treat binaries at eccentric.
+        We define this as the maximum eccentricity at which the n=2 harmonic
+        is the total GW luminosity given the tolerance `self.gw_lum_tol`"""
+        # only need to check lower eccentricities
+        e_range = np.linspace(0.0, 0.2, 10000)
+
+        # find first e where n=2 harmonic is below tolerance
+        circular_lum = utils.peters_g(2, e_range)
+        lum_within_tolerance = (1 - self.gw_lum_tol) * utils.peters_f(e_range)
+        self.ecc_tol = e_range[circular_lum < lum_within_tolerance][0]
+
+    def update_gw_lum_tol(self, gw_lum_tol):
+        """Update GW luminosity tolerance and use updated value to
+        recalculate max_harmonics function and transition to eccentric
+        
+        Params
+        ------
+        gw_lum_tol : `float`
+            allowed error on the GW luminosity when calculating snrs
+        """
+        self.gw_lum_tol = gw_lum_tol
+        self.create_max_harmonics_function()
+        self.find_eccentric_transition()
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
         """Produce a mask of the sources based on whether binaries
@@ -99,13 +175,6 @@ class Source():
         ------
         t_obs : `array`
             observation duration (default: 4 years)
-
-        ecc_tol : `float`
-            tolerance for treating a binary as eccentric
-
-        stat_tol : `float`
-            tolerance for treating a binary as stationary
-            (using fractional change in frequency)
 
         max_harmonic : `int`
             maximum integer harmonic to consider for eccentric sources
