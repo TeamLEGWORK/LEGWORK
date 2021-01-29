@@ -21,7 +21,7 @@ class Test(unittest.TestCase):
         h0 = strain.h_0_n(m_c, f_orb, e, n, dist)
         hc = strain.h_c_n(m_c, f_orb, e, n, dist)
 
-        should_be_fn_dot = 2 * (n * f_orb)**2 * h0**2 / hc**2
+        should_be_fn_dot = (n * f_orb)**2 * h0**2 / hc**2
         fn_dot = utils.fn_dot(m_c, f_orb, e, n)
 
         difference = should_be_fn_dot.to(u.Hz / u.yr).round(10) - fn_dot.to(u.Hz / u.yr).round(10)
