@@ -50,6 +50,7 @@ class Source():
         self.dist = dist
         self.stat_tol = stat_tol
         self.n_sources = len(m_1)
+        self.snr = None
 
         self.update_gw_lum_tol(gw_lum_tol)
 
@@ -206,6 +207,7 @@ class Source():
                                                        which_sources=evolving_mask,
                                                        n_step=n_step,
                                                        verbose=verbose)
+        self.snr = snr
         return snr
 
     def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None, verbose=False):
@@ -249,13 +251,17 @@ class Source():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
                     len(snr[ind_ecc])))
-            max_harmonic = np.max(self.max_harmonic(self.ecc[ind_ecc]))
-            snr[ind_ecc] = sn.snr_ecc_stationary(m_c=m_c[ind_ecc],
-                                                 f_orb=self.f_orb[ind_ecc],
-                                                 ecc=self.ecc[ind_ecc],
-                                                 dist=self.dist[ind_ecc],
-                                                 t_obs=t_obs,
-                                                 max_harmonic=max_harmonic)
+            max_harmonics = self.max_harmonic(self.ecc)
+            harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
+            for lower, upper in harmonic_groups:
+                matching = np.logical_and(np.logical_and(max_harmonics >= lower, max_harmonics < upper), ind_ecc)
+                if matching.any():
+                    snr[matching] = sn.snr_ecc_stationary(m_c=m_c[matching],
+                                                        f_orb=self.f_orb[matching],
+                                                        ecc=self.ecc[matching],
+                                                        dist=self.dist[matching],
+                                                        t_obs=t_obs,
+                                                        max_harmonic=upper - 1)
 
         return snr[which_sources]
 
@@ -320,11 +326,13 @@ class Stationary(Source):
     """Subclass for sources that are stationary"""
 
     def get_snr(self, t_obs=4*u.yr, verbose=False):
-        return self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
+        self.snr = self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
+        return self.snr
         
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
     def get_snr(self, t_obs=4*u.yr, n_step=100, verbose=False):
-        return self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
+        self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
                                      verbose=verbose)
+        return self.snr
