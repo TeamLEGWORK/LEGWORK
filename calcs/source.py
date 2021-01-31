@@ -39,7 +39,7 @@ class Source():
             This is used to calculate maximum harmonics needed and
             transition between 'eccentric' and 'circular'.
             This variable should be updated using the function
-            `update_gw_lum_tol` (not Source.gw_lum_tol =) to ensure
+            `update_gw_lum_tol` (not Source._gw_lum_tol =) to ensure
             the cached calculations match the current tolerance.
 
         stat_tol : `float`
@@ -94,7 +94,7 @@ class Source():
             total_lum = g_vals[i][:harmonics_needed[i]].sum()
 
             # keep adding harmonics until gw luminosity is within errors
-            while total_lum < (1 - self.gw_lum_tol) * f_vals[i] \
+            while total_lum < (1 - self._gw_lum_tol) * f_vals[i] \
                 and harmonics_needed[i] < len(n_range):
                 harmonics_needed[i] += 1
                 total_lum += g_vals[i][harmonics_needed[i] - 1]
@@ -111,13 +111,13 @@ class Source():
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
         We define this as the maximum eccentricity at which the n=2 harmonic
-        is the total GW luminosity given the tolerance `self.gw_lum_tol`"""
+        is the total GW luminosity given the tolerance `self._gw_lum_tol`"""
         # only need to check lower eccentricities
         e_range = np.linspace(0.0, 0.2, 10000)
 
         # find first e where n=2 harmonic is below tolerance
         circular_lum = utils.peters_g(2, e_range)
-        lum_within_tolerance = (1 - self.gw_lum_tol) * utils.peters_f(e_range)
+        lum_within_tolerance = (1 - self._gw_lum_tol) * utils.peters_f(e_range)
         self.ecc_tol = e_range[circular_lum < lum_within_tolerance][0]
 
     def update_gw_lum_tol(self, gw_lum_tol):
@@ -129,7 +129,7 @@ class Source():
         gw_lum_tol : `float`
             allowed error on the GW luminosity when calculating snrs
         """
-        self.gw_lum_tol = gw_lum_tol
+        self._gw_lum_tol = gw_lum_tol
         self.create_max_harmonics_function()
         self.find_eccentric_transition()
 
