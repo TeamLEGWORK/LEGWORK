@@ -12,7 +12,7 @@ __all__ = ['Source', 'Stationary', 'Evolving']
 
 class Source():
     """Superclass for generic sources"""
-    def __init__(self, m_1, m_2, f_orb, ecc, dist, gw_lum_tol=0.05, stat_tol=1e-2):
+    def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None, gw_lum_tol=0.05, stat_tol=1e-2):
         """Initialise all parameters
         Params
         ------
@@ -22,14 +22,18 @@ class Source():
         m_2 : `float/array`
             secondary mass
 
-        forb : `float/array`
-            orbital frequency
-
         ecc : `float/array`
             initial eccentricity
 
         dist : `float/array`
             luminosity distance to source
+
+        forb : `float/array`
+            orbital frequency (either a or forb must be supplied)
+            This takes precedence over a
+
+        a : `float/array`
+            semi-major axis (either a or forb must be supplied)
 
         gw_lum_tol : `float`
             allowed error on the GW luminosity when calculating snrs.
@@ -45,12 +49,20 @@ class Source():
         """
         self.m_1 = m_1
         self.m_2 = m_2
-        self.f_orb = f_orb
         self.ecc = ecc
         self.dist = dist
         self.stat_tol = stat_tol
         self.n_sources = len(m_1)
         self.snr = None
+
+        if f_orb is not None:
+            self.f_orb = f_orb
+            self.a = utils.get_a_from_f_orb(self.f_orb, self.m_1, self.m_2)
+        elif a is not None:
+            self.a = a
+            self.f_orb = utils.get_f_orb_from_a(self.a, self.m_1, self.m_2)
+        else:
+            raise ValueError("Either `f_orb` or `a` must be specified")
 
         self.update_gw_lum_tol(gw_lum_tol)
 
