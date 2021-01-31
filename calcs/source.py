@@ -1,12 +1,11 @@
 """`circular binary stuff!`"""
 from astropy import units as u
 import numpy as np
-from scipy import interpolate
+from importlib import resources
+from scipy.interpolate import interp1d
 
 import calcs.utils as utils
 import calcs.snr as sn
-from importlib import resources
-from scipy.interpolate import interp1d
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
