@@ -321,15 +321,19 @@ class Source():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
                     len(snr[ind_ecc])))
-            max_harmonic = np.max(self.max_harmonic(self.ecc[ind_ecc]))
-            snr[ind_ecc] = sn.snr_ecc_evolving(m_1=self.m_1[ind_ecc],
-                                               m_2=self.m_2[ind_ecc],
-                                               f_orb_i=self.f_orb[ind_ecc],
-                                               dist=self.dist[ind_ecc],
-                                               ecc=self.ecc[ind_ecc],
-                                               max_harmonic=max_harmonic,
-                                               t_obs=t_obs,
-                                               n_step=n_step)
+            max_harmonics = self.max_harmonic(self.ecc)
+            harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
+            for lower, upper in harmonic_groups:
+                matching = np.logical_and(np.logical_and(max_harmonics >= lower, max_harmonics < upper), ind_ecc)
+                if matching.any():
+                    snr[matching] = sn.snr_ecc_evolving(m_1=self.m_1[matching],
+                                                        m_2=self.m_2[matching],
+                                                        f_orb_i=self.f_orb[matching],
+                                                        dist=self.dist[matching],
+                                                        ecc=self.ecc[matching],
+                                                        max_harmonic=upper - 1,
+                                                        t_obs=t_obs,
+                                                        n_step=n_step)
 
         return snr[which_sources]
 
