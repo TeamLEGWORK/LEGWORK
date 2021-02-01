@@ -46,22 +46,51 @@ class Source():
             fractional change in frequency above which a
             binary should be considered to be stationary
         """
+        # ensure that either a frequency or semi-major axis is supplied
+        if f_orb is None and a is None:
+            raise ValueError("Either `f_orb` or `a` must be specified")
+
+        # calculate whichever one wasn't supplied
+        f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb
+        a = utils.get_a_from_f_orb(f_orb, m_1, m_2) if a is None else a
+
+        # define which arguments must have units
+        unit_args = [m_1, m_2, dist, f_orb, a]
+        unit_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a']
+
+        # define which arguments must be arrays of same length
+        array_args = [m_1, m_2, dist, f_orb, a, ecc]
+        array_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a', 'ecc']
+
+        # convert args to numpy arrays if only single values are entered
+        for i in range(len(array_args)):
+            if array_args_str[i] in unit_args_str:
+                # check that every arg has units if it should
+                assert(isinstance(array_args[i], u.quantity.Quantity)), "`{}` must have units".format(array_args_str[i])
+
+                if not isinstance(array_args[i].value, np.ndarray) and not isinstance(array_args[i].value, list):
+                    array_args[i] = np.array([array_args[i].value]) * array_args[i].unit
+            else:
+                if not isinstance(array_args[i], np.ndarray) and not isinstance(array_args[i], list):
+                    array_args[i] = np.array([array_args[i]])
+
+        # ensure all array arguments are the same length
+        length_check = np.array([len(arg) != len(array_args[0]) for arg in array_args])
+        if length_check.any():
+            raise ValueError("All input arrays must have the same length")
+
+        # reset the arguments with the new converted ones (since Python passes by assignment)
+        m_1, m_2, dist, f_orb, a, ecc = array_args
+
         self.m_1 = m_1
         self.m_2 = m_2
         self.ecc = ecc
         self.dist = dist
         self.stat_tol = stat_tol
-        self.n_sources = len(m_1)
+        self.f_orb = f_orb
+        self.a = a
         self.snr = None
-
-        if f_orb is not None:
-            self.f_orb = f_orb
-            self.a = utils.get_a_from_f_orb(self.f_orb, self.m_1, self.m_2)
-        elif a is not None:
-            self.a = a
-            self.f_orb = utils.get_f_orb_from_a(self.a, self.m_1, self.m_2)
-        else:
-            raise ValueError("Either `f_orb` or `a` must be specified")
+        self.n_sources = len(m_1)
 
         self.update_gw_lum_tol(gw_lum_tol)
 
