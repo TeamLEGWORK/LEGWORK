@@ -85,8 +85,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
     # turn n_range into grid and calcualte noise
-    N, _ = np.meshgrid(n_range, ecc)
-    h_f_lisa_n_2 = lisa.power_spectral_density(f=N * f_orb, t_obs=t_obs)
+    N, F = np.meshgrid(n_range, f_orb)
+    h_f_lisa_n_2 = lisa.power_spectral_density(f=N * F, t_obs=t_obs)
 
     # calculate the signal-to-noise ratio
     snr = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
