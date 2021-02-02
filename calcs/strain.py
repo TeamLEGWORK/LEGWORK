@@ -34,8 +34,8 @@ def h_0_n(m_c, f_orb, ecc, n, dist):
         shape of array is `(number of sources, number of harmonics)`
     """
     # calculate how many harmonics and sources
-    n_harmonics = 1 if isinstance(n, int) else len(n)
-    n_sources = len(m_c) if isinstance(m_c.value, np.ndarray) else 1
+    n_harmonics = 1 if isinstance(n, (int, np.int64, np.int)) else len(n)
+    n_sources = len(m_c) if isinstance(m_c.value, (list, np.ndarray)) else 1
 
     # work out strain for n independent part and broadcast to correct shape
     prefac = (2**(28/3) / 5)**(0.5) * c.G**(5/3) / c.c**4
@@ -80,8 +80,8 @@ def h_c_n(m_c, f_orb, ecc, n, dist):
         dimensionless strain in the quadrupole approximation (unitless)
     """
     # calculate how many harmonics and sources
-    n_harmonics = 1 if isinstance(n, int) else len(n)
-    n_sources = len(m_c) if isinstance(m_c.value, np.ndarray) else 1
+    n_harmonics = 1 if isinstance(n, (int, np.int64, np.int)) else len(n)
+    n_sources = len(m_c) if isinstance(m_c.value, (list, np.ndarray)) else 1
 
     # work out strain for n independent part and broadcast to correct shape
     prefac = (2**(5/3) / (3 * np.pi**(4/3)))**(0.5) * c.G**(5/6) / c.c**(3/2)
