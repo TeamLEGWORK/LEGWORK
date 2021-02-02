@@ -348,7 +348,8 @@ class Source():
             snr[ind_circ] = sn.snr_circ_stationary(m_c=m_c[ind_circ], 
                                                    f_orb=self.f_orb[ind_circ], 
                                                    dist=self.dist[ind_circ], 
-                                                   t_obs=t_obs)
+                                                   t_obs=t_obs,
+                                                   interpolated_g=self.g)
         if ind_ecc.any():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
@@ -363,7 +364,8 @@ class Source():
                                                         ecc=self.ecc[matching],
                                                         dist=self.dist[matching],
                                                         t_obs=t_obs,
-                                                        max_harmonic=upper - 1)
+                                                        max_harmonic=upper - 1,
+                                                        interpolated_g=self.g)
 
         return snr[which_sources]
 
@@ -407,7 +409,8 @@ class Source():
                                                  f_orb_i=self.f_orb[ind_circ],
                                                  dist=self.dist[ind_circ],
                                                  t_obs=t_obs,
-                                                 n_step=n_step)
+                                                 n_step=n_step,
+                                                 interpolated_g=self.g)
         if ind_ecc.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
@@ -424,7 +427,8 @@ class Source():
                                                         ecc=self.ecc[matching],
                                                         max_harmonic=upper - 1,
                                                         t_obs=t_obs,
-                                                        n_step=n_step)
+                                                        n_step=n_step,
+                                                        interpolated_g=self.g)
 
         return snr[which_sources]
 

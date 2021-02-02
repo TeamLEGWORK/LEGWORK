@@ -8,7 +8,7 @@ import calcs.utils as utils
 import calcs.evol as evol
 
 
-def snr_circ_stationary(m_c, f_orb, dist, t_obs):
+def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
     """Computes the signal to noise ratio for stationary and
     circular binaries
 
@@ -26,6 +26,13 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
     t_obs : `float`
         total duration of the observation
 
+    interpolated_g : `function`
+        A function returned by scipy.interpolate.interp2d that
+        computes g(n,e) from Peters (1964). The code assumes
+        that the function returns the output sorted as with the
+        interp2d returned functions (and thus unsorts).
+        Default is None and uses exact g(n,e) in this case.
+
     Returns
     -------
     sn : `float/array`
@@ -33,11 +40,9 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
     """
 
     # only need to compute n=2 harmonic for circular
-    h_0_circ_2 = strain.h_0_n(m_c=m_c,
-                                f_orb=f_orb, 
-                                ecc=0.0,
-                                n=2, 
-                                dist=dist).flatten()**2
+    h_0_circ_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb, 
+                              ecc=0.0, n=2, dist=dist,
+                              interpolated_g=interpolated_g).flatten()**2
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_orb, t_obs=t_obs)
@@ -46,7 +51,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
     return snr.decompose()
 
 
-def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
+def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic, interpolated_g=None):
     """Computes the signal to noise ratio for stationary and
     eccentric binaries
 
@@ -71,6 +76,13 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
     max_harmonic : `integer`
         maximum integer harmonic to compute
 
+    interpolated_g : `function`
+        A function returned by scipy.interpolate.interp2d that
+        computes g(n,e) from Peters (1964). The code assumes
+        that the function returns the output sorted as with the
+        interp2d returned functions (and thus unsorts).
+        Default is None and uses exact g(n,e) in this case.
+
     Returns
     -------
     sn : `float/array`
@@ -81,7 +93,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
 
     # calculate source signal
     h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
-                               ecc=ecc, n=n_range, dist=dist)**2
+                               ecc=ecc, n=n_range, dist=dist,
+                               interpolated_g=interpolated_g)**2
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
     # turn n_range into grid and calcualte noise
@@ -93,7 +106,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
     return snr.decompose()
 
 
-def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
+def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, interpolated_g=None):
     """Computes the signal to noise ratio for stationary and
     circular binaries
 
@@ -116,6 +129,13 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
 
     n_step : `int`
         number of timesteps during obsrvation duration
+
+    interpolated_g : `function`
+        A function returned by scipy.interpolate.interp2d that
+        computes g(n,e) from Peters (1964). The code assumes
+        that the function returns the output sorted as with the
+        interp2d returned functions (and thus unsorts).
+        Default is None and uses exact g(n,e) in this case.
 
     Returns
     -------
@@ -145,7 +165,8 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
                            f_orb=f_evol,
                            ecc=np.zeros(len(m_c)),
                            n=2,
-                           dist=dist)**2
+                           dist=dist,
+                           interpolated_g=interpolated_g)**2
     # calculate the characteristic noise power
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
     h_c_lisa_2 = 4 * (2*f_evol)**2 * h_f_lisa_2
@@ -154,7 +175,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
 
     return snr.decompose()
 
-def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step):
+def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step, interpolated_g=None):
     """Computes the signal to noise ratio for stationary and
     eccentric binaries
 
@@ -184,6 +205,13 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step):
 
     n_step : `int`
         number of timesteps during obsrvation duration
+
+    interpolated_g : `function`
+        A function returned by scipy.interpolate.interp2d that
+        computes g(n,e) from Peters (1964). The code assumes
+        that the function returns the output sorted as with the
+        interp2d returned functions (and thus unsorts).
+        Default is None and uses exact g(n,e) in this case.
 
     Returns
     -------
