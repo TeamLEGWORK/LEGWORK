@@ -5,6 +5,7 @@ from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
 import calcs.utils as utils
+import calcs.strain as strain
 import calcs.snr as sn
 
 __all__ = ['Source', 'Stationary', 'Evolving']
@@ -235,6 +236,40 @@ class Source():
             raise ValueError("`stationary` must be None, True or False")
 
         return np.logical_and(circular_mask, stationary_mask)
+
+    def get_h_0_n(self, harmonics):
+        """Computes the strain for all binaries for the given `harmonics`
+
+        Params
+        ------
+        harmonics : `int/array`
+            harmonic(s) at which to calculate the strain
+
+        Returns
+        -------
+        h_0_n : `float/array`
+            dimensionless strain in the quadrupole approximation (unitless)
+            shape of array is `(number of sources, number of harmonics)`
+        """
+        return strain.h_0_n(utils.chirp_mass(self.m_1, self.m_2), self.f_orb,
+                            self.ecc, harmonics, self.dist)
+
+    def get_h_c_n(self, harmonics):
+        """Computes the characteristic strain for all binaries for the given `harmonics`
+
+        Params
+        ------
+        harmonics : `int/array`
+            harmonic(s) at which to calculate the strain
+
+        Returns
+        -------
+        h_c_n : `float/array`
+            dimensionless characteristic strain in the quadrupole approximation (unitless)
+            shape of array is `(number of sources, number of harmonics)`
+        """
+        return strain.h_c_n(utils.chirp_mass(self.m_1, self.m_2), self.f_orb,
+                            self.ecc, harmonics, self.dist)
 
     def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
         """Computes the SNR for a generic binary
