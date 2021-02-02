@@ -174,6 +174,7 @@ def c_0(a_i, e_i):
          * (1 + (121/304)*e_i**2)**(-870/2299)
     return c0
 
+
 def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     """Determine whether a binary is stationary by checking how
     much its orbital frequency changes over t_evol time
@@ -224,7 +225,8 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     stationary = delta_f / forb_i <= stat_tol
 
     return stationary
-    
+
+
 def fn_dot(m_c, f_orb, e, n):
     """Rate of change of nth frequency of a binary
 

@@ -5,6 +5,7 @@ import astropy.units as u
 from scipy.interpolate import splev, splrep
 from importlib import resources
 
+
 def load_transfer_function(f, fstar=19.09e-3):
     """Load in transfer function from file and interpolate values
     for a range of frequencies. Adapted from
@@ -29,7 +30,8 @@ def load_transfer_function(f, fstar=19.09e-3):
         with resources.path(package="calcs", resource="R.npy") as path:
             f_R, R = np.load(path)
     except FileExistsError:
-        print("WARNING: Can't find transfer function file, using approximation instead")
+        print("WARNING: Can't find transfer function file, \
+                        using approximation instead")
         return approximate_transfer_function(f, fstar)
 
     # interpolate the R values in the file
@@ -38,6 +40,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     # use interpolated curve to get R values for supplied f values
     R = splev(f, R_data, der=0)
     return R
+
 
 def approximate_transfer_function(f, fstar):
     """Calculate the the LISA transfer function using
@@ -58,7 +61,10 @@ def approximate_transfer_function(f, fstar):
     """
     return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
 
-def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3, approximate_R=False, include_confusion_noise=True):
+
+def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
+                           approximate_R=False,
+                           include_confusion_noise=True):
     """Calculates the effective LISA power spectral density sensitivity
     curve using equations from Robson+19
 
@@ -78,10 +84,10 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3, approximate
 
     approximate_R : `boolean`
         whether to approximate the transfer function (default: no)
-    
+
     include_confusion_noise  : `boolean`
         whether to include the Galactic confusion noise (default: yes)
-    
+
     Returns
     -------
     Sn : `float/array`
@@ -136,8 +142,8 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3, approximate
             gamma = 1680.
             fk = 1.13e-3
 
-        return 9e-45 * f**(-7/3.) * np.exp(-f**(alpha) + beta * f \
-                * np.sin(kappa * f)) * (1 + np.tanh(gamma * (fk - f)))
+        return 9e-45 * f**(-7/3.) * np.exp(-f**(alpha) + beta * f
+                     * np.sin(kappa * f)) * (1 + np.tanh(gamma * (fk - f)))
 
     # calculate transfer function (either exactly or with approximation)
     if approximate_R:
@@ -149,10 +155,10 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3, approximate
     if include_confusion_noise:
         cn = Sc(f, t_obs)
     else:
-        cn = np.zeros(len(f)) if isinstance(f, list) or isinstance(f, np.ndarray) else 0.0
+        cn = np.zeros(len(f)) if isinstance(f, (list, np.ndarray)) else 0.0
 
     # calculate sensitivity curve
-    Sn = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R  + cn
+    Sn = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
 
     # replace values for bad frequencies (set to extremely high value)
     Sn = np.where(np.logical_and(f > MIN_F, f < MAX_F), Sn, HUGE_NOISE)

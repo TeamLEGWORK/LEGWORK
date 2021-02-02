@@ -10,10 +10,11 @@ import calcs.snr as sn
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
+
 class Source():
     """Superclass for generic sources"""
-    def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None, gw_lum_tol=0.05, stat_tol=1e-2,
-                interpolate_g=True):
+    def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None,
+                 gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True):
         """Initialise all parameters
         Params
         ------
@@ -61,7 +62,6 @@ class Source():
         a = utils.get_a_from_f_orb(f_orb, m_1, m_2) if a is None else a
 
         # define which arguments must have units
-        unit_args = [m_1, m_2, dist, f_orb, a]
         unit_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a']
 
         # define which arguments must be arrays of same length
@@ -72,20 +72,23 @@ class Source():
         for i in range(len(array_args)):
             if array_args_str[i] in unit_args_str:
                 # check that every arg has units if it should
-                assert(isinstance(array_args[i], u.quantity.Quantity)), "`{}` must have units".format(array_args_str[i])
+                assert(isinstance(array_args[i], u.quantity.Quantity)), \
+                        "`{}` must have units".format(array_args_str[i])
 
-                if not isinstance(array_args[i].value, np.ndarray) and not isinstance(array_args[i].value, list):
-                    array_args[i] = np.array([array_args[i].value]) * array_args[i].unit
+                if not isinstance(array_args[i].value, (np.ndarray, list)):
+                    array_args[i] = np.array([array_args[i].value]) \
+                                  * array_args[i].unit
             else:
-                if not isinstance(array_args[i], np.ndarray) and not isinstance(array_args[i], list):
+                if not isinstance(array_args[i], (np.ndarray, list)):
                     array_args[i] = np.array([array_args[i]])
 
         # ensure all array arguments are the same length
-        length_check = np.array([len(arg) != len(array_args[0]) for arg in array_args])
+        length_check = np.array([len(arg) != len(array_args[0])
+                                 for arg in array_args])
         if length_check.any():
             raise ValueError("All input arrays must have the same length")
 
-        # reset the arguments with the new converted ones (since Python passes by assignment)
+        # reset the arguments with the new converted ones
         m_1, m_2, dist, f_orb, a, ecc = array_args
 
         self.m_1 = m_1
@@ -113,9 +116,10 @@ class Source():
         e_len = e_len.astype(int)
         n_max = lum_info["n_max"]
         g_vals = lum_info["g_vals"]
-            
+
         # reconstruct arrays
-        e_range = 1 - np.logspace(np.log10(1 - e_min), np.log10(1 - e_max), e_len)
+        e_range = 1 - np.logspace(np.log10(1 - e_min),
+                                  np.log10(1 - e_max), e_len)
         n_range = np.arange(1, n_max.astype(int) + 1)
 
         f_vals = utils.peters_f(e_range)
@@ -131,7 +135,7 @@ class Source():
 
             # keep adding harmonics until gw luminosity is within errors
             while total_lum < (1 - self._gw_lum_tol) * f_vals[i] \
-                and harmonics_needed[i] < len(n_range):
+                    and harmonics_needed[i] < len(n_range):
                 harmonics_needed[i] += 1
                 total_lum += g_vals[i][harmonics_needed[i] - 1]
 
@@ -159,7 +163,7 @@ class Source():
     def update_gw_lum_tol(self, gw_lum_tol):
         """Update GW luminosity tolerance and use updated value to
         recalculate max_harmonics function and transition to eccentric
-        
+
         Params
         ------
         gw_lum_tol : `float`
@@ -172,7 +176,7 @@ class Source():
     def set_g(self, interpolate_g):
         """Set Source g function if user wants to interpolate g(n,e).
         Otherwise just leave the function as None.
-        
+
         Params
         ------
         interpolate_g : `boolean`
@@ -180,12 +184,13 @@ class Source():
         """
         if interpolate_g:
             # open file containing pre-calculated fine g(n,e) grid
-            with resources.path(package="calcs", resource="peters_g.npy") as path:
+            with resources.path(package="calcs",
+                                resource="peters_g.npy") as path:
                 peters_g = np.load(path)
 
             # interpolate grid using scipy
             n_range = np.arange(1, 10000 + 1).astype(int)
-            e_range = np.linspace(0, 1, 1000)   
+            e_range = np.linspace(0, 1, 1000)
             self.g = interp2d(n_range, e_range, peters_g)
         else:
             self.g = None
@@ -224,14 +229,13 @@ class Source():
 
         if stationary is None:
             stationary_mask = np.repeat(True, self.n_sources)
-        elif stationary is True:
+        elif stationary is True or stationary is False:
             stationary_mask = utils.determine_stationarity(self.m_1, self.m_2,
                                                            self.f_orb, t_obs,
-                                                           self.ecc, self.stat_tol)
-        elif stationary is False:
-            stationary_mask = np.logical_not(utils.determine_stationarity(self.m_1, self.m_2,
-                                                           self.f_orb, t_obs,
-                                                           self.ecc, self.stat_tol))
+                                                           self.ecc,
+                                                           self.stat_tol)
+            if stationary is False:
+                stationary_mask = np.logical_not(stationary_mask)
         else:
             raise ValueError("`stationary` must be None, True or False")
 
@@ -255,7 +259,8 @@ class Source():
                             self.ecc, harmonics, self.dist)
 
     def get_h_c_n(self, harmonics):
-        """Computes the characteristic strain for all binaries for the given `harmonics`
+        """Computes the characteristic strain for all binaries
+        for the given `harmonics`
 
         Params
         ------
@@ -265,7 +270,7 @@ class Source():
         Returns
         -------
         h_c_n : `float/array`
-            dimensionless characteristic strain in the quadrupole approximation (unitless)
+            dimensionless characteristic strain in the quadrupole approximation
             shape of array is `(number of sources, number of harmonics)`
         """
         return strain.h_c_n(utils.chirp_mass(self.m_1, self.m_2), self.f_orb,
@@ -293,18 +298,21 @@ class Source():
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
         snr = np.zeros(self.n_sources)
-        stationary_mask = self.get_source_mask(circular=None, stationary=True, t_obs=t_obs)
+        stationary_mask = self.get_source_mask(circular=None, stationary=True,
+                                               t_obs=t_obs)
         evolving_mask = np.logical_not(stationary_mask)
 
         if stationary_mask.any():
             if verbose:
-                print("\t{} sources are stationary".format(len(snr[stationary_mask])))
+                n_stat = len(snr[stationary_mask])
+                print("\t{} sources are stationary".format(n_stat))
             snr[stationary_mask] = self.get_snr_stationary(t_obs=t_obs,
                                                            which_sources=stationary_mask,
                                                            verbose=verbose)
         if evolving_mask.any():
             if verbose:
-                print("\t{} sources are evolving".format(len(snr[evolving_mask])))
+                n_evol = len(snr[evolving_mask])
+                print("\t{} sources are evolving".format(n_evol))
             snr[evolving_mask] = self.get_snr_evolving(t_obs=t_obs,
                                                        which_sources=evolving_mask,
                                                        n_step=n_step,
@@ -312,7 +320,8 @@ class Source():
         self.snr = snr
         return snr
 
-    def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None, verbose=False):
+    def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None,
+                           verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Params
@@ -345,9 +354,9 @@ class Source():
             if verbose:
                 print("\t\t{} sources are stationary and circular".format(
                     len(snr[ind_circ])))
-            snr[ind_circ] = sn.snr_circ_stationary(m_c=m_c[ind_circ], 
-                                                   f_orb=self.f_orb[ind_circ], 
-                                                   dist=self.dist[ind_circ], 
+            snr[ind_circ] = sn.snr_circ_stationary(m_c=m_c[ind_circ],
+                                                   f_orb=self.f_orb[ind_circ],
+                                                   dist=self.dist[ind_circ],
                                                    t_obs=t_obs,
                                                    interpolated_g=self.g)
         if ind_ecc.any():
@@ -357,19 +366,22 @@ class Source():
             max_harmonics = self.max_harmonic(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                matching = np.logical_and(np.logical_and(max_harmonics >= lower, max_harmonics < upper), ind_ecc)
-                if matching.any():
-                    snr[matching] = sn.snr_ecc_stationary(m_c=m_c[matching],
-                                                        f_orb=self.f_orb[matching],
-                                                        ecc=self.ecc[matching],
-                                                        dist=self.dist[matching],
-                                                        t_obs=t_obs,
-                                                        max_harmonic=upper - 1,
-                                                        interpolated_g=self.g)
+                harm_mask = np.logical_and(max_harmonics >= lower,
+                                           max_harmonics < upper)
+                match = np.logical_and(harm_mask, ind_ecc)
+                if match.any():
+                    snr[match] = sn.snr_ecc_stationary(m_c=m_c[match],
+                                                       f_orb=self.f_orb[match],
+                                                       ecc=self.ecc[match],
+                                                       dist=self.dist[match],
+                                                       t_obs=t_obs,
+                                                       max_harmonic=upper - 1,
+                                                       interpolated_g=self.g)
 
         return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs, n_step=100, which_sources=None, verbose=False):
+    def get_snr_evolving(self, t_obs, n_step=100, which_sources=None,
+                         verbose=False):
         """Computes the SNR assuming an evolving binary
 
         Params
@@ -392,9 +404,8 @@ class Source():
         SNR : `array`
             the signal to noise ratio
         """
-        m_c = utils.chirp_mass(m_1=self.m_1, m_2=self.m_2)
         snr = np.zeros(self.n_sources)
-        
+
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
         ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
@@ -418,19 +429,22 @@ class Source():
             max_harmonics = self.max_harmonic(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                matching = np.logical_and(np.logical_and(max_harmonics >= lower, max_harmonics < upper), ind_ecc)
-                if matching.any():
-                    snr[matching] = sn.snr_ecc_evolving(m_1=self.m_1[matching],
-                                                        m_2=self.m_2[matching],
-                                                        f_orb_i=self.f_orb[matching],
-                                                        dist=self.dist[matching],
-                                                        ecc=self.ecc[matching],
-                                                        max_harmonic=upper - 1,
-                                                        t_obs=t_obs,
-                                                        n_step=n_step,
-                                                        interpolated_g=self.g)
+                harm_mask = np.logical_and(max_harmonics >= lower,
+                                           max_harmonics < upper)
+                match = np.logical_and(harm_mask, ind_ecc)
+                if match.any():
+                    snr[match] = sn.snr_ecc_evolving(m_1=self.m_1[match],
+                                                     m_2=self.m_2[match],
+                                                     f_orb_i=self.f_orb[match],
+                                                     dist=self.dist[match],
+                                                     ecc=self.ecc[match],
+                                                     max_harmonic=upper - 1,
+                                                     t_obs=t_obs,
+                                                     n_step=n_step,
+                                                     interpolated_g=self.g)
 
         return snr[which_sources]
+
 
 class Stationary(Source):
     """Subclass for sources that are stationary"""
@@ -438,11 +452,12 @@ class Stationary(Source):
     def get_snr(self, t_obs=4*u.yr, verbose=False):
         self.snr = self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
         return self.snr
-        
+
+
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
     def get_snr(self, t_obs=4*u.yr, n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
-                                     verbose=verbose)
+                                         verbose=verbose)
         return self.snr
