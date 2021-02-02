@@ -2,7 +2,7 @@
 from astropy import units as u
 import numpy as np
 from importlib import resources
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, interp2d
 
 import calcs.utils as utils
 import calcs.snr as sn
@@ -11,7 +11,8 @@ __all__ = ['Source', 'Stationary', 'Evolving']
 
 class Source():
     """Superclass for generic sources"""
-    def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None, gw_lum_tol=0.05, stat_tol=1e-2):
+    def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None, gw_lum_tol=0.05, stat_tol=1e-2,
+                interpolate_g=True):
         """Initialise all parameters
         Params
         ------
@@ -45,6 +46,10 @@ class Source():
         stat_tol : `float`
             fractional change in frequency above which a
             binary should be considered to be stationary
+
+
+        interpolate_g : `boolean`
+            whether to interpolate the g(n,e) function from Peters (1964)
         """
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
@@ -93,12 +98,13 @@ class Source():
         self.n_sources = len(m_1)
 
         self.update_gw_lum_tol(gw_lum_tol)
+        self.set_g(interpolate_g)
 
     def create_max_harmonics_function(self):
         """Create a function to calculate the maximum harmonics required
         to calculate the SNRs assuming provided tolerance `gw_lum_tol`"""
 
-        # open file containing pre-calculating g(n,e) and F(e) values
+        # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="calcs", resource="harmonics.npz") as path:
             lum_info = np.load(path)
 
@@ -161,6 +167,27 @@ class Source():
         self._gw_lum_tol = gw_lum_tol
         self.create_max_harmonics_function()
         self.find_eccentric_transition()
+
+    def set_g(self, interpolate_g):
+        """Set Source g function if user wants to interpolate g(n,e).
+        Otherwise just leave the function as None.
+        
+        Params
+        ------
+        interpolate_g : `boolean`
+            whether to interpolate the g(n,e) function from Peters (1964)
+        """
+        if interpolate_g:
+            # open file containing pre-calculated fine g(n,e) grid
+            with resources.path(package="calcs", resource="peters_g.npy") as path:
+                peters_g = np.load(path)
+
+            # interpolate grid using scipy
+            n_range = np.arange(1, 10000 + 1).astype(int)
+            e_range = np.linspace(0, 1, 1000)   
+            self.g = interp2d(n_range, e_range, peters_g)
+        else:
+            self.g = None
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
         """Produce a mask of the sources based on whether binaries
