@@ -5,7 +5,7 @@ from calcs.utils import peters_g, peters_f
 import numpy as np
 
 
-def h_0_n(m_c, f_orb, ecc, n, dist):
+def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     """Computes the dimensionless power of a general binary
     radiating gravitational waves in the quadrupole approximation
     at the nth harmonic of the orbital frequency
@@ -27,6 +27,13 @@ def h_0_n(m_c, f_orb, ecc, n, dist):
     dist : `float/array`
         distance to the binary
 
+    interpolated_g : `function`
+        A function returned by scipy.interpolate.interp2d that
+        computes g(n,e) from Peters (1964). The code assumes
+        that the function returns the output sorted as with the
+        interp2d returned functions (and thus unsorts).
+        Default is None and uses exact g(n,e) in this case.
+
     Returns
     -------
     h_0 : `float/array`
@@ -46,13 +53,22 @@ def h_0_n(m_c, f_orb, ecc, n, dist):
         n_independent_part = np.broadcast_to(n_independent_part.decompose(), (n_harmonics, n_sources)).T
 
     N, E = np.meshgrid(n, ecc)
-    n_dependent_part = peters_g(N, E)**(1/2) / N
+
+    if interpolated_g is None:
+        n_dependent_part = peters_g(N, E)**(1/2) / N
+    else:
+        g_vals = interpolated_g(n, ecc)
+
+        # unsort the output array if there is more than one eccentricity
+        if isinstance(ecc, (np.ndarray, list)) and len(ecc) > 1:
+            g_vals = g_vals[np.argsort(ecc).argsort()]
+        n_dependent_part = g_vals**(0.5) / N
 
     h_0 = n_independent_part * n_dependent_part
     return h_0
 
 
-def h_c_n(m_c, f_orb, ecc, n, dist):
+def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     """Computes the dimensionless characteristic power of a general
     binary radiating gravitational waves in the quadrupole approximation
     at the nth harmonic of the orbital frequency
@@ -77,6 +93,13 @@ def h_c_n(m_c, f_orb, ecc, n, dist):
     t_obs : `float/array`
         observation duration
 
+    interpolated_g : `function`
+        A function returned by scipy.interpolate.interp2d that
+        computes g(n,e) from Peters (1964). The code assumes
+        that the function returns the output sorted as with the
+        interp2d returned functions (and thus unsorts).
+        Default is None and uses exact g(n,e) in this case.
+
     Returns
     -------
     h_c : `float/array`
@@ -95,7 +118,15 @@ def h_c_n(m_c, f_orb, ecc, n, dist):
         n_independent_part = np.broadcast_to(n_independent_part.decompose(), (n_harmonics, n_sources)).T
 
     N, E = np.meshgrid(n, ecc)
-    n_dependent_part = (peters_g(N, E) / N)**(1/2)
+    if interpolated_g is None:
+        n_dependent_part = (peters_g(N, E) / N)**(1/2)
+    else:
+        g_vals = interpolated_g(n, ecc)
+
+        # unsort the output array if there is more than one eccentricity
+        if isinstance(ecc, (np.ndarray, list)) and len(ecc) > 1:
+            g_vals = g_vals[np.argsort(ecc).argsort()]
+        n_dependent_part = (g_vals / N)**(0.5) / N
 
     h_c = n_independent_part * n_dependent_part
     return h_c
