@@ -18,8 +18,8 @@ class Test(unittest.TestCase):
     def test_strain_conversion(self):
         """This test checks whether the strain and characteristic strain are
         related as hc^2 = (2 * fn^2 / fn_dot) h0^2"""
-        h0 = strain.h_0_n(m_c, f_orb, e, n, dist)
-        hc = strain.h_c_n(m_c, f_orb, e, n, dist)
+        h0 = strain.h_0_n(m_c, f_orb, e, n, dist).flatten()
+        hc = strain.h_c_n(m_c, f_orb, e, n, dist).flatten()
 
         should_be_fn_dot = (n * f_orb)**2 * h0**2 / hc**2
         fn_dot = utils.fn_dot(m_c, f_orb, e, n)
