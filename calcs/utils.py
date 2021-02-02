@@ -216,11 +216,11 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
                  * t_evol / (5 * c.c**5) * (c.G * m_c)**(5/3) * peters_f(ecc)
 
     # any merged binaries will have a negative inner part
-    merged = inner_part < 0.0
-    inspiral = np.logical_not(merged)
+    inspiral = inner_part >= 0.0
 
     # calculate the change in frequency (set to 10^10 Hz if merged)
-    delta_f = np.where(merged, 1e10 * u.Hz, np.power(inner_part[inspiral], -3/8) - forb_i[inspiral])
+    delta_f = np.repeat(1e10, len(forb_i)) * u.Hz
+    delta_f[inspiral] = np.power(inner_part[inspiral], -3/8) - forb_i[inspiral]
     stationary = delta_f / forb_i <= stat_tol
 
     return stationary

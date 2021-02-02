@@ -37,7 +37,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs):
                                 f_orb=f_orb, 
                                 ecc=0.0,
                                 n=2, 
-                                dist=dist)**2
+                                dist=dist).flatten()**2
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_orb, t_obs=t_obs)
@@ -76,22 +76,20 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic):
     sn : `float/array`
         sn for each binary
     """
+    # define range of harmonics
+    n_range = np.arange(1, max_harmonic + 1).astype(int)
 
-    h_0_ecc_n_2 = np.zeros((len(m_c), max_harmonic))
-    h_f_lisa_n_2 = np.zeros((len(m_c), max_harmonic)) / u.Hz
-    n_range = np.arange(1, max_harmonic+1)
-    for n in n_range:    
-        h_0_ecc_n_2[:, n-1] = strain.h_0_n(m_c=m_c,
-                                             f_orb=f_orb,
-                                             ecc=ecc,
-                                             n=n,
-                                             dist=dist)**2
-
-        h_f_lisa_n_2[:, n-1] = lisa.power_spectral_density(f=n * f_orb, t_obs=t_obs)
+    # calculate source signal
+    h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
+                               ecc=ecc, n=n_range, dist=dist)**2
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
-    snr = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
+    # turn n_range into grid and calcualte noise
+    N, _ = np.meshgrid(n_range, ecc)
+    h_f_lisa_n_2 = lisa.power_spectral_density(f=N * f_orb, t_obs=t_obs)
 
+    # calculate the signal-to-noise ratio
+    snr = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
     return snr.decompose()
 
 
@@ -144,10 +142,10 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step):
 
     # calculate the characteristic power
     h_c_n_2 = strain.h_c_n(m_c=m_c,
-                             f_orb=f_evol,
-                             ecc=np.zeros(len(m_c)),
-                             n=2,
-                             dist=dist)**2
+                           f_orb=f_evol,
+                           ecc=np.zeros(len(m_c)),
+                           n=2,
+                           dist=dist)**2
     # calculate the characteristic noise power
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
     h_c_lisa_2 = 4 * (2*f_evol)**2 * h_f_lisa_2
