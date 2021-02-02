@@ -65,8 +65,8 @@ def h_c_n(m_c, f_orb, ecc, n, dist):
     ecc : `float/array`
         eccentricity
 
-    n : `int`
-        harmonic of the orbital frequency 
+    n : `int/array`
+        harmonic(s) at which to calculate the strain
 
     dist : `float/array`
         distance to the binary
@@ -79,8 +79,17 @@ def h_c_n(m_c, f_orb, ecc, n, dist):
     h_c : `float/array`
         dimensionless strain in the quadrupole approximation (unitless)
     """
+    # calculate how many harmonics and sources
+    n_harmonics = 1 if isinstance(n, int) else len(n)
+    n_sources = len(m_c) if isinstance(m_c.value, np.ndarray) else 1
 
-    prefac = (2 / (3 * np.pi**(4/3)))**(0.5) * c.G**(5/6) / c.c**(3/2)
-    h_c = prefac * m_c**(5/6) / dist * (n * f_orb)**(-1/6) \
-            * (2 / n)**(1/3) * (peters_g(n, ecc) / peters_f(ecc))**(0.5)
-    return h_c.decompose()
+    # work out strain for n independent part and broadcast to correct shape
+    prefac = (2**(5/3) / (3 * np.pi**(4/3)))**(0.5) * c.G**(5/6) / c.c**(3/2)
+    n_independent_part = prefac * m_c**(5/6) / dist * f_orb**(-1/6) / peters_f(ecc)**(0.5)
+    n_independent_part = np.broadcast_to(n_independent_part.decompose(), (n_harmonics, n_sources)).T
+
+    N, E = np.meshgrid(n, ecc)
+    n_dependent_part = (peters_g(N, E) / N)**(1/2)
+
+    h_c = n_independent_part * n_dependent_part
+    return h_c
