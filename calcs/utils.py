@@ -174,6 +174,7 @@ def c_0(a_i, e_i):
          * (1 + (121/304)*e_i**2)**(-870/2299)
     return c0
 
+
 def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     """Determine whether a binary is stationary by checking how
     much its orbital frequency changes over t_evol time
@@ -216,15 +217,17 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
                  * t_evol / (5 * c.c**5) * (c.G * m_c)**(5/3) * peters_f(ecc)
 
     # any merged binaries will have a negative inner part
-    merged = inner_part < 0.0
-    inspiral = np.logical_not(merged)
+    inspiral = inner_part >= 0.0
 
     # calculate the change in frequency (set to 10^10 Hz if merged)
-    delta_f = np.where(merged, 1e10 * u.Hz, np.power(inner_part, -3/8) - forb_i)
+    delta_f = np.repeat(1e10, len(forb_i)) * u.Hz
+    delta_f[inspiral] = np.power(inner_part[inspiral], -3/8) - forb_i[inspiral]
+
     stationary = delta_f / forb_i <= stat_tol
 
     return stationary
-    
+
+
 def fn_dot(m_c, f_orb, e, n):
     """Rate of change of nth frequency of a binary
 

@@ -32,8 +32,8 @@ def de_dt(e, times, beta, c_0):
     dedt : `array`
         eccentricity evolution
     """
-    dedt = -19/12 * beta/c_0**4 * (e**(29/19)*(1 - e**2)**(3/2))/\
-                                   (1+(121/304)*e**2)**(1181/2299)
+    dedt = -19/12 * beta/c_0**4 * (e**(29/19)*(1 - e**2)**(3/2)) \
+                                / (1+(121/304)*e**2)**(1181/2299)
 
     return dedt
 
@@ -108,7 +108,7 @@ def get_e_evol(beta, c_0, ecc_i, times):
 
     e_evol = odeint(de_dt, ecc_i, times, args=(beta.value, c_0.value))
 
-    return e_evol.flatten() 
+    return e_evol.flatten()
 
 
 def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
@@ -163,7 +163,7 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
 
     a_evol = get_a_evol(a_i=a_i, e_evol=e_evol,
                         beta=beta, c_0=c_0, times=times)
-    
+
     # change merged binaries to extremely small separations
     a_evol = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
     f_orb_evol = utils.get_f_orb_from_a(a=a_evol, m_1=m_1, m_2=m_2)
