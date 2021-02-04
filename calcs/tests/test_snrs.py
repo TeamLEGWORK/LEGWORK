@@ -21,7 +21,4 @@ class Test(unittest.TestCase):
         t_obs = 4 * u.yr
         snr_circ = snr.snr_circ_stationary(m_c, f_orb, dist, t_obs).decompose()
         snr_ecc = snr.snr_ecc_stationary(m_c, f_orb, 0.0, dist, t_obs, 25).decompose()
-
-        difference = snr_circ - snr_ecc
-
-        self.assertTrue(all(difference.value < 1e-5))
+        self.assertTrue(np.allclose(snr_circ, snr_ecc, atol=1e-5))
