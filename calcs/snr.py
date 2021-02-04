@@ -235,6 +235,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     # get f_orb, ecc evolution for each binary one by one
     # since we have to integrate the de/de ode
 
+    snr = []
     for m1, m2, mc, fi, ei, d, t in zip(m_1, m_2, m_c, f_orb_i, ecc, dist, t_evol):
         f_evol, e_evol = evol.get_f_and_e(m_1=m1,
                                           m_2=m2,
@@ -259,6 +260,6 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
 
             # compute the snr for the nth harmonic
             snr_n_2.append(np.sum(h_c_n_2[:-1] / (h_c_lisa_2[:-1] * f_evol[:-1]) * (f_evol[1:] - f_evol[:-1])))
-        snr = np.sum(snr_n_2)**0.5
+        snr.append(np.sum(snr_n_2)**0.5)
 
-        return snr
+    return snr
