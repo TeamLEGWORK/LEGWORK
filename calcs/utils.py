@@ -220,7 +220,7 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     inspiral = np.logical_not(merged)
 
     # calculate the change in frequency (set to 10^10 Hz if merged)
-    delta_f = np.where(merged, 1e10 * u.Hz, np.power(inner_part[inspiral], -3/8) - forb_i[inspiral])
+    delta_f = np.where(merged, 1e10 * u.Hz, np.power(inner_part, -3/8) - forb_i)
     stationary = delta_f / forb_i <= stat_tol
 
     return stationary
