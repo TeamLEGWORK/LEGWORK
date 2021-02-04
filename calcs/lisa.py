@@ -5,6 +5,7 @@ import astropy.units as u
 from scipy.interpolate import splev, splrep
 from importlib import resources
 
+
 def load_transfer_function(f, fstar=19.09e-3):
     """Load in transfer function from file and interpolate values
     for a range of frequencies. Adapted from
@@ -39,6 +40,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     R = splev(f, R_data, der=0)
     return R
 
+
 def approximate_transfer_function(f, fstar):
     """Calculate the the LISA transfer function using
     approximation from Eq. 9 of Robson+19
@@ -57,6 +59,7 @@ def approximate_transfer_function(f, fstar):
         transfer function at each frequency
     """
     return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
+
 
 def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3, approximate_R=False, include_confusion_noise=True):
     """Calculates the effective LISA power spectral density sensitivity
