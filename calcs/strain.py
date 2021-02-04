@@ -35,7 +35,7 @@ def h_0_n(m_c, f_orb, ecc, n, dist):
 
     prefac = (2**(28/3) / 5)**(0.5) * c.G**(5/3) / c.c**4
     h_0 = prefac * m_c**(5/3) * (np.pi * f_orb)**(2/3) / dist *\
-          peters_g(n, ecc)**(1/2) / n
+        peters_g(n, ecc)**(1/2) / n
     return h_0.decompose()
 
 
@@ -70,7 +70,7 @@ def h_c_n(m_c, f_orb, ecc, n, dist):
         dimensionless strain in the quadrupole approximation (unitless)
     """
 
-    prefac = (2 / (3 * np.pi**(4/3)))**(0.5) * c.G**(5/6) / c.c**(3/2)
+    prefac = (2 / (3 * np.pi**(4/3)))**0.5 * c.G**(5/6) / c.c**(3/2)
     h_c = prefac * m_c**(5/6) / dist * (n * f_orb)**(-1/6) \
-            * (2 / n)**(1/3) * (peters_g(n, ecc) / peters_f(ecc))**(0.5)
+        * (2 / n)**(1/3) * (peters_g(n, ecc) / peters_f(ecc))**0.5
     return h_c.decompose()

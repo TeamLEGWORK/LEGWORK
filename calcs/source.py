@@ -328,7 +328,6 @@ class Source():
         SNR : `array`
             the signal to noise ratio
         """
-        m_c = utils.chirp_mass(m_1=self.m_1, m_2=self.m_2)
         snr = np.zeros(self.n_sources)
         
         if which_sources is None:
@@ -366,17 +365,19 @@ class Source():
 
         return snr[which_sources]
 
+
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
     def get_snr(self, t_obs=4*u.yr, verbose=False):
         self.snr = self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
         return self.snr
-        
+
+
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
     def get_snr(self, t_obs=4*u.yr, n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
-                                     verbose=verbose)
+                                         verbose=verbose)
         return self.snr
