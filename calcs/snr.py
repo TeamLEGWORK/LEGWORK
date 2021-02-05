@@ -173,8 +173,8 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     h_c_lisa_2 = 4 * (2*f_evol) * h_f_lisa_2
 
     snr = (np.sum(h_c_n_2[:-1] / (h_c_lisa_2[:-1] * f_evol[:-1]) *
-                  (f_evol[1:] - f_evol[:-1]), axis=0))**0.5
-    
+           (f_evol[1:] - f_evol[:-1]), axis=0))**0.5
+
     return snr.decompose()
 
 
@@ -231,12 +231,13 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     t_merge = evol.get_t_merge_circ(m_1=m_1,
                                     m_2=m_2,
                                     f_orb_i=f_orb_i)
-    t_evol = np.where(t_merge < t_obs, t_merge, t_obs)
+    t_evol = np.where(t_merge > t_obs, t_merge, t_obs)
     # get f_orb, ecc evolution for each binary one by one
     # since we have to integrate the de/de ode
 
     snr = []
-    for m1, m2, mc, fi, ei, d, t in zip(m_1, m_2, m_c, f_orb_i, ecc, dist, t_evol):
+    for m1, m2, mc, fi, ei, d, t in zip(m_1, m_2, m_c, f_orb_i,
+                                        ecc, dist, t_evol):
         f_evol, e_evol = evol.get_f_and_e(m_1=m1,
                                           m_2=m2,
                                           f_orb_i=fi,
@@ -259,7 +260,9 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
             h_c_lisa_2 = 4 * (n * f_evol) * h_f_lisa_2
 
             # compute the snr for the nth harmonic
-            snr_n_2.append(np.sum(h_c_n_2[:-1] / (h_c_lisa_2[:-1] * f_evol[:-1]) * (f_evol[1:] - f_evol[:-1])))
+            snr_n_2 = np.sum(h_c_n_2[:-1] / (h_c_lisa_2[:-1] * f_evol[:-1])
+                             * (f_evol[1:] - f_evol[:-1]))
+            snr_n_2.append(snr_n_2)
         snr.append(np.sum(snr_n_2)**0.5)
 
     return snr
