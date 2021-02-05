@@ -172,42 +172,9 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
     return f_orb_evol.to(u.Hz), e_evol
 
 
-def get_t_merge_circ(m_1, m_2, f_orb_i):
-    """Computes the merger time in seconds for a circular binary
-    from Peters 1964
-
-    Params
-    ------
-    m_1 : `array`
-        primary mass
-
-    m_2 : `array`
-        secondary mass
-
-    f_orb_i : `array`
-        initial orbital frequency
-
-    Returns
-    -------
-    t_merge : `array`
-        merger time
-    """
-
-    a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-    beta = utils.beta(m_1, m_2)
-
-    t_merge = a_i**4 / (4*beta)
-
-    return t_merge
-
-
-def get_t_merge_ecc(beta=None, m_1=None, m_2=None,
-                    a_i=None, f_orb_i=None, ecc_i=None,
-                    small_e_tol=1e-2, large_e_tol=1 - 1e-2):
-    """Computes the merger time for a binary using Peters 1964.
-    We use one of Eq. 5.10, 5.14 or the two unlabelled equations
-    after 5.14 in Peters 1964 depending on the eccentricity of
-    the binary.
+def get_t_merge_circ(beta=None, m_1=None, m_2=None,
+                    a_i=None, f_orb_i=None):
+    """Computes the merger time for a circular binary using Peters 1964
 
     Params
     ------
@@ -227,9 +194,58 @@ def get_t_merge_ecc(beta=None, m_1=None, m_2=None,
     f_orb_i : `float/array`
         initial orbital frequency (required if `a_i` is None)
 
+    Returns
+    -------
+    t_merge : `float/array`
+        merger time
+    """
+    # ensure that a_i is supplied or calculated
+    if a_i is None and f_orb_i is None:
+        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
+    elif a_i is None:
+        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
+
+    # ensure that beta is supplied or calculated
+    if beta is None and (m_1 is None or m_2 is None):
+        raise ValueError("Either `beta` or (`m_1`, `m_2`) must be supplied")
+    elif beta is None:
+        beta = utils.beta(m_1, m_2)
+
+    # apply Peters 1964 Eq. 5.9
+    t_merge = a_i**4 / (4 * beta)
+
+    return t_merge.to(u.Gyr)
+
+
+def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
+                    beta=None, m_1=None, m_2=None,
+                    small_e_tol=1e-2, large_e_tol=1 - 1e-2):
+    """Computes the merger time for a binary using Peters 1964.
+    We use one of Eq. 5.10, 5.14 or the two unlabelled equations
+    after 5.14 in Peters 1964 depending on the eccentricity of
+    the binary.
+
+    Params
+    ------
     ecc_i : `float/array`
         initial eccentricity (if `ecc_i` is known to be 0.0 then use
         `get_t_merge_circ` instead)
+
+    a_i : `float/array`
+        initial semi major axis (if supplied `f_orb_i` is ignored)
+
+    f_orb_i : `float/array`
+        initial orbital frequency (required if `a_i` is None)
+
+    beta : `float/array`
+        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied `m_1` and
+        `m_2` are ignored)
+
+    m_1 : `float/array`
+        primary mass (required if `beta` is None)
+
+    m_2 : `float/array`
+        secondary mass (required if `beta` is None)
 
     small_e_tol : `float`
         eccentricity below which to apply the small e approximation
