@@ -231,7 +231,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     t_merge = evol.get_t_merge_circ(m_1=m_1,
                                     m_2=m_2,
                                     f_orb_i=f_orb_i)
-    t_evol = np.where(t_merge < t_obs, t_merge, t_obs)
+    t_evol = np.where(t_merge > t_obs, t_merge, t_obs)
     # get f_orb, ecc evolution for each binary one by one
     # since we have to integrate the de/de ode
 
