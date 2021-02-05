@@ -260,7 +260,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
             h_c_lisa_2 = 4 * (n * f_evol)**2 * h_f_lisa_2
 
             # compute the snr for the nth harmonic
-            snr_n_2.append(np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * n * (f_evol[1:] - f_evol[:-1])))
+            snr_n_2.append(np.sum(h_c_n_2.flatten()[:-1] / h_c_lisa_2[:-1] * n * (f_evol[1:] - f_evol[:-1])))
         snr.append(np.sum(snr_n_2)**0.5)
 
     return snr
