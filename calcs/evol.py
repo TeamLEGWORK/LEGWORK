@@ -32,8 +32,8 @@ def de_dt(e, times, beta, c_0):
     dedt : `array`
         eccentricity evolution
     """
-    dedt = -19/12 * beta/c_0**4 * (e**(29/19)*(1 - e**2)**(3/2)) \
-        / (1+(121/304)*e**2)**(1181/2299)
+    dedt = -19 / 12 * beta / c_0**4 * (e**(-29 / 19) * (1 - e**2)**(3/2)) \
+        / (1 + (121/304) * e**2)**(1181/2299)
     return dedt
 
 
@@ -104,8 +104,8 @@ def get_e_evol(beta, c_0, ecc_i, times):
     e_evol : `array`
         array of eccentricities evolved for the times provided
     """
-
-    e_evol = odeint(de_dt, ecc_i, times, args=(beta.value, c_0.value))
+    e_evol = odeint(de_dt, ecc_i, times.to(u.s),
+                    args=(beta.to(u.m**4 / u.s).value, c_0.to(u.m).value))
 
     return e_evol.flatten()
 
@@ -145,7 +145,7 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
 
     a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
     beta = utils.beta(m_1, m_2)
-    times = np.linspace(0, t_evol, n_step)
+    times = np.linspace(0 * u.s, t_evol, n_step).to(u.s)
 
     # Only treat single eccentric sources, so any cases where
     # len(e_i) > 1 are circular.
@@ -272,8 +272,8 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     elif beta is None:
         beta = utils.beta(m_1, m_2)
 
-    # shortcut if all binaries are effectively circular
-    if np.all(ecc_i <= small_e_tol):
+    # shortcut if all binaries are circular
+    if np.all(ecc_i == 0.0):
         return get_t_merge_circ(beta=beta, a_i=a_i)
 
     # calculate c0 from Peters Eq. 5.11
