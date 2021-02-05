@@ -272,6 +272,10 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     elif beta is None:
         beta = utils.beta(m_1, m_2)
 
+    # shortcut if all binaries are effectively circular
+    if np.all(ecc_i <= small_e_tol):
+        return get_t_merge_circ(beta=beta, a_i=a_i)
+
     # calculate c0 from Peters Eq. 5.11
     c0 = utils.c_0(a_i, ecc_i)
 
