@@ -161,19 +161,20 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
                                       n_step=n_step)
 
     # calculate the characteristic power
-    h_c_n_2 = strain.h_c_n(m_c=m_c,
-                           f_orb=f_evol,
-                           ecc=np.zeros(len(m_c)),
+    h_c_n_2 = strain.h_c_n(m_c=np.tile(m_c, n_step),
+                           f_orb=f_evol.flatten(),
+                           ecc=np.zeros_like(f_evol.flatten()).value,
                            n=2,
-                           dist=dist,
+                           dist=np.tile(dist, n_step),
                            interpolated_g=interpolated_g)**2
+    h_c_n_2 = h_c_n_2.flatten().reshape(n_step, len(m_c))
 
     # calculate the characteristic noise power
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
-    h_c_lisa_2 = 4 * (2*f_evol) * h_f_lisa_2
+    h_c_lisa_2 = 4 * (2 * f_evol)**2 * h_f_lisa_2
 
-    snr = (np.sum(h_c_n_2[:-1] / (h_c_lisa_2[:-1] * f_evol[:-1]) *
-                  (f_evol[1:] - f_evol[:-1]), axis=0))**0.5
+    snr = (np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] *
+                  2 * (f_evol[1:] - f_evol[:-1]), axis=0))**0.5
     
     return snr.decompose()
 
@@ -256,10 +257,10 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
 
             # calculate the characteristic noise power
             h_f_lisa_2 = lisa.power_spectral_density(f=n * f_evol, t_obs=t_obs)
-            h_c_lisa_2 = 4 * (n * f_evol) * h_f_lisa_2
+            h_c_lisa_2 = 4 * (n * f_evol)**2 * h_f_lisa_2
 
             # compute the snr for the nth harmonic
-            snr_n_2.append(np.sum(h_c_n_2[:-1] / (h_c_lisa_2[:-1] * f_evol[:-1]) * (f_evol[1:] - f_evol[:-1])))
+            snr_n_2.append(np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] * n * (f_evol[1:] - f_evol[:-1])))
         snr.append(np.sum(snr_n_2)**0.5)
 
     return snr
