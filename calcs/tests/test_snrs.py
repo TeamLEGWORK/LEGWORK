@@ -4,6 +4,7 @@ import unittest
 
 from astropy import units as u
 
+
 class Test(unittest.TestCase):
     """Tests that the code is functioning properly"""
 
@@ -17,5 +18,6 @@ class Test(unittest.TestCase):
         t_obs = 4 * u.yr
 
         snr_circ = snr.snr_circ_stationary(m_c, f_orb, dist, t_obs).decompose()
-        snr_ecc = snr.snr_ecc_stationary(m_c, f_orb, 0.0, dist, t_obs, 25).decompose()
+        snr_ecc = snr.snr_ecc_stationary(m_c, f_orb, 0.0, dist,
+                                         t_obs, 25).decompose()
         self.assertTrue(np.allclose(snr_circ, snr_ecc))

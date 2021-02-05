@@ -173,7 +173,7 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
 
 
 def get_t_merge_circ(beta=None, m_1=None, m_2=None,
-                    a_i=None, f_orb_i=None):
+                     a_i=None, f_orb_i=None):
     """Computes the merger time for a circular binary using Peters 1964
 
     Params

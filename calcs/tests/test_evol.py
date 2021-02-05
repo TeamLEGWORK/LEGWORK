@@ -4,6 +4,7 @@ import unittest
 
 from astropy import units as u
 
+
 class Test(unittest.TestCase):
     """Tests that the code is functioning properly"""
 
@@ -19,7 +20,7 @@ class Test(unittest.TestCase):
 
         circ_time = evol.get_t_merge_circ(m_1=m_1, m_2=m_2, f_orb_i=f_orb)
         ecc_time = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
-                                          f_orb_i=f_orb, ecc_i=e)
+                                        f_orb_i=f_orb, ecc_i=e)
 
         self.assertTrue(np.all(circ_time >= ecc_time))
 
@@ -35,6 +36,6 @@ class Test(unittest.TestCase):
 
         circ_time = evol.get_t_merge_circ(m_1=m_1, m_2=m_2, f_orb_i=f_orb)
         ecc_time = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
-                                          f_orb_i=f_orb, ecc_i=e)
+                                        f_orb_i=f_orb, ecc_i=e)
 
         self.assertTrue(np.allclose(circ_time, ecc_time))
