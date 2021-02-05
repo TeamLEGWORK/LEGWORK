@@ -2,7 +2,7 @@
 
 import calcs.utils as utils
 from numba import jit
-from scipy.integrate import odeint
+from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
 
@@ -33,8 +33,7 @@ def de_dt(e, times, beta, c_0):
         eccentricity evolution
     """
     dedt = -19/12 * beta/c_0**4 * (e**(29/19)*(1 - e**2)**(3/2)) \
-                                / (1+(121/304)*e**2)**(1181/2299)
-
+        / (1+(121/304)*e**2)**(1181/2299)
     return dedt
 
 
@@ -173,62 +172,158 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
     return f_orb_evol.to(u.Hz), e_evol
 
 
-def get_t_merge_circ(m_1, m_2, f_orb_i):
-    """Computes the merger time in seconds for a circular binary
-    from Peters 1964
+def get_t_merge_circ(beta=None, m_1=None, m_2=None,
+                     a_i=None, f_orb_i=None):
+    """Computes the merger time for a circular binary using Peters 1964
 
     Params
     ------
-    m_1 : `array`
-        primary mass
+    beta : `float/array`
+        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied `m_1` and
+        `m_2` are ignored)
 
-    m_2 : `array`
-        secondary mass
+    m_1 : `float/array`
+        primary mass (required if `beta` is None)
 
-    f_orb_i : `array`
-        initial orbital frequency
+    m_2 : `float/array`
+        secondary mass (required if `beta` is None)
+
+    a_i : `float/array`
+        initial semi major axis (if supplied `f_orb_i` is ignored)
+
+    f_orb_i : `float/array`
+        initial orbital frequency (required if `a_i` is None)
 
     Returns
     -------
-    t_merge : `array`
+    t_merge : `float/array`
         merger time
     """
+    # ensure that a_i is supplied or calculated
+    if a_i is None and f_orb_i is None:
+        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
+    elif a_i is None:
+        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
 
-    a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-    beta = utils.beta(m_1, m_2)
+    # ensure that beta is supplied or calculated
+    if beta is None and (m_1 is None or m_2 is None):
+        raise ValueError("Either `beta` or (`m_1`, `m_2`) must be supplied")
+    elif beta is None:
+        beta = utils.beta(m_1, m_2)
 
-    t_merge = a_i**4 / (4*beta)
+    # apply Peters 1964 Eq. 5.9
+    t_merge = a_i**4 / (4 * beta)
 
-    return t_merge
+    return t_merge.to(u.Gyr)
 
 
-def get_t_merge_ecc(m_1, m_2, f_orb_i, ecc_i):
-    """Computes the merger time in seconds for a circular binary
-    from Peters 1964
+def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
+                    beta=None, m_1=None, m_2=None,
+                    small_e_tol=1e-2, large_e_tol=1 - 1e-2):
+    """Computes the merger time for a binary using Peters 1964.
+    We use one of Eq. 5.10, 5.14 or the two unlabelled equations
+    after 5.14 in Peters 1964 depending on the eccentricity of
+    the binary.
 
     Params
     ------
-    m_1 : `array`
-        primary mass
+    ecc_i : `float/array`
+        initial eccentricity (if `ecc_i` is known to be 0.0 then use
+        `get_t_merge_circ` instead)
 
-    m_2 : `array`
-        secondary mass
+    a_i : `float/array`
+        initial semi major axis (if supplied `f_orb_i` is ignored)
 
-    f_orb_i : `array`
-        initial orbital frequency
+    f_orb_i : `float/array`
+        initial orbital frequency (required if `a_i` is None)
 
-    ecc_i : `array`
-        initial eccentricity
+    beta : `float/array`
+        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied `m_1` and
+        `m_2` are ignored)
+
+    m_1 : `float/array`
+        primary mass (required if `beta` is None)
+
+    m_2 : `float/array`
+        secondary mass (required if `beta` is None)
+
+    small_e_tol : `float`
+        eccentricity below which to apply the small e approximation
+        (first unlabelled equation following Eq. 5.14 of Peters 1964)
+
+    large_e_tol : `float`
+        eccentricity above which to apply the large e approximation
+        (second unlabelled equation following Eq. 5.14 of Peters 1964)
 
     Returns
     -------
-    t_merge : `array`
+    t_merge : `float/array`
         merger time
     """
+    # ensure that a_i is supplied or calculated
+    if a_i is None and f_orb_i is None:
+        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
+    elif a_i is None:
+        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
 
-    a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-    beta = utils.beta(m_1, m_2)
+    # ensure that beta is supplied or calculated
+    if beta is None and (m_1 is None or m_2 is None):
+        raise ValueError("Either `beta` or (`m_1`, `m_2`) must be supplied")
+    elif beta is None:
+        beta = utils.beta(m_1, m_2)
 
-    t_merge = a_i**4 / (4*beta)
+    # shortcut if all binaries are effectively circular
+    if np.all(ecc_i <= small_e_tol):
+        return get_t_merge_circ(beta=beta, a_i=a_i)
 
+    # calculate c0 from Peters Eq. 5.11
+    c0 = utils.c_0(a_i, ecc_i)
+
+    @jit(nopython=True)
+    def peters_5_14(e):
+        """ merger time from Peters Eq. 5.14 """
+        return np.power(e, 29/19) * np.power(1 + (121/304)*e**2, 1181/2299) \
+            / np.power(1 - e**2, 3/2)
+
+    # case with array of binaries
+    if isinstance(ecc_i, (np.ndarray, list)):
+        # mask eccentricity based on tolerances
+        circular = ecc_i == 0.0
+        small_e = np.logical_and(ecc_i > 0.0, ecc_i < small_e_tol)
+        large_e = ecc_i > large_e_tol
+        other_e = np.logical_and(ecc_i >= small_e_tol, ecc_i <= large_e_tol)
+
+        t_merge = np.zeros(len(ecc_i)) * u.Gyr
+
+        # merger time for circular binaries (Peters Eq. 5.9)
+        t_merge[circular] = a_i[circular]**4 / (4 * beta[circular])
+
+        # merger time for low e binaries (Eq after Peters Eq. 5.14)
+        t_merge[small_e] = c0[small_e]**4 / (4 * beta[small_e]) \
+            * ecc_i[small_e]**(48/19)
+
+        # merger time for high e binaries (2nd Eq after Peters Eq. 5.14)
+        t_merge[large_e] = c0[large_e]**4 / (4 * beta[large_e]) \
+            * ecc_i[large_e]**(48/19) * (768 / 425) \
+            * (1 - ecc_i[large_e]**2)**(-1/2) \
+            * (1 + 121/304 * ecc_i[large_e]**2)**(3480/2299)
+
+        # merger time for general binaries (Peters Eq. 5.14)
+        prefac = ((12 / 19) * c0[other_e]**4 / beta[other_e]).to(u.Gyr)
+        t_merge[other_e] = prefac * [quad(peters_5_14, 0, ecc_i[other_e][i])[0]
+                                     for i in range(len(ecc_i[other_e]))]
+    # case with only one binary
+    else:
+        # conditions as above but for floats instead of arrays
+        if ecc_i == 0.0:
+            t_merge = a_i**4 / (4 * beta)
+        elif ecc_i < small_e_tol:
+            t_merge = c0**4 / (4 * beta) * ecc_i**(48/19)
+        elif ecc_i > large_e_tol:
+            t_merge = c0**4 / (4 * beta) * ecc_i**(48/19) * (768 / 425) \
+                * (1 - ecc_i**2)**(-1/2) \
+                * (1 + 121/304 * ecc_i**2)**(3480/2299)
+        else:
+            t_merge = ((12 / 19) * c0**4 / beta
+                       * quad(peters_5_14, 0, ecc_i)[0])
     return t_merge.to(u.Gyr)

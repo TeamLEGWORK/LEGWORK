@@ -46,8 +46,8 @@ def peters_g(n, e):
     """
 
     bracket_1 = jv(n-2, n*e) - 2*e*jv(n-1, n*e) \
-                + 2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) \
-                - jv(n+2, n*e)
+        + 2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) \
+        - jv(n+2, n*e)
     bracket_2 = jv(n-2, n*e) - 2*jv(n, n*e) + jv(n+2, n*e)
     bracket_3 = jv(n, n*e)
 
@@ -170,8 +170,8 @@ def c_0(a_i, e_i):
         c factor in SI units
     """
 
-    c0 = a_i * (1-e_i**2) * e_i**(-12/19) \
-         * (1 + (121/304)*e_i**2)**(-870/2299)
+    c0 = a_i * (1 - e_i**2) * e_i**(-12/19) \
+        * (1 + (121/304)*e_i**2)**(-870/2299)
     return c0
 
 
@@ -214,7 +214,7 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     m_c = chirp_mass(m_1, m_2)
     # calculate the inner part of the final frequency equation
     inner_part = forb_i**(-8/3) - 2**(32/3) * np.pi**(8/3) \
-                 * t_evol / (5 * c.c**5) * (c.G * m_c)**(5/3) * peters_f(ecc)
+        * t_evol / (5 * c.c**5) * (c.G * m_c)**(5/3) * peters_f(ecc)
 
     # any merged binaries will have a negative inner part
     inspiral = inner_part >= 0.0
@@ -251,5 +251,5 @@ def fn_dot(m_c, f_orb, e, n):
         rate of change of nth frequency
     """
     fn_dot = (48 * n) / (5 * np.pi) * (c.G * m_c)**(5/3) / c.c**5 \
-             * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
+        * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
     return fn_dot.to(u.Hz / u.yr)

@@ -1,10 +1,9 @@
 import numpy as np
-import calcs.snr as snr
-import calcs.source as source
 import calcs.utils as utils
 import unittest
 
 from astropy import units as u
+
 
 class Test(unittest.TestCase):
     """Tests that the code is functioning properly"""
@@ -16,7 +15,7 @@ class Test(unittest.TestCase):
         f_orb = 10**(np.random.uniform(-5, -1, n_vals)) * u.Hz
         m_1 = np.random.uniform(0, 50, n_vals) * u.Msun
         m_2 = np.random.uniform(0, 50, n_vals) * u.Msun
-        
+
         # convert frequency to semi-major axis
         a = utils.get_a_from_f_orb(f_orb, m_1, m_2)
 

@@ -115,7 +115,7 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     # work out strain for n independent part
     prefac = (2**(5/3) / (3 * np.pi**(4/3)))**(0.5) * c.G**(5/6) / c.c**(3/2)
     n_independent_part = prefac * m_c**(5/6) / dist * f_orb**(-1/6) \
-                                / peters_f(ecc)**(0.5)
+        / peters_f(ecc)**(0.5)
 
     # broadcast to correct shape if necessary
     if n_independent_part.shape != (n_sources, n_harmonics):

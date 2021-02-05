@@ -6,6 +6,7 @@ import unittest
 
 from astropy import units as u
 
+
 class Test(unittest.TestCase):
     """Tests that the code is functioning properly"""
 
@@ -24,18 +25,18 @@ class Test(unittest.TestCase):
 
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist)
-        
+
         # compare snr calculated directly with through Source
         snr_direct = snr.snr_circ_stationary(m_c=m_c, f_orb=f_orb,
                                              dist=dist, t_obs=t_obs)
         snr_source = sources.get_snr()
-        
+
         self.assertTrue(np.allclose(snr_direct, snr_source))
 
         # repeat the same test for eccentric systems
         ecc = np.random.uniform(sources.ecc_tol, 0.1, n_values)
         sources.ecc = ecc
-        
+
         snr_direct = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb, ecc=ecc,
                                             dist=dist, t_obs=t_obs,
                                             max_harmonic=10)
@@ -56,6 +57,6 @@ class Test(unittest.TestCase):
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist)
         stationary_sources = source.Stationary(m_1=m_1, m_2=m_2, f_orb=f_orb,
-                                ecc=ecc, dist=dist)
+                                               ecc=ecc, dist=dist)
         self.assertTrue(np.allclose(sources.get_snr(),
                                     stationary_sources.get_snr()))
