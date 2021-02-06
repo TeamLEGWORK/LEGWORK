@@ -83,3 +83,49 @@ class Test(unittest.TestCase):
         snr = sources.get_snr()
 
         self.assertTrue(np.allclose(interp_snr, snr, atol=1e-2))
+
+    def test_bad_input(self):
+        """checks that Source handles bad input well"""
+
+        n_values = 10
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        ecc = np.random.uniform(0.0, 1.0, n_values)
+        dist = np.random.uniform(0, 10, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+
+        # try creating sources with no f_orb or a
+        no_worries = True
+        try:
+            sources = source.Source(m_1=m_1, m_2=m_2, ecc=ecc, dist=dist)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # try creating sources with no units
+        no_worries = True
+        try:
+            sources = source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                                    dist=dist.value, f_orb=f_orb)
+        except AssertionError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # try creating sources with only single source (should be fine)
+        no_worries = True
+        try:
+            sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun,
+                                    ecc=0.1, dist=8 * u.kpc, f_orb=3e-4 * u.Hz)
+        except:
+            no_worries = False
+        self.assertTrue(no_worries)
+
+        # try creating sources with different length arrays
+        no_worries = True
+        dist = np.append(dist, 8 * u.kpc)
+        try:
+            sources = source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                                    dist=dist, f_orb=f_orb)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
