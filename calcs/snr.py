@@ -5,6 +5,7 @@ import calcs.strain as strain
 import calcs.lisa as lisa
 import calcs.utils as utils
 import calcs.evol as evol
+import astropy.units as u
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
@@ -150,7 +151,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     t_merge = evol.get_t_merge_circ(m_1=m_1,
                                     m_2=m_2,
                                     f_orb_i=f_orb_i)
-    t_evol = np.where(t_merge < t_obs, t_merge, t_obs)
+    t_evol = np.minimum(t_merge, t_obs)
 
     # get f_orb, ecc evolution
     f_evol, e_evol = evol.get_f_and_e(m_1=m_1,
@@ -173,8 +174,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
     h_c_lisa_2 = 4 * (2 * f_evol)**2 * h_f_lisa_2
 
-    snr = (np.sum(h_c_n_2[:-1] / h_c_lisa_2[:-1] *
-                  2 * (f_evol[1:] - f_evol[:-1]), axis=0))**0.5
+    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_evol, axis=0)**0.5
     
     return snr.decompose()
 
@@ -229,39 +229,40 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
 
     # calculate minimum of observation time and merger time
     # need to implement t_merge_ecc!
-    t_merge = evol.get_t_merge_circ(m_1=m_1,
-                                    m_2=m_2,
-                                    f_orb_i=f_orb_i)
-    t_evol = np.where(t_merge > t_obs, t_merge, t_obs)
+    t_merge = evol.get_t_merge_ecc(m_1=m_1,
+                                   m_2=m_2,
+                                   f_orb_i=f_orb_i,
+                                   ecc_i=ecc)
+    t_evol = np.minimum(t_merge * 0.99, t_obs).to(u.s)
     # get f_orb, ecc evolution for each binary one by one
     # since we have to integrate the de/de ode
 
     snr = []
-    for m1, m2, mc, fi, ei, d, t in zip(m_1, m_2, m_c, f_orb_i,
-                                        ecc, dist, t_evol):
-        f_evol, e_evol = evol.get_f_and_e(m_1=m1,
-                                          m_2=m2,
-                                          f_orb_i=fi,
-                                          e_i=ei,
-                                          t_evol=t,
+    for i in range(len(m_c)):
+        f_evol, e_evol = evol.get_f_and_e(m_1=m_1[i],
+                                          m_2=m_2[i],
+                                          f_orb_i=f_orb_i[i],
+                                          e_i=ecc[i],
+                                          t_evol=t_evol[i],
                                           n_step=n_step)
 
         # calculate the characteristic power
         snr_n_2 = []
         for n in range(1, max_harmonic+1):
-            h_c_n_2 = strain.h_c_n(m_c=mc,
+            h_c_n_2 = strain.h_c_n(m_c=m_c[i],
                                    f_orb=f_evol,
                                    ecc=e_evol,
                                    n=n,
-                                   dist=d,
-                                   interpolated_g=interpolated_g) ** 2
+                                   dist=dist[i],
+                                   interpolated_g=interpolated_g)**2
 
             # calculate the characteristic noise power
             h_f_lisa_2 = lisa.power_spectral_density(f=n * f_evol, t_obs=t_obs)
             h_c_lisa_2 = 4 * (n * f_evol)**2 * h_f_lisa_2
 
             # compute the snr for the nth harmonic
-            snr_n_2.append(np.sum(h_c_n_2.flatten()[:-1] / h_c_lisa_2[:-1] * n * (f_evol[1:] - f_evol[:-1])))
+            snr_n_2.append(np.trapz(y=h_c_n_2.flatten() / h_c_lisa_2,
+                                    x=n * f_evol))
         snr.append(np.sum(snr_n_2)**0.5)
 
     return snr
