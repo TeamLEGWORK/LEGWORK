@@ -8,7 +8,7 @@ import astropy.units as u
 
 
 @jit
-def de_dt(e, times, beta, c_0):
+def de_dt(e, times, beta, c_0):                             # pragma: no cover
     """Computes the evolution of the eccentricity from the emission
     of gravitational waves following Peters & Mathews 1964
 
@@ -286,7 +286,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     c0 = utils.c_0(a_i, ecc_i)
 
     @jit(nopython=True)
-    def peters_5_14(e):
+    def peters_5_14(e):                                 # pragma: no cover
         """ merger time from Peters Eq. 5.14 """
         return np.power(e, 29/19) * np.power(1 + (121/304)*e**2, 1181/2299) \
             / np.power(1 - e**2, 3/2)
@@ -320,10 +320,8 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
                                      for i in range(len(ecc_i[other_e]))]
     # case with only one binary
     else:
-        # conditions as above but for floats instead of arrays
-        if ecc_i == 0.0:
-            t_merge = a_i**4 / (4 * beta)
-        elif ecc_i < small_e_tol:
+        # conditions as above (no need for ecc=0.0 since it never reaches here)
+        if ecc_i < small_e_tol:
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19)
         elif ecc_i > large_e_tol:
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19) * (768 / 425) \
