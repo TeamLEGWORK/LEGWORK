@@ -29,7 +29,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     try:
         with resources.path(package="calcs", resource="R.npy") as path:
             f_R, R = np.load(path)
-    except FileExistsError: # pragma: no cover
+    except FileExistsError:                             # pragma: no cover
         print("WARNING: Can't find transfer function file, \
                         using approximation instead")
         return approximate_transfer_function(f, fstar)
@@ -127,8 +127,8 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
         ind = np.abs(t_obs - lengths).argmin()
 
         return 9e-45 * f**(-7/3.) \
-            * np.exp(-f**(alpha[ind]) + beta[ind] * f \
-            * np.sin(kappa[ind] * f)) \
+            * np.exp(-f**(alpha[ind]) + beta[ind] * f
+                     * np.sin(kappa[ind] * f)) \
             * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
 
     # calculate transfer function (either exactly or with approximation)

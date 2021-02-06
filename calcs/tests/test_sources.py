@@ -48,7 +48,6 @@ class Test(unittest.TestCase):
     def test_source_strain(self):
         """check that source calculate strain correctly"""
         n_values = 500
-        t_obs = 4 * u.yr
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         m_c = utils.chirp_mass(m_1, m_2)
@@ -69,7 +68,7 @@ class Test(unittest.TestCase):
         true_char_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
                                         n=[1, 2, 3], dist=dist)
 
-        self.assertTrue(np.all(source_char_strain == source_char_strain))
+        self.assertTrue(np.all(source_char_strain == true_char_strain))
 
     def test_stationary_subclass(self):
         # create random (circular/stationary) binaries
