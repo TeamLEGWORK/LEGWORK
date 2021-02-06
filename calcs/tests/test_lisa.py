@@ -17,3 +17,20 @@ class Test(unittest.TestCase):
         approx = lisa.power_spectral_density(frequencies, approximate_R=False)
 
         self.assertTrue(np.allclose(exact, approx))
+
+    def test_confusion_noise(self):
+        """check that confusion noise is doing logical things"""
+        frequencies = np.logspace(-6, 0, 10000) * u.Hz
+
+        confused = lisa.power_spectral_density(frequencies,
+                                               include_confusion_noise=True)
+        lucid = lisa.power_spectral_density(frequencies, 
+                                            include_confusion_noise=False)
+
+        # ensure confusion noise only adds to noise
+        self.assertTrue(np.all(confused >= lucid))
+
+        # ensure that it doesn't affect things at low or high frequency
+        safe = np.logical_or(frequencies < 1e-4 * u.Hz,
+                                     frequencies > 1e-2 * u.Hz)
+        self.assertTrue(np.allclose(confused[safe], lucid[safe]))

@@ -29,7 +29,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     try:
         with resources.path(package="calcs", resource="R.npy") as path:
             f_R, R = np.load(path)
-    except FileExistsError:
+    except FileExistsError: # pragma: no cover
         print("WARNING: Can't find transfer function file, \
                         using approximation instead")
         return approximate_transfer_function(f, fstar)
