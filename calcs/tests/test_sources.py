@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
         # compare snr calculated directly with through Source
         snr_direct = snr.snr_circ_stationary(m_c=m_c, f_orb=f_orb,
                                              dist=dist, t_obs=t_obs)
-        snr_source = sources.get_snr()
+        snr_source = sources.get_snr(verbose=True)
 
         self.assertTrue(np.allclose(snr_direct, snr_source))
 
@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
         snr_direct = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb, ecc=ecc,
                                             dist=dist, t_obs=t_obs,
                                             max_harmonic=10)
-        snr_source = sources.get_snr()
+        snr_source = sources.get_snr(verbose=True)
 
         self.assertTrue(np.allclose(snr_direct, snr_source))
 
@@ -58,13 +58,13 @@ class Test(unittest.TestCase):
                                 ecc=ecc, dist=dist)
         stationary_sources = source.Stationary(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                                ecc=ecc, dist=dist)
-        self.assertTrue(np.allclose(sources.get_snr(),
-                                    stationary_sources.get_snr()))
+        self.assertTrue(np.allclose(sources.get_snr(verbose=True),
+                                    stationary_sources.get_snr(verbose=True)))
 
     def test_interpolated_g(self):
         """checks that the interpolation of g(n,e) is not producing
         any large errors"""
-        # create random (circular/stationary) binaries
+        # create random binaries
         n_values = 50
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
@@ -79,8 +79,8 @@ class Test(unittest.TestCase):
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist, interpolate_g=False)
 
-        interp_snr = sources_interp.get_snr()
-        snr = sources.get_snr()
+        interp_snr = sources_interp.get_snr(verbose=True)
+        snr = sources.get_snr(verbose=True)
 
         self.assertTrue(np.allclose(interp_snr, snr, atol=1e-2))
 
@@ -113,11 +113,8 @@ class Test(unittest.TestCase):
 
         # try creating sources with only single source (should be fine)
         no_worries = True
-        try:
-            sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun,
-                                    ecc=0.1, dist=8 * u.kpc, f_orb=3e-4 * u.Hz)
-        except:
-            no_worries = False
+        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun,
+                                ecc=0.1, dist=8 * u.kpc, f_orb=3e-4 * u.Hz)
         self.assertTrue(no_worries)
 
         # try creating sources with different length arrays
