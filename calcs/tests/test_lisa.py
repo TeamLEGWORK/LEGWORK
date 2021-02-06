@@ -34,3 +34,22 @@ class Test(unittest.TestCase):
         safe = np.logical_or(frequencies < 1e-4 * u.Hz,
                                      frequencies > 1e-2 * u.Hz)
         self.assertTrue(np.allclose(confused[safe], lucid[safe]))
+
+    def test_mission_length_effect(self):
+        """check that increasing the mission length isn't changing
+        anything far from confusion noise"""
+        frequencies = np.logspace(-6, 0, 100) * u.Hz
+
+        # compute same curve with various mission length
+        smol = lisa.power_spectral_density(frequencies, t_obs=0.5 * u.yr)
+        teeny = lisa.power_spectral_density(frequencies, t_obs=1.0 * u.yr)
+        little = lisa.power_spectral_density(frequencies, t_obs=2.0 * u.yr)
+        regular = lisa.power_spectral_density(frequencies, t_obs=4.5 * u.yr)
+        looonngg = lisa.power_spectral_density(frequencies, t_obs=10.0 * u.yr)
+        noises = [smol, teeny, little, regular, looonngg]
+
+        # ensure that a shorter mission length never decreases the noise
+        for noise in noises:
+            above = noise > regular
+            close = np.isclose(noise, regular, atol=1e-39)
+            self.assertTrue(np.logical_or(above, close).all())
