@@ -199,17 +199,20 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
     t_merge : `float/array`
         merger time
     """
-    # ensure that a_i is supplied or calculated
-    if a_i is None and f_orb_i is None:
-        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
-    elif a_i is None:
-        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-
     # ensure that beta is supplied or calculated
     if beta is None and (m_1 is None or m_2 is None):
         raise ValueError("Either `beta` or (`m_1`, `m_2`) must be supplied")
     elif beta is None:
         beta = utils.beta(m_1, m_2)
+
+    # ensure that a_i is supplied or calculated
+    if a_i is None and f_orb_i is None:
+        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
+    elif a_i is None and (m_1 is None or m_2 is None):
+        raise ValueError("Individual masses `m_1` and `m_2` are required \
+                         if no value of `a_i` is supplied")
+    elif a_i is None:
+        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
 
     # apply Peters 1964 Eq. 5.9
     t_merge = a_i**4 / (4 * beta)
@@ -260,17 +263,20 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     t_merge : `float/array`
         merger time
     """
-    # ensure that a_i is supplied or calculated
-    if a_i is None and f_orb_i is None:
-        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
-    elif a_i is None:
-        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-
     # ensure that beta is supplied or calculated
     if beta is None and (m_1 is None or m_2 is None):
         raise ValueError("Either `beta` or (`m_1`, `m_2`) must be supplied")
     elif beta is None:
         beta = utils.beta(m_1, m_2)
+
+    # ensure that a_i is supplied or calculated
+    if a_i is None and f_orb_i is None:
+        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
+    elif a_i is None and (m_1 is None or m_2 is None):
+        raise ValueError("Individual masses `m_1` and `m_2` are required \
+                         if no value of `a_i` is supplied")
+    elif a_i is None:
+        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
 
     # shortcut if all binaries are circular
     if np.all(ecc_i == 0.0):
