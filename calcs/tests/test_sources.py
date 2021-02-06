@@ -60,3 +60,26 @@ class Test(unittest.TestCase):
                                                ecc=ecc, dist=dist)
         self.assertTrue(np.allclose(sources.get_snr(),
                                     stationary_sources.get_snr()))
+
+    def test_interpolated_g(self):
+        """checks that the interpolation of g(n,e) is not producing
+        any large errors"""
+        # create random (circular/stationary) binaries
+        n_values = 50
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        ecc = np.random.uniform(0.0, 0.9, n_values)
+
+        # compare snr calculated directly with through Source
+        sources_interp = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                       ecc=ecc, dist=dist, interpolate_g=True)
+
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist, interpolate_g=False)
+
+        interp_snr = sources_interp.get_snr()
+        snr = sources.get_snr()
+
+        self.assertTrue(np.allclose(interp_snr, snr, atol=1e-2))
