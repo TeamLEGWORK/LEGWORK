@@ -182,8 +182,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
 def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
                      interpolated_g=None):
 
-    """Computes the signal to noise ratio for stationary and
-    eccentric binaries
+    """Computes the signal to noise ratio for evolving and
+    eccentric binaries. This function will not work for exactly
+    circular (ecc = 0.0) binaries.
 
 
     Params
@@ -233,7 +234,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
                                    m_2=m_2,
                                    f_orb_i=f_orb_i,
                                    ecc_i=ecc)
-    t_evol = np.minimum(t_merge * 0.99, t_obs).to(u.s)
+    t_evol = np.minimum(t_merge, t_obs).to(u.s)
     # get f_orb, ecc evolution for each binary one by one
     # since we have to integrate the de/de ode
 
@@ -245,6 +246,10 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
                                           e_i=ecc[i],
                                           t_evol=t_evol[i],
                                           n_step=n_step)
+
+        merged = np.isnan(e_evol)
+        e_evol[merged] = 0.0
+        f_evol[merged] = 1 * u.Hz
 
         # calculate the characteristic power
         snr_n_2 = []
