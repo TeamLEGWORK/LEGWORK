@@ -453,7 +453,8 @@ class Source():
 
         Params
         ------
-        var : `{{ 'm_1', 'm_2', 'ecc', 'dist', 'f_orb', 'a', 'snr' }}`
+        var : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a', 
+                  snr' }}`
             which variable to plot
 
         Keyword Args
@@ -474,13 +475,16 @@ class Source():
             the axis on which the distribution is plotted
         """
         convert = {"m_1": self.m_1, "m_2": self.m_2,
+                   "m_c": utils.chirp_mass(self.m_1, self.m_2),
                    "ecc": self.ecc * u.dimensionless_unscaled,
-                   "dist": self.dist, "f_orb": self.f_orb, "a": self.a,
+                   "dist": self.dist, "f_orb": self.f_orb,
+                   "f_GW": self.f_orb * 2, "a": self.a,
                    "snr": self.snr}
         xlabels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
-                   "ecc": "Eccentricity", "dist": "Distance",
-                   "f_orb": "Orbital Frequency", "a": "Semi-major axis",
-                   "snr": "Signal-to-noise Ratio"}
+                   "m_c": "Chirp Mass", "ecc": "Eccentricity",
+                   "dist": "Distance", "f_orb": "Orbital Frequency",
+                   "f_GW": "Gravitational Wave Frequency",
+                   "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
         unitless = set(["ecc", "snr"])
 
         # ensure that the variable is a valid choice
