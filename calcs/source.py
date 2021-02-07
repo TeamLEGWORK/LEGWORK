@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d, interp2d
 import calcs.utils as utils
 import calcs.strain as strain
 import calcs.snr as sn
+import calcs.visualisation as vis
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
@@ -444,6 +445,65 @@ class Source():
                                                      interpolated_g=self.g)
 
         return snr[which_sources]
+
+    def plot_1D_variable(self, var, **kwargs):
+        """plot a 1D distribution of a Source variable. This function is a
+        wrapper on `visualisation.plot_1D_dist` and thus takes mostly the same
+        parameters.
+
+        Params
+        ------
+        var : `{{ 'm_1', 'm_2', 'ecc', 'dist', 'f_orb', 'a', 'snr' }}`
+            which variable to plot
+
+        Keyword Args
+        ------------
+        These are exactly the same as `visualisation.plot_1D_dist`, see those
+        docs for more details.
+
+        Note that if `xlabel` is not passed then this function automatically
+        creates one using a default string and (if applicable) the units of
+        the variable.
+
+        Returns
+        -------
+        fig : `matplotlib Figure`
+            the figure on which the distribution is plotted
+
+        fig : `matplotlib Axis`
+            the axis on which the distribution is plotted
+        """
+        convert = {"m_1": self.m_1, "m_2": self.m_2,
+                   "ecc": self.ecc * u.dimensionless_unscaled,
+                   "dist": self.dist, "f_orb": self.f_orb, "a": self.a,
+                   "snr": self.snr}
+        xlabels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
+                   "ecc": "Eccentricity", "dist": "Distance",
+                   "f_orb": "Orbital Frequency", "a": "Semi-major axis",
+                   "snr": "Signal-to-noise Ratio"}
+        unitless = set(["ecc", "snr"])
+
+        # ensure that the variable is a valid choice
+        if var not in convert.keys():
+            error_str = "`var_str` must be one of: " \
+                + ', '.join(["`{}`".format(t) for t in list(convert.keys())])
+            raise ValueError(error_str)
+
+        # check the instance variable has been already set
+        plot_me = convert[var]
+        if plot_me is None:
+            raise ValueError("Variable (`{}`) must be not be None".format(var))
+
+        # create the x label if it wasn't provided
+        if "xlabel" not in kwargs.keys():
+            if var in unitless:
+                kwargs["xlabel"] = xlabels[var]
+            else:
+                kwargs["xlabel"] = r"{} [{:latex}]".format(xlabels[var],
+                                                           plot_me.unit)
+
+        # plot it!
+        return vis.plot_1D_dist(plot_me.value, **kwargs)
 
 
 class Stationary(Source):

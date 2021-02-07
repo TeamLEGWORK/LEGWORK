@@ -10,8 +10,8 @@ fs = 24
 params = {'figure.figsize': (12, 8),
           'legend.fontsize': fs,
           'axes.labelsize': fs,
-          'xtick.labelsize':0.7*fs,
-          'ytick.labelsize':0.7*fs}
+          'xtick.labelsize': 0.7 * fs,
+          'ytick.labelsize': 0.7 * fs}
 plt.rcParams.update(params)
 
 
@@ -21,7 +21,7 @@ def plot_1D_dist(variable, weights=None, disttype="hist", fig=None, ax=None,
     """plot a 1D distribution of `variable` with `weights`. This function is a
     wrapper for `matplotlib.pyplot.hist`, `seaborn.kdeplot` and
     `seaborn.ecdfplot`
-    
+
     Params
     ------
     variable : `float/int array`
@@ -80,9 +80,14 @@ def plot_1D_dist(variable, weights=None, disttype="hist", fig=None, ax=None,
     For `disttype="ecdf"` : stat, complementary, log_scale, legend, label
     See https://seaborn.pydata.org/generated/seaborn.ecdfplot.html
     for more details.
-    
+
     Returns
     -------
+    fig : `matplotlib Figure`
+        the figure on which the distribution is plotted
+
+    fig : `matplotlib Axis`
+        the axis on which the distribution is plotted
     """
     # create new figure and axes is either weren't provided
     if fig is None or ax is None:
@@ -114,8 +119,8 @@ def plot_1D_dist(variable, weights=None, disttype="hist", fig=None, ax=None,
         else:
             # warn user if they give an invalid kwarg
             print("Warning: keyword argument `{}`".format(key),
-                "not recognised for disttype `{}`".format(disttype),
-                "and will be ignored")
+                  "not recognised for disttype `{}`".format(disttype),
+                  "and will be ignored")
 
     # create whichever plot was requested
     if disttype == "hist":
