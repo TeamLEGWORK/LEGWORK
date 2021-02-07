@@ -69,7 +69,7 @@ def plot_1D_dist(variable, weights=None, disttype="hist", fig=None, ax=None,
 
     For `disttype="hist"` : bins, range, density, cumulative, bottom, histtype,
                             align, orientation, rwidth, log, label
-    See https://matplotlib.org/3.3.3/api/_as_gen/matplotlib.pyplot.hist.html
+    See https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html
     for more details.
 
     For `disttype="kde"` : gridsize, cut, clip, legend, cumulative, bw_method,
@@ -131,6 +131,132 @@ def plot_1D_dist(variable, weights=None, disttype="hist", fig=None, ax=None,
     elif disttype == "ecdf":
         sns.ecdfplot(x=variable, weights=weights, ax=ax, color=color,
                      **plot_args)
+
+    # update axis labels
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    # update axis limits
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+
+    # immediately show the plot if requested
+    if show:
+        plt.show()
+
+    # return the figure and axis for further plotting
+    return fig, ax
+
+
+def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
+                 xlabel="", ylabel="", xlim=None, ylim=None, color=None,
+                 show=True, **kwargs):
+    """plot a 2D distribution of `x` and `y` with `weights`. This function is a
+    wrapper for `matplotlib.pyplot.scatter` and `seaborn.kdeplot`
+
+    Params
+    ------
+    x : `float/int array`
+        variable to plot on the x axis, should be a 1D array
+
+    y : `float/int array`
+        variable to plot on the x axis, should be a 1D array
+
+    weights : `float/int array`
+        weights for each variable in `variable`, must have the same shape
+
+    disttype : `{{ "scatter", "kde" }}`
+        which type of distribution plot to use
+
+    fig: `matplotlib Figure`
+        a figure on which to plot the distribution. Both `ax` and `fig` must be
+        supplied for either to be used
+
+    ax: `matplotlib Axis`
+        an axis on which to plot the distribution. Both `ax` and `fig` must be
+        supplied for either to be used
+
+    xlabel : `string`
+        label for the x axis, passed to Axes.set_xlabel()
+
+    ylabel : `string`
+        label for the y axis, passed to Axes.set_ylabel()
+
+    xlim : `tuple`
+        lower and upper limits for the x axis, passed to Axes.set_xlim()
+
+    ylim : `tuple`
+        lower and upper limits for the u axis, passed to Axes.set_ylim()
+
+    color : `string or tuple`
+        colour to use for the plot, see
+        https://matplotlib.org/tutorials/colors/colors.html for details on how
+        to specifiy a colour
+
+    show : `boolean`
+        whether to immediately show the plot or only return the Figure and Axis
+
+    Keyword Args
+    ------------
+    The keyword args in this function are passed to the respective function
+    that is used (set by `disttype`). Depending on your choice of `disttype`,
+    there are many options:
+
+    For `disttype="scatter"` : s, c, marker, cmap, norm, vmin, vmax, alpha,
+                               linewidths, edgecolors
+    See https://matplotlib.org/api/_as_gen/matplotlib.pyplot.scatter.html
+    for more details.
+
+    For `disttype="kde"` : gridsize, cut, clip, legend, cumulative, cbar,
+                           cbar_ax, cbar_kws, bw_method, hue, palette,
+                           hue_order, hue_norm, levels, thresh, bw_adjust,
+                           log_scale, fill, label
+    See https://seaborn.pydata.org/generated/seaborn.kdeplot.html
+    for more details.
+
+    Returns
+    -------
+    fig : `matplotlib Figure`
+        the figure on which the distribution is plotted
+
+    fig : `matplotlib Axis`
+        the axis on which the distribution is plotted
+    """
+    # create new figure and axes is either weren't provided
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
+
+    # possible kwargs for matplotlib.hist
+    scatter_args = {"s": None, "c": None, "marker": None, "cmap": None,
+                    "norm": None, "vmin": None, "vmax": None, "alpha": None,
+                    "linewidths": None, "edgecolors": None}
+
+    # possible kwargs for seaborn.kdeplot
+    kde_args = {"gridsize": 200, "cut": 3, "clip": None, "legend": True,
+                "cumulative": False, "cbar": False, "cbar_ax": None,
+                "cbar_kws": None, "hue": None, "palette": None,
+                "hue_order": None, "hue_norm": None, "levels": 10,
+                "thresh": 0.05, "bw_method": 'scott', "bw_adjust": 1,
+                "log_scale": None, "fill": None, "label": None}
+
+    # set which ones we are using for this plot
+    plot_args = scatter_args if disttype == "scatter" else kde_args
+
+    # update the values with those supplied
+    for key, value in kwargs.items():
+        if key in plot_args:
+            plot_args[key] = value
+        else:
+            # warn user if they give an invalid kwarg
+            print("Warning: keyword argument `{}`".format(key),
+                  "not recognised for disttype `{}`".format(disttype),
+                  "and will be ignored")
+
+    # create whichever plot was requested
+    if disttype == "scatter":
+        ax.scatter(x, y, color=color, **plot_args)
+    elif disttype == "kde":
+        sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
 
     # update axis labels
     ax.set_xlabel(xlabel)
