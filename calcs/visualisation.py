@@ -15,20 +15,20 @@ params = {'figure.figsize': (12, 8),
 plt.rcParams.update(params)
 
 
-def plot_1D_dist(variable, weights=None, disttype="hist", fig=None, ax=None,
+def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
                  xlabel="", ylabel="", xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
-    """plot a 1D distribution of `variable` with `weights`. This function is a
+    """plot a 1D distribution of `x` with `weights`. This function is a
     wrapper for `matplotlib.pyplot.hist`, `seaborn.kdeplot` and
     `seaborn.ecdfplot`
 
     Params
     ------
-    variable : `float/int array`
+    x : `float/int array`
         variable to plot, should be a 1D array
 
     weights : `float/int array`
-        weights for each variable in `variable`, must have the same shape
+        weights for each variable in `x`, must have the same shape
 
     disttype : `{{ "hist", "kde", "ecdf" }}`
         which type of distribution plot to use
@@ -124,12 +124,12 @@ def plot_1D_dist(variable, weights=None, disttype="hist", fig=None, ax=None,
 
     # create whichever plot was requested
     if disttype == "hist":
-        ax.hist(variable, weights=weights, color=color, **plot_args)
+        ax.hist(x, weights=weights, color=color, **plot_args)
     elif disttype == "kde":
-        sns.kdeplot(x=variable, weights=weights, ax=ax, color=color,
+        sns.kdeplot(x=x, weights=weights, ax=ax, color=color,
                     **plot_args)
     elif disttype == "ecdf":
-        sns.ecdfplot(x=variable, weights=weights, ax=ax, color=color,
+        sns.ecdfplot(x=x, weights=weights, ax=ax, color=color,
                      **plot_args)
 
     # update axis labels

@@ -446,25 +446,31 @@ class Source():
 
         return snr[which_sources]
 
-    def plot_1D_variable(self, var, **kwargs):
-        """plot a 1D distribution of a Source variable. This function is a
-        wrapper on `visualisation.plot_1D_dist` and thus takes mostly the same
-        parameters.
+    def plot_source_variables(self, xstr, ystr=None, **kwargs):
+        """plot distributions of Source variables. If two variables are
+        specified then produce a 2D distribution, otherwise a 1D distribution.
+        This function is a wrapper on `visualisation.plot_1D_dist` and
+        `visualisation.plot_2D_dist` and thus takes mostly the same parameters.
 
         Params
         ------
-        var : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a', 
-                  snr' }}`
-            which variable to plot
+        xstr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
+        snr' }}`
+            which variable to plot on the x axis
+
+        ystr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
+        snr' }}`
+            which variable to plot on the y axis
+            (if None then a 1D distribution is made using `xstr`)
 
         Keyword Args
         ------------
         These are exactly the same as `visualisation.plot_1D_dist`, see those
         docs for more details.
 
-        Note that if `xlabel` is not passed then this function automatically
-        creates one using a default string and (if applicable) the units of
-        the variable.
+        Note that if `xlabel` or `ylabel` is not passed then this function
+        automatically creates one using a default string and (if applicable)
+        the units of the variable.
 
         Returns
         -------
@@ -480,34 +486,53 @@ class Source():
                    "dist": self.dist, "f_orb": self.f_orb,
                    "f_GW": self.f_orb * 2, "a": self.a,
                    "snr": self.snr}
-        xlabels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
-                   "m_c": "Chirp Mass", "ecc": "Eccentricity",
-                   "dist": "Distance", "f_orb": "Orbital Frequency",
-                   "f_GW": "Gravitational Wave Frequency",
-                   "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
+        labels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
+                  "m_c": "Chirp Mass", "ecc": "Eccentricity",
+                  "dist": "Distance", "f_orb": "Orbital Frequency",
+                  "f_GW": "Gravitational Wave Frequency",
+                  "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
         unitless = set(["ecc", "snr"])
 
         # ensure that the variable is a valid choice
-        if var not in convert.keys():
-            error_str = "`var_str` must be one of: " \
-                + ', '.join(["`{}`".format(t) for t in list(convert.keys())])
-            raise ValueError(error_str)
+        for var_str in [xstr, ystr]:
+            if var_str not in convert.keys() and var_str is not None:
+                error_str = "`xstr` and `ystr` must be one of: " \
+                    + ', '.join(["`{}`".format(k)
+                                 for k in list(convert.keys())])
+                raise ValueError(error_str)
 
         # check the instance variable has been already set
-        plot_me = convert[var]
-        if plot_me is None:
-            raise ValueError("Variable (`{}`) must be not be None".format(var))
+        x = convert[xstr]
+        if x is None:
+            raise ValueError("x variable (`{}`)".format(xstr),
+                             "must be not be None")
+        if ystr is not None:
+            y = convert[ystr]
+            if y is None:
+                raise ValueError("y variable (`{}`)".format(ystr),
+                                 "must be not be None")
 
         # create the x label if it wasn't provided
         if "xlabel" not in kwargs.keys():
-            if var in unitless:
-                kwargs["xlabel"] = xlabels[var]
+            if xstr in unitless:
+                kwargs["xlabel"] = labels[xstr]
             else:
-                kwargs["xlabel"] = r"{} [{:latex}]".format(xlabels[var],
-                                                           plot_me.unit)
+                kwargs["xlabel"] = r"{} [{:latex}]".format(labels[xstr],
+                                                           x.unit)
+
+        # create the y label if it wasn't provided and ystr was
+        if ystr is not None and "ylabel" not in kwargs.keys():
+            if ystr in unitless:
+                kwargs["ylabel"] = labels[ystr]
+            else:
+                kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr],
+                                                           y.unit)
 
         # plot it!
-        return vis.plot_1D_dist(plot_me.value, **kwargs)
+        if ystr is not None:
+            return vis.plot_2D_dist(x=x.value, y=y.value, **kwargs)
+        else:
+            return vis.plot_1D_dist(x=x.value, **kwargs)
 
 
 class Stationary(Source):
