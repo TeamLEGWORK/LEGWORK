@@ -1,6 +1,6 @@
 """`evolve with peters!`"""
 
-import calcs.utils as utils
+import gw.utils as utils
 from numba import jit
 from scipy.integrate import odeint
 import numpy as np
