@@ -1,21 +1,45 @@
 import numpy as np
 import gw.snr as snr
+import gw.utils as utils
 import unittest
 
 from astropy import units as u
-
 class Test(unittest.TestCase):
     """Tests that the code is functioning properly"""
 
-    def test_circular_vs_eccentric_snr(self):
+    def test_circ_vs_ecc_stationary(self):
         """check whether the eccentric snr equation gives the same results
-        as the circular one for circular binaries"""
+        as the circular one for circular stationary binaries"""
         n_values = 100000
         m_c = np.random.uniform(0, 10, n_values) * u.Msun
         dist = np.random.uniform(0, 30, n_values) * u.kpc
         f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
         t_obs = 4 * u.yr
 
-        snr_circ = snr.snr_circ_stationary(m_c, f_orb, dist, t_obs).decompose()
-        snr_ecc = snr.snr_ecc_stationary(m_c, f_orb, 0.0, dist, t_obs, 25).decompose()
+        snr_circ = snr.snr_circ_stationary(m_c=m_c, f_orb=f_orb,
+                                           dist=dist, t_obs=t_obs)
+        snr_ecc = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb,
+                                         ecc=0.0, dist=dist,
+                                         t_obs=t_obs, max_harmonic=3)
+        self.assertTrue(np.allclose(snr_circ, snr_ecc))
+
+    def test_stat_vs_evol_eccentric(self):
+        """check whether the evolving snr equation gives the same results
+        as the stationary one for eccentric stationary binaries"""
+        n_values = 100
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_c = utils.chirp_mass(m_1, m_2)
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-6, -4, n_values)) * u.Hz
+        ecc = np.random.uniform(0.1, 0.15, n_values)
+        t_obs = 4 * u.yr
+
+        snr_circ = snr.snr_ecc_stationary(m_c=m_c, ecc=ecc,
+                                          f_orb=f_orb, dist=dist,
+                                          t_obs=t_obs, max_harmonic=10)
+        snr_ecc = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
+                                       f_orb_i=f_orb, dist=dist, n_step=100,
+                                       t_obs=t_obs, max_harmonic=10)
+
         self.assertTrue(np.allclose(snr_circ, snr_ecc))
