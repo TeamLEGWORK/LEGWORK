@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
+import astropy.units as u
+import calcs.lisa as lisa
 
 # set the default font and fontsize
 plt.rc('font', family='serif')
@@ -271,4 +274,94 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
         plt.show()
 
     # return the figure and axis for further plotting
+    return fig, ax
+
+
+def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
+                           ax=None, show=True, color="#18068b", fill=True, 
+                           alpha=0.2, label=None, **kwargs):
+    """plot the LISA sensitivity curve
+    
+    Params
+    ------
+    frequency_range : `float array`
+        frequency values at which to plot the sensitivity curve
+
+    y_quantity : `{{ "ASD", "h_c }}`
+        which quantity to plot on the y axis (amplitude spectral density
+        or characteristic strain)
+
+    fig: `matplotlib Figure`
+        a figure on which to plot the distribution. Both `ax` and `fig` must be
+        supplied for either to be used
+
+    ax: `matplotlib Axis`
+        an axis on which to plot the distribution. Both `ax` and `fig` must be
+        supplied for either to be used
+    
+    show : `boolean`
+        whether to immediately show the plot or only return the Figure and Axis
+
+    color : `string or tuple`
+        colour to use for the curve, see
+        https://matplotlib.org/tutorials/colors/colors.html for details on how
+        to specifiy a colour
+
+    fill : `boolean`
+        whether to fill the area below the sensitivity curve
+
+    alpha : `float`
+        opacity of the filled area below the sensitivity curve (ignored if fill
+        is `False`)
+
+    label : `string`
+        label for the sensitivity curve in legends
+
+    Keyword Args
+    ------------
+    Keyword args are passed to `lisa.power_spectral_density`, see those docs
+    for details on possible arguments.
+
+    Returns
+    -------
+    fig : `matplotlib Figure`
+        the figure on which the distribution is plotted
+
+    fig : `matplotlib Axis`
+        the axis on which the distribution is plotted
+    """
+    if frequency_range is None:
+        frequency_range = np.logspace(-5, 0, 1000) * u.Hz
+
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
+
+    # work out what the noise amplitude should be
+    psd = lisa.power_spectral_density(f=frequency_range, **kwargs)
+    if y_quantity == "ASD":
+        noise_amplitude = np.sqrt(psd)
+    elif y_quantity == "h_c":
+        noise_amplitude = np.sqrt(frequency_range * psd)
+    else:
+        raise ValueError("y_quantity must be one of 'ASD' or 'h_c'")
+
+    # plot the curve and fill if needed
+    ax.loglog(frequency_range, noise_amplitude, color=color, label=label)
+    if fill:
+        ax.fill_between(frequency_range, 0, noise_amplitude, alpha=alpha,
+                        color=color)
+
+    # adjust labels, sizes and frequency limits to plot is flush to the edges
+    ax.set_xlabel(r'Frequency [$\rm Hz$]', fontsize=fs)
+    if y_quantity == "ASD":
+        ax.set_ylabel(r'ASD $[\rm Hz^{-1/2}]$', fontsize=fs)
+    else:
+        ax.set_ylabel(r'Characteristic Strain', fontsize=fs)
+    
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    ax.set_xlim(np.min(frequency_range).value, np.max(frequency_range).value)
+
+    if show:
+        plt.show()
+
     return fig, ax
