@@ -89,7 +89,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     fig : `matplotlib Figure`
         the figure on which the distribution is plotted
 
-    fig : `matplotlib Axis`
+    ax : `matplotlib Axis`
         the axis on which the distribution is plotted
     """
     # create new figure and axes is either weren't provided
@@ -222,7 +222,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     fig : `matplotlib Figure`
         the figure on which the distribution is plotted
 
-    fig : `matplotlib Axis`
+    ax : `matplotlib Axis`
         the axis on which the distribution is plotted
     """
     # create new figure and axes is either weren't provided
