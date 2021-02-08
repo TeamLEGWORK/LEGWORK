@@ -8,7 +8,7 @@ import astropy.units as u
 
 
 @jit
-def de_dt(e, times, beta, c_0):
+def de_dt(e, times, beta, c_0):                             # pragma: no cover
     """Computes the evolution of the eccentricity from the emission
     of gravitational waves following Peters & Mathews 1964
 
@@ -32,8 +32,8 @@ def de_dt(e, times, beta, c_0):
     dedt : `array`
         eccentricity evolution
     """
-    dedt = -19/12 * beta/c_0**4 * (e**(29/19)*(1 - e**2)**(3/2)) \
-        / (1+(121/304)*e**2)**(1181/2299)
+    dedt = -19 / 12 * beta / c_0**4 * (e**(-29 / 19) * (1 - e**2)**(3/2)) \
+        / (1 + (121/304) * e**2)**(1181/2299)
     return dedt
 
 
@@ -104,8 +104,8 @@ def get_e_evol(beta, c_0, ecc_i, times):
     e_evol : `array`
         array of eccentricities evolved for the times provided
     """
-
-    e_evol = odeint(de_dt, ecc_i, times, args=(beta.value, c_0.value))
+    e_evol = odeint(de_dt, ecc_i, times.to(u.s),
+                    args=(beta.to(u.m**4 / u.s).value, c_0.to(u.m).value))
 
     return e_evol.flatten()
 
@@ -145,7 +145,7 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
 
     a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
     beta = utils.beta(m_1, m_2)
-    times = np.linspace(0, t_evol, n_step)
+    times = np.linspace(0 * u.s, t_evol, n_step).to(u.s)
 
     # Only treat single eccentric sources, so any cases where
     # len(e_i) > 1 are circular.
@@ -199,17 +199,20 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
     t_merge : `float/array`
         merger time
     """
-    # ensure that a_i is supplied or calculated
-    if a_i is None and f_orb_i is None:
-        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
-    elif a_i is None:
-        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-
     # ensure that beta is supplied or calculated
     if beta is None and (m_1 is None or m_2 is None):
         raise ValueError("Either `beta` or (`m_1`, `m_2`) must be supplied")
     elif beta is None:
         beta = utils.beta(m_1, m_2)
+
+    # ensure that a_i is supplied or calculated
+    if a_i is None and f_orb_i is None:
+        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
+    elif a_i is None and (m_1 is None or m_2 is None):
+        raise ValueError("Individual masses `m_1` and `m_2` are required \
+                         if no value of `a_i` is supplied")
+    elif a_i is None:
+        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
 
     # apply Peters 1964 Eq. 5.9
     t_merge = a_i**4 / (4 * beta)
@@ -260,27 +263,30 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     t_merge : `float/array`
         merger time
     """
-    # ensure that a_i is supplied or calculated
-    if a_i is None and f_orb_i is None:
-        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
-    elif a_i is None:
-        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-
     # ensure that beta is supplied or calculated
     if beta is None and (m_1 is None or m_2 is None):
         raise ValueError("Either `beta` or (`m_1`, `m_2`) must be supplied")
     elif beta is None:
         beta = utils.beta(m_1, m_2)
 
-    # shortcut if all binaries are effectively circular
-    if np.all(ecc_i <= small_e_tol):
+    # ensure that a_i is supplied or calculated
+    if a_i is None and f_orb_i is None:
+        raise ValueError("Either `a_i` or `f_orb_i` must be supplied")
+    elif a_i is None and (m_1 is None or m_2 is None):
+        raise ValueError("Individual masses `m_1` and `m_2` are required \
+                         if no value of `a_i` is supplied")
+    elif a_i is None:
+        a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
+
+    # shortcut if all binaries are circular
+    if np.all(ecc_i == 0.0):
         return get_t_merge_circ(beta=beta, a_i=a_i)
 
     # calculate c0 from Peters Eq. 5.11
     c0 = utils.c_0(a_i, ecc_i)
 
     @jit(nopython=True)
-    def peters_5_14(e):
+    def peters_5_14(e):                                 # pragma: no cover
         """ merger time from Peters Eq. 5.14 """
         return np.power(e, 29/19) * np.power(1 + (121/304)*e**2, 1181/2299) \
             / np.power(1 - e**2, 3/2)
@@ -314,10 +320,8 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
                                      for i in range(len(ecc_i[other_e]))]
     # case with only one binary
     else:
-        # conditions as above but for floats instead of arrays
-        if ecc_i == 0.0:
-            t_merge = a_i**4 / (4 * beta)
-        elif ecc_i < small_e_tol:
+        # conditions as above (no need for ecc=0.0 since it never reaches here)
+        if ecc_i < small_e_tol:
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19)
         elif ecc_i > large_e_tol:
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19) * (768 / 425) \
