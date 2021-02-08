@@ -67,8 +67,7 @@ class Test(unittest.TestCase):
         true_char_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
                                         n=[1, 2, 3], dist=dist)
 
-        self.assertTrue(np.all(source_char_strain == true_char_strain)
-
+        self.assertTrue(np.all(source_char_strain == true_char_strain))
 
     def test_stationary_subclass(self):
         # create random (circular/stationary) binaries
