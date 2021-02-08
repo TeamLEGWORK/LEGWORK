@@ -107,9 +107,11 @@ class Source():
         self.update_gw_lum_tol(gw_lum_tol)
         self.set_g(interpolate_g)
 
-    def create_max_harmonics_function(self):
-        """Create a function to calculate the maximum harmonics required
-        to calculate the SNRs assuming provided tolerance `gw_lum_tol`"""
+    def create_harmonics_functions(self):
+        """Create two functions:
+        1. to calculate the maximum harmonics required to calculate the SNRs
+        assuming provided tolerance `gw_lum_tol`
+        2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="calcs", resource="harmonics.npz") as path:
@@ -151,6 +153,14 @@ class Source():
             return np.ceil(interpolated(e)).astype(int)
         self.max_harmonic = max_harmonic
 
+        # now calculate the dominant harmonics
+        dominant_harmonics = n_range[g_vals.argmax(axis=1)]
+        interpolated = interp1d(e_range, dominant_harmonics, bounds_error=False,
+                                fill_value=(2, np.max(harmonics_needed)))
+        def dominant_harmonic(e):
+            return np.round(interpolated(e)).astype(int)
+        self.dominant_harmonic = dominant_harmonic
+
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
         We define this as the maximum eccentricity at which the n=2 harmonic
@@ -173,7 +183,7 @@ class Source():
             allowed error on the GW luminosity when calculating snrs
         """
         self._gw_lum_tol = gw_lum_tol
-        self.create_max_harmonics_function()
+        self.create_harmonics_functions()
         self.find_eccentric_transition()
 
     def set_g(self, interpolate_g):
@@ -597,8 +607,10 @@ class Source():
             asd = self.snr[mask] * np.sqrt(lisa.power_spectral_density(f_GW))
             ax.scatter(f_GW, asd.to(u.Hz**(-1/2)))
         elif ecc_freq == "dominant_harmonic":
-            raise NotImplementedError
-
+            dom_harms = self.dominant_harmonic(self.ecc[mask])
+            f_dom = self.f_orb[mask] * dom_harms
+            asd = self.snr[mask] * np.sqrt(lisa.power_spectral_density(f_dom))
+            ax.scatter(f_dom, asd.to(u.Hz**(-1/2)))
         if show:
             plt.show()
 
