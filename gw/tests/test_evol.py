@@ -108,8 +108,6 @@ class Test(unittest.TestCase):
 
         for e in [0.0, 0.005, 0.5, 0.999]:
             ecc_i = np.array([e])
-            array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
-                                              ecc_i=ecc_i).to(u.yr)
-            single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0],
-                                               ecc_i=ecc_i[0]).to(u.yr)
+            array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i, ecc_i=ecc_i).to(u.yr)
+            single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0], ecc_i=ecc_i[0]).to(u.yr)
             self.assertTrue(array_time[0] == single_time)

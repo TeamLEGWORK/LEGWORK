@@ -1,6 +1,8 @@
 import numpy as np
 import gw.lisa as lisa
+import gw.utils as utils
 import unittest
+
 from astropy import units as u
 
 
@@ -22,7 +24,7 @@ class Test(unittest.TestCase):
 
         confused = lisa.power_spectral_density(frequencies,
                                                include_confusion_noise=True)
-        lucid = lisa.power_spectral_density(frequencies,
+        lucid = lisa.power_spectral_density(frequencies, 
                                             include_confusion_noise=False)
 
         # ensure confusion noise only adds to noise
@@ -30,7 +32,7 @@ class Test(unittest.TestCase):
 
         # ensure that it doesn't affect things at low or high frequency
         safe = np.logical_or(frequencies < 1e-4 * u.Hz,
-                             frequencies > 1e-2 * u.Hz)
+                                     frequencies > 1e-2 * u.Hz)
         self.assertTrue(np.allclose(confused[safe], lucid[safe]))
 
     def test_mission_length_effect(self):
