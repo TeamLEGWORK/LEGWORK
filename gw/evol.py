@@ -12,8 +12,8 @@ def de_dt(e, times, beta, c_0):                             # pragma: no cover
     """Computes the evolution of the eccentricity from the emission
     of gravitational waves following Peters & Mathews 1964
 
-    Params
-    ------
+    Parameters
+    ----------
     e : `float`
         initial eccentricity
 
@@ -42,8 +42,8 @@ def get_a_evol(a_i, e_evol, beta, c_0, times):
     Peters 1964
 
 
-    Params
-    ------
+    Parameters
+    ----------
     a_i : `float`
         initial separation in SI units
 
@@ -85,8 +85,8 @@ def get_e_evol(beta, c_0, ecc_i, times):
     with beta and c_0 factors and evolution times following
     Peters 1964
 
-    Params
-    ------
+    Parameters
+    ----------
     beta : `float`
         Peters beta parameter in SI units, calculated in utils
 
@@ -114,8 +114,8 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
     """Evolves a binary due to the emission of gravitational waves
     and returns the final separation at t_evol
 
-    Params
-    ------
+    Parameters
+    ----------
     m_1 : `float/array`
         more massive binary component in units of kg
 
@@ -176,8 +176,8 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
                      a_i=None, f_orb_i=None):
     """Computes the merger time for a circular binary using Peters 1964
 
-    Params
-    ------
+    Parameters
+    ----------
     beta : `float/array`
         beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied `m_1` and
         `m_2` are ignored)
@@ -228,8 +228,8 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     after 5.14 in Peters 1964 depending on the eccentricity of
     the binary.
 
-    Params
-    ------
+    Parameters
+    ----------
     ecc_i : `float/array`
         initial eccentricity (if `ecc_i` is known to be 0.0 then use
         `get_t_merge_circ` instead)
