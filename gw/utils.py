@@ -224,8 +224,8 @@ def determine_stationarity(f_orb_i, t_evol, ecc_i,
         m_c = chirp_mass(m_1, m_2)
 
     # calculate the final frequency
-    f_orb_f = evol.evolve_frequency_circ(f_orb_i=f_orb_i, m_c=m_c,
-                                         t_evol=t_evol, ecc_i=ecc_i)
+    f_orb_f = evol.evolve_f_orb_circ(f_orb_i=f_orb_i, m_c=m_c,
+                                     t_evol=t_evol, ecc_i=ecc_i)
 
     # check the stationary criterion
     stationary = (f_orb_f - f_orb_i) / f_orb_i <= stat_tol

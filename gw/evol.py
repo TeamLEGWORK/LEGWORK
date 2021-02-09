@@ -334,7 +334,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     return t_merge.to(u.Gyr)
 
 
-def evolve_frequency_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
+def evolve_f_orb_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
     """Evolve orbital frequency for `t_evol` time. This gives the exact final
     frequency for circular binaries. However, it will overestimate the final
     frequency for an eccentric binary and if an exact value is required then
