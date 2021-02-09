@@ -8,6 +8,7 @@ from scipy.interpolate import interp1d, interp2d
 import gw.utils as utils
 import gw.strain as strain
 import gw.snr as sn
+import gw.visualisation as vis
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
@@ -94,6 +95,7 @@ class Source():
 
         self.m_1 = m_1
         self.m_2 = m_2
+        self.m_c = utils.chirp_mass(m_1, m_2)
         self.ecc = ecc
         self.dist = dist
         self.stat_tol = stat_tol
@@ -241,10 +243,11 @@ class Source():
         if stationary is None:
             stationary_mask = np.repeat(True, self.n_sources)
         elif stationary is True or stationary is False:
-            stationary_mask = utils.determine_stationarity(self.m_1, self.m_2,
-                                                           self.f_orb, t_obs,
-                                                           self.ecc,
-                                                           self.stat_tol)
+            stationary_mask = utils.determine_stationarity(m_c=self.m_c,
+                                                           f_orb_i=self.f_orb,
+                                                           t_evol=t_obs,
+                                                           ecc_i=self.ecc,
+                                                           stat_tol=self.stat_tol)
             if stationary is False:
                 stationary_mask = np.logical_not(stationary_mask)
         else:
@@ -352,8 +355,6 @@ class Source():
         SNR : `array`
             the signal to noise ratio
         """
-        m_c = utils.chirp_mass(m_1=self.m_1, m_2=self.m_2)
-
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
         snr = np.zeros(self.n_sources)
@@ -365,7 +366,7 @@ class Source():
             if verbose:
                 print("\t\t{} sources are stationary and circular".format(
                     len(snr[ind_circ])))
-            snr[ind_circ] = sn.snr_circ_stationary(m_c=m_c[ind_circ],
+            snr[ind_circ] = sn.snr_circ_stationary(m_c=self.m_c[ind_circ],
                                                    f_orb=self.f_orb[ind_circ],
                                                    dist=self.dist[ind_circ],
                                                    t_obs=t_obs,
@@ -381,7 +382,7 @@ class Source():
                                            max_harmonics < upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
-                    snr[match] = sn.snr_ecc_stationary(m_c=m_c[match],
+                    snr[match] = sn.snr_ecc_stationary(m_c=self.m_c[match],
                                                        f_orb=self.f_orb[match],
                                                        ecc=self.ecc[match],
                                                        dist=self.dist[match],
@@ -543,76 +544,6 @@ class Source():
             return vis.plot_2D_dist(x=x.value, y=y.value, **kwargs)
         else:
             return vis.plot_1D_dist(x=x.value, **kwargs)
-
-    def plot_sources_over_sensitivity_curve(self, snr_cutoff=0, ecc_freq="gw",
-                                            fig=None, ax=None, show=True):
-        """overlay sources on the LISA sensitivty curve. Stationary sources are
-        plotted as points such that their height above the sensitivity curve is 
-        equal to their SNR. Evolving sources are plotted as lines such that the
-        area between the lines and the sensitivity curve gives the SNR.
-        Circular sources are plotted at twice their orbital frequency and
-        eccentric binaries are either plotted at twice their orbital frequency
-        or at their dominant harmonic frequency (based on user input).
-        
-        
-        Params
-        ------
-        snr_cutoff : `float`
-            SNR above which to plot binaries (default is 0 such that all
-            sources are plotted)
-
-        ecc_freq : `{{ "gw", "dominant_harmonic" }}`
-            which harmonic frequency to plot the binary at
-
-        fig: `matplotlib Figure`
-            a figure on which to plot the distribution. Both `ax` and `fig`
-            must be supplied for either to be used
-
-        ax: `matplotlib Axis`
-            an axis on which to plot the distribution. Both `ax` and `fig`
-            must be supplied for either to be used
-
-        show : `boolean`
-            whether to immediately show the plot or only return the Figure
-            and Axis
-
-        Returns
-        -------
-        fig : `matplotlib Figure`
-            the figure on which the distribution is plotted
-
-        ax : `matplotlib Axis`
-            the axis on which the distribution is plotted
-        """
-        # create figure if it wasn't provided
-        if fig is None or ax is None:
-            fig, ax = vis.plot_sensitivity_curve(show=False)
-
-        detectable = self.snr > snr_cutoff
-
-        # circular and stationary binaries are plotted as points at f_GW
-        circ_stat = self.get_source_mask(circular=True, stationary=True)
-        mask = np.logical_and(circ_stat, detectable)
-        f_GW = self.f_orb[mask] * 2
-        asd = ((4 * u.yr / 4)**(1/2) * self.get_h_0_n(2)[mask].flatten())
-        ax.scatter(f_GW, asd.to(u.Hz**(-1/2)))
-
-        # eccentric and stationary binaries are plotted as points
-        ecc_stat = self.get_source_mask(circular=False, stationary=True)
-        mask = np.logical_and(ecc_stat, detectable)
-        if ecc_freq == "gw":
-            f_GW = self.f_orb[mask] * 2
-            asd = self.snr[mask] * np.sqrt(lisa.power_spectral_density(f_GW))
-            ax.scatter(f_GW, asd.to(u.Hz**(-1/2)))
-        elif ecc_freq == "dominant_harmonic":
-            dom_harms = self.dominant_harmonic(self.ecc[mask])
-            f_dom = self.f_orb[mask] * dom_harms
-            asd = self.snr[mask] * np.sqrt(lisa.power_spectral_density(f_dom))
-            ax.scatter(f_dom, asd.to(u.Hz**(-1/2)))
-        if show:
-            plt.show()
-
-        return fig, ax
 
 
 class Stationary(Source):
