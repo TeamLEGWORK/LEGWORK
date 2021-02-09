@@ -12,8 +12,8 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
     """Computes the signal to noise ratio for stationary and
     circular binaries
 
-    Params
-    ------
+    Parameters
+    ----------
     m_c : `float/array`
         chirp mass
 
@@ -57,8 +57,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
     eccentric binaries
 
 
-    Params
-    ------
+    Parameters
+    ----------
     m_c : `float/array`
         chirp mass
 
@@ -112,8 +112,8 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     """Computes the signal to noise ratio for stationary and
     circular binaries
 
-    Params
-    ------
+    Parameters
+    ----------
     m_1 : `float/array`
         primary mass
 
@@ -187,8 +187,8 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     circular (ecc = 0.0) binaries.
 
 
-    Params
-    ------
+    Parameters
+    ----------
     m_1 : `float/array`
         primary mass
 

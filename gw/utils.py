@@ -9,8 +9,8 @@ import numpy as np
 def chirp_mass(m_1, m_2):
     """Computes chirp mass of a binary system
 
-    Params
-    ------
+    Parameters
+    ----------
     m_1 : `float/array`
         more massive binary component
 
@@ -31,8 +31,8 @@ def peters_g(n, e):
     """relative power of gravitational radiation at nth harmonic
     from Peters and Mathews (1963)
 
-    Params
-    ------
+    Parameters
+    ----------
     n : `int`
         harmonic of interest
 
@@ -61,8 +61,8 @@ def peters_f(e):
     """integrated enhancement factor of gravitational radiation
     from an eccentric source from Peters and Mathews (1963)
 
-    Params
-    ------
+    Parameters
+    ----------
     e : `array`
         eccentricity
 
@@ -84,8 +84,8 @@ def get_a_from_f_orb(f_orb, m_1, m_2):
     """Converts orbital frequency to separation using Kepler's
     third law all units are SI
 
-    Params
-    ------
+    Parameters
+    ----------
     f_orb : `array`
         orbital frequency
 
@@ -109,8 +109,8 @@ def get_f_orb_from_a(a, m_1, m_2):
     """Converts orbital frequency to separation using Kepler's
     third law where all units are SI
 
-    Params
-    ------
+    Parameters
+    ----------
     a : `array`
         separation
 
@@ -135,8 +135,8 @@ def beta(m_1, m_2):
     """Computes the beta factor in Peters & Mathews calculations
     with all units in SI
 
-    Params
-    ------
+    Parameters
+    ----------
     m_1 : `array`
         primary mass
 
@@ -156,8 +156,8 @@ def beta(m_1, m_2):
 def c_0(a_i, e_i):
     """Computes the c_0 factor in Peters and Mathews calculations
 
-    Params
-    ------
+    Parameters
+    ----------
     a_i : `array`
         initial separation with astropy units
 
@@ -185,8 +185,8 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     initial value. Solving this in full would require the same
     amount of time as assuming the binary is evolving.
 
-    Params
-    ------
+    Parameters
+    ----------
     m_1 : `float/array`
         primary mass
 
@@ -231,8 +231,8 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
 def fn_dot(m_c, f_orb, e, n):
     """Rate of change of nth frequency of a binary
 
-    Params
-    ------
+    Parameters
+    ----------
     m_c : `float/array`
         chirp mass
 
