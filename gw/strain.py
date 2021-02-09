@@ -1,7 +1,7 @@
 """Computes several types of gravitational wave strains"""
 
 import astropy.constants as c
-from calcs.utils import peters_g, peters_f
+from gw.utils import peters_g, peters_f
 import numpy as np
 
 
@@ -10,8 +10,8 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     radiating gravitational waves in the quadrupole approximation
     at the nth harmonic of the orbital frequency
 
-    Params
-    ------
+    Parameters
+    ----------
     m_c : `float/array`
         chirp mass of the binary
 
@@ -75,8 +75,8 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     binary radiating gravitational waves in the quadrupole approximation
     at the nth harmonic of the orbital frequency
 
-    Params
-    ------
+    Parameters
+    ----------
     m_c : `float/array`
         chirp mass of the binary
 

@@ -5,11 +5,9 @@ import matplotlib.pyplot as plt
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
-import calcs.utils as utils
-import calcs.strain as strain
-import calcs.snr as sn
-import calcs.visualisation as vis
-import calcs.lisa as lisa
+import gw.utils as utils
+import gw.strain as strain
+import gw.snr as sn
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
@@ -114,7 +112,7 @@ class Source():
         2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values
-        with resources.path(package="calcs", resource="harmonics.npz") as path:
+        with resources.path(package="gw", resource="harmonics.npz") as path:
             lum_info = np.load(path)
 
         e_min, e_max, e_len = lum_info["e_lims"]
@@ -197,7 +195,7 @@ class Source():
         """
         if interpolate_g:
             # open file containing pre-calculated fine g(n,e) grid
-            with resources.path(package="calcs",
+            with resources.path(package="gw",
                                 resource="peters_g.npy") as path:
                 peters_g = np.load(path)
 

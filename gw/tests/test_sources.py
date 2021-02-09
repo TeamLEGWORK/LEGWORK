@@ -1,8 +1,8 @@
 import numpy as np
-import calcs.snr as snr
-import calcs.source as source
-import calcs.strain as strain
-import calcs.utils as utils
+import gw.snr as snr
+import gw.source as source
+import gw.strain as strain
+import gw.utils as utils
 import unittest
 
 from astropy import units as u

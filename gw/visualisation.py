@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import astropy.units as u
-import calcs.lisa as lisa
+import gw.lisa as lisa
 
 # set the default font and fontsize
 plt.rc('font', family='serif')

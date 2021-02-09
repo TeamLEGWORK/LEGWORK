@@ -1,6 +1,6 @@
 import numpy as np
-import calcs.snr as snr
-import calcs.utils as utils
+import gw.snr as snr
+import gw.utils as utils
 import unittest
 
 from astropy import units as u

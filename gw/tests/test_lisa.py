@@ -1,5 +1,5 @@
 import numpy as np
-import calcs.lisa as lisa
+import gw.lisa as lisa
 import unittest
 from astropy import units as u
 

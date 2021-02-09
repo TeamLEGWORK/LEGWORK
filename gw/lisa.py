@@ -12,8 +12,8 @@ def load_transfer_function(f, fstar=19.09e-3):
     https://github.com/eXtremeGravityInstitute/LISA_Sensitivity to use binary
     files instead of text. See Robson+19 for more details
 
-    Params
-    ------
+    Parameters
+    ----------
     f : `float/array`
         frequencies at which to evaluate the sensitivity curve
 
@@ -27,7 +27,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     """
     # try to load the values for interpolating R
     try:
-        with resources.path(package="calcs", resource="R.npy") as path:
+        with resources.path(package="gw", resource="R.npy") as path:
             f_R, R = np.load(path)
     except FileExistsError:                             # pragma: no cover
         print("WARNING: Can't find transfer function file, \
@@ -46,8 +46,8 @@ def approximate_transfer_function(f, fstar):
     """Calculate the the LISA transfer function using
     approximation from Eq. 9 of Robson+19
 
-    Params
-    ------
+    Parameters
+    ----------
     f : `float/array`
         frequencies at which to evaluate the sensitivity curve
 
@@ -68,8 +68,8 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
     """Calculates the effective LISA power spectral density sensitivity
     curve using equations from Robson+19
 
-    Params
-    ------
+    Parameters
+    ----------
     f : `float/array`
         frequencies at which to evaluate the sensitivity curve
 

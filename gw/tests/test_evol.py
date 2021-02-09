@@ -1,5 +1,5 @@
 import numpy as np
-import calcs.evol as evol
+import gw.evol as evol
 import unittest
 
 from astropy import units as u

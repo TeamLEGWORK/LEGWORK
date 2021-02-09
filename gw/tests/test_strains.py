@@ -1,6 +1,6 @@
 import numpy as np
-import calcs.strain as strain
-import calcs.utils as utils
+import gw.strain as strain
+import gw.utils as utils
 import unittest
 
 from astropy import units as u
