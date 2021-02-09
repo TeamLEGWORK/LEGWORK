@@ -365,3 +365,78 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
         plt.show()
 
     return fig, ax
+
+def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
+                                 snr_cutoff=0, t_obs=4 * u.yr,
+                                 fig=None, ax=None, show=True, **kwargs):
+    """overlay circular and stationary sources on the LISA sensitivty curve.
+    Each source is plotted at its gravitational wave frequency (n = 2) such
+    that its height above the curve is equal to it signal-to-noise ratio.
+    
+    Params
+    ------
+    f_orb : `float/array`
+        orbital frequency
+
+    h_0_2 : `float/array`
+        strain amplitude of the n = 2 harmonic
+
+    snr : `float/array`
+        signal-to-noise ratio
+
+    snr_cutoff : `float`
+        SNR above which to plot binaries (default is 0 such that all
+        sources are plotted)
+
+    t_obs : `float`
+        LISA observation time
+
+    fig: `matplotlib Figure`
+        a figure on which to plot the distribution. Both `ax` and `fig`
+        must be supplied for either to be used
+
+    ax: `matplotlib Axis`
+        an axis on which to plot the distribution. Both `ax` and `fig`
+        must be supplied for either to be used
+
+    show : `boolean`
+        whether to immediately show the plot or only return the Figure
+        and Axis
+
+    Keyword Args
+    ------------
+    This function is a wrapper on `visualisation.plot_2D_dist` and each kwarg
+    is passed directly to this function. For example, you can write
+    `disttype="kde"` for a kde density plot instead of a scatter plot.
+
+    Returns
+    -------
+    fig : `matplotlib Figure`
+        the figure on which the distribution is plotted
+
+    ax : `matplotlib Axis`
+        the axis on which the distribution is plotted
+    """
+    # create figure if it wasn't provided
+    if fig is None or ax is None:
+        fig, ax = plot_sensitivity_curve(show=False)
+
+    # work out which binaries are above the cutoff
+    detectable = snr > snr_cutoff
+    if not detectable.any():
+        print("ERROR: There are no binaries above provided `snr_cutoff`")
+        return fig, ax
+    
+    # calculate the GW frequency and ASD for detectable binaries
+    f_GW = f_orb[detectable] * 2
+    asd = ((1/4 * t_obs)**(1/2) * h_0_2[detectable]).to(u.Hz**(-1/2))
+
+    # plot either a scatter or density plot of the detectable binaries
+    ylims = ax.get_ylim()
+    fig, ax = plot_2D_dist(x=f_GW, y=asd, fig=fig, ax=ax, show=False, **kwargs)
+    ax.set_ylim(ylims)
+
+    if show:
+        plt.show()
+
+    return fig, ax
