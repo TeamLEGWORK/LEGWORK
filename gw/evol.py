@@ -5,6 +5,7 @@ from numba import jit
 from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
+import astropy.constants as c
 
 
 @jit
@@ -331,3 +332,46 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
             t_merge = ((12 / 19) * c0**4 / beta
                        * quad(peters_5_14, 0, ecc_i)[0])
     return t_merge.to(u.Gyr)
+
+
+def evolve_frequency_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
+    """Evolve orbital frequency for `t_evol` time. This gives the exact final
+    frequency for circular binaries. However, it will overestimate the final
+    frequency for an eccentric binary and if an exact value is required then
+    `evol.get_f_and_e()` should be used instead.
+
+    Parameters
+    ----------
+    f_orb_i : `float/array`
+        initial orbital frequency
+
+    m_c : `float/array`
+        chirp mass
+
+    t_evol : `float`
+        time over which the frequency evolves
+
+    ecc_i : `float/array`
+        initial eccentricity
+
+    merge_f : `float`
+        frequency to assign if the binary has already merged after `t_evol`
+
+    Returns
+    -------
+    f_orb_f : `bool/array`
+        final orbital frequency
+    """
+    # fill the default value with the merged frequency
+    f_orb_f = np.repeat(merge_f, len(f_orb_i))
+
+    # calculate the inner part of the final frequency equation
+    inner_part = f_orb_i**(-8/3) - 2**(32/3) * np.pi**(8/3) \
+        * t_evol / (5 * c.c**5) * (c.G * m_c)**(5/3) * utils.peters_f(ecc_i)
+
+    # any merged binaries will have a negative inner part
+    inspiral = inner_part >= 0.0
+
+    # fill in the values for binaries that are still inspiraling
+    f_orb_f[inspiral] = np.power(inner_part[inspiral], -3/8)
+    return f_orb_f

@@ -5,6 +5,8 @@ from astropy import constants as c
 from astropy import units as u
 import numpy as np
 
+import gw.evol as evol
+
 
 def chirp_mass(m_1, m_2):
     """Computes chirp mass of a binary system
@@ -175,7 +177,8 @@ def c_0(a_i, e_i):
     return c0
 
 
-def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
+def determine_stationarity(f_orb_i, t_evol, ecc_i,
+                           m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
     """Determine whether a binary is stationary by checking how
     much its orbital frequency changes over t_evol time
 
@@ -187,12 +190,6 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
 
     Parameters
     ----------
-    m_1 : `float/array`
-        primary mass
-
-    m_2 : `float/array`
-        secondary mass
-
     forb_i : `float/array`
         initial orbital frequency
 
@@ -201,6 +198,15 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
 
     ecc : `float/array`
         initial eccentricity
+
+    m_1 : `float/array`
+        primary mass (required if `m_c` is None)
+
+    m_2 : `float/array`
+        secondary mass (required if `m_c` is None)
+
+    m_c : `float/array`
+        chirp mass (overrides `m_1` and `m_2`)
 
     stat_tol : `float`
         fractional change in frequency above which we do not
@@ -211,20 +217,18 @@ def determine_stationarity(m_1, m_2, forb_i, t_evol, ecc, stat_tol=1e-2):
     stationary : `bool/array`
         mask of whether each binary is stationary
     """
-    m_c = chirp_mass(m_1, m_2)
-    # calculate the inner part of the final frequency equation
-    inner_part = forb_i**(-8/3) - 2**(32/3) * np.pi**(8/3) \
-        * t_evol / (5 * c.c**5) * (c.G * m_c)**(5/3) * peters_f(ecc)
+    # calculate chirp mass if necessary
+    if m_c is None:
+        if m_1 is None or m_1 is None:
+            raise ValueError("`m_1` and `m_2` are required if `m_c` is None")
+        m_c = chirp_mass(m_1, m_2)
 
-    # any merged binaries will have a negative inner part
-    inspiral = inner_part >= 0.0
+    # calculate the final frequency
+    f_orb_f = evol.evolve_frequency_circ(f_orb_i=f_orb_i, m_c=m_c,
+                                         t_evol=t_evol, ecc_i=ecc_i)
 
-    # calculate the change in frequency (set to 10^10 Hz if merged)
-    delta_f = np.repeat(1e10, len(forb_i)) * u.Hz
-    delta_f[inspiral] = np.power(inner_part[inspiral], -3/8) - forb_i[inspiral]
-
-    stationary = delta_f / forb_i <= stat_tol
-
+    # check the stationary criterion
+    stationary = (f_orb_f - f_orb_i) / f_orb_i <= stat_tol
     return stationary
 
 
