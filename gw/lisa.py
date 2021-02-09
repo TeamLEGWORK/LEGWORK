@@ -29,7 +29,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     try:
         with resources.path(package="gw", resource="R.npy") as path:
             f_R, R = np.load(path)
-    except FileExistsError:
+    except FileExistsError:                             # pragma: no cover
         print("WARNING: Can't find transfer function file, \
                         using approximation instead")
         return approximate_transfer_function(f, fstar)
@@ -115,35 +115,21 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
     # galactic confusion noise (Robson+ Eq. 14)
     def Sc(f, t_obs):
 
-        # use parameters from Robson+ 2019 by finding closest number of years
-        years = t_obs.to(u.yr).value
-        if years < 0.75:
-            alpha = 0.133
-            beta = 243.
-            kappa = 482.
-            gamma = 917.
-            fk = 2.58e-3
-        elif years < 1.5:
-            alpha = 0.171
-            beta = 292.
-            kappa = 1020.
-            gamma = 1680.
-            fk = 2.15e-3
-        elif years < 3.0:
-            alpha = 0.165
-            beta = 299.
-            kappa = 611.
-            gamma = 1340.
-            fk = 1.73e-3
-        else:
-            alpha = 0.138
-            beta = -221.
-            kappa = 521.
-            gamma = 1680.
-            fk = 1.13e-3
+        # parameters from Robson+ 2019 Table 1
+        lengths = np.array([0.5, 1.0, 2.0, 4.0]) * u.yr
+        alpha = [0.133, 0.171, 0.165, 0.138]
+        beta = [243.0, 292.0, 299.0, -221.0]
+        kappa = [482.0, 1020.0, 611.0, 521.0]
+        gamma = [917.0, 1680.0, 1340.0, 1680.0]
+        fk = [2.58e-3, 2.15e-3, 1.73e-3, 1.13e-3]
 
-        return 9e-45 * f**(-7/3.) * np.exp(-f**(alpha) + beta * f
-                     * np.sin(kappa * f)) * (1 + np.tanh(gamma * (fk - f)))
+        # find index of the closest length to inputted observation time
+        ind = np.abs(t_obs - lengths).argmin()
+
+        return 9e-45 * f**(-7/3.) \
+            * np.exp(-f**(alpha[ind]) + beta[ind] * f
+                     * np.sin(kappa[ind] * f)) \
+            * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
 
     # calculate transfer function (either exactly or with approximation)
     if approximate_R:
