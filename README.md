@@ -1,4 +1,4 @@
 # gw-calcs
 simple package for gravitational wave calculations 
 
-![tests](https://github.com/katiebreivik/gw-calcs/workflows/Python%20package/badge.svg)
+[![codecov](https://codecov.io/gh/katiebreivik/gw-calcs/branch/main/graph/badge.svg?token=FUG4RFYCWX)](https://codecov.io/gh/katiebreivik/gw-calcs)
