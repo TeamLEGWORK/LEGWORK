@@ -369,7 +369,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
 def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
                                  snr_cutoff=0, t_obs=4 * u.yr,
                                  fig=None, ax=None, show=True, **kwargs):
-    """overlay circular and stationary sources on the LISA sensitivty curve.
+    """overlay circular/stationary sources on the LISA sensitivty curve.
     Each source is plotted at its gravitational wave frequency (n = 2) such
     that its height above the curve is equal to it signal-to-noise ratio.
     
@@ -434,6 +434,82 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
     fig, ax = plot_2D_dist(x=f_GW, y=asd, fig=fig, ax=ax, show=False, **kwargs)
+    ax.set_ylim(ylims)
+
+    if show:
+        plt.show()
+
+    return fig, ax
+
+def plot_sources_on_sc_ecc_stat(f_dom, snr,
+                                snr_cutoff=0, t_obs=4 * u.yr,
+                                fig=None, ax=None, show=True, **kwargs):
+    """overlay eccentric/stationary sources on the LISA sensitivty curve.
+    Each source is plotted at its dominant harmonic frequency such that
+    that its height above the curve is equal to it signal-to-noise ratio.
+    
+    Params
+    ------
+    f_dom : `float/array`
+        dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic
+        with the maximum strain)
+
+    snr : `float/array`
+        signal-to-noise ratio
+
+    plot_freq : `{{ "dominant", "gw" }}`
+
+    snr_cutoff : `float`
+        SNR above which to plot binaries (default is 0 such that all
+        sources are plotted)
+
+    t_obs : `float`
+        LISA observation time
+
+    fig: `matplotlib Figure`
+        a figure on which to plot the distribution. Both `ax` and `fig`
+        must be supplied for either to be used
+
+    ax: `matplotlib Axis`
+        an axis on which to plot the distribution. Both `ax` and `fig`
+        must be supplied for either to be used
+
+    show : `boolean`
+        whether to immediately show the plot or only return the Figure
+        and Axis
+
+    Keyword Args
+    ------------
+    This function is a wrapper on `visualisation.plot_2D_dist` and each kwarg
+    is passed directly to this function. For example, you can write
+    `disttype="kde"` for a kde density plot instead of a scatter plot.
+
+    Returns
+    -------
+    fig : `matplotlib Figure`
+        the figure on which the distribution is plotted
+
+    ax : `matplotlib Axis`
+        the axis on which the distribution is plotted
+    """
+    # create figure if it wasn't provided
+    if fig is None or ax is None:
+        fig, ax = plot_sensitivity_curve(show=False)
+
+    # work out which binaries are above the cutoff
+    detectable = snr > snr_cutoff
+    if not detectable.any():
+        print("ERROR: There are no binaries above provided `snr_cutoff`")
+        return fig, ax
+    
+    # calculate asd that makes it so height above curve is snr
+    asd = snr[detectable] \
+        * np.sqrt(lisa.power_spectral_density(f_dom[detectable]))
+
+    # plot either a scatter or density plot of the detectable binaries
+    ylims = ax.get_ylim()
+    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)),
+                           fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
     if show:
