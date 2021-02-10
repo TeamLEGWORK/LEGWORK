@@ -255,7 +255,7 @@ class Source():
 
         return np.logical_and(circular_mask, stationary_mask)
 
-    def get_h_0_n(self, harmonics):
+    def get_h_0_n(self, harmonics, which_sources=None):
         """Computes the strain for all binaries for the given `harmonics`
 
         Params
@@ -263,16 +263,25 @@ class Source():
         harmonics : `int/array`
             harmonic(s) at which to calculate the strain
 
+        which_sources : `boolean/array`
+            mask on which sources to compute values for (default is all)
+
         Returns
         -------
         h_0_n : `float/array`
             dimensionless strain in the quadrupole approximation (unitless)
             shape of array is `(number of sources, number of harmonics)`
         """
-        return strain.h_0_n(utils.chirp_mass(self.m_1, self.m_2), self.f_orb,
-                            self.ecc, harmonics, self.dist)
+        if which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
+        return strain.h_0_n(m_c=self.m_c[which_sources],
+                            f_orb=self.f_orb[which_sources],
+                            ecc=self.ecc[which_sources],
+                            n=harmonics,
+                            dist=self.dist[which_sources],
+                            interpolated_g=self.g)
 
-    def get_h_c_n(self, harmonics):
+    def get_h_c_n(self, harmonics, which_sources=None):
         """Computes the characteristic strain for all binaries
         for the given `harmonics`
 
@@ -281,14 +290,23 @@ class Source():
         harmonics : `int/array`
             harmonic(s) at which to calculate the strain
 
+        which_sources `boolean/array`
+            mask on which sources to compute values for (default is all)
+
         Returns
         -------
         h_c_n : `float/array`
             dimensionless characteristic strain in the quadrupole approximation
             shape of array is `(number of sources, number of harmonics)`
         """
-        return strain.h_c_n(utils.chirp_mass(self.m_1, self.m_2), self.f_orb,
-                            self.ecc, harmonics, self.dist)
+        if which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
+        return strain.h_c_n(m_c=self.m_c[which_sources],
+                            f_orb=self.f_orb[which_sources],
+                            ecc=self.ecc[which_sources],
+                            n=harmonics,
+                            dist=self.dist[which_sources],
+                            interpolated_g=self.g)
 
     def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
         """Computes the SNR for a generic binary
@@ -496,7 +514,7 @@ class Source():
                    "ecc": self.ecc * u.dimensionless_unscaled,
                    "dist": self.dist, "f_orb": self.f_orb,
                    "f_GW": self.f_orb * 2, "a": self.a,
-                   "snr": self.snr}
+                   "snr": self.snr * u.dimensionless_unscaled}
         labels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
                   "m_c": "Chirp Mass", "ecc": "Eccentricity",
                   "dist": "Distance", "f_orb": "Orbital Frequency",
