@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d, interp2d
 import gw.utils as utils
 import gw.strain as strain
 import gw.snr as sn
+import gw.visualisation as vis
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
@@ -93,6 +94,7 @@ class Source():
 
         self.m_1 = m_1
         self.m_2 = m_2
+        self.m_c = utils.chirp_mass(m_1, m_2)
         self.ecc = ecc
         self.dist = dist
         self.stat_tol = stat_tol
@@ -104,9 +106,11 @@ class Source():
         self.update_gw_lum_tol(gw_lum_tol)
         self.set_g(interpolate_g)
 
-    def create_max_harmonics_function(self):
-        """Create a function to calculate the maximum harmonics required
-        to calculate the SNRs assuming provided tolerance `gw_lum_tol`"""
+    def create_harmonics_functions(self):
+        """Create two functions:
+        1. to calculate the maximum harmonics required to calculate the SNRs
+        assuming provided tolerance `gw_lum_tol`
+        2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="gw", resource="harmonics.npz") as path:
@@ -148,6 +152,17 @@ class Source():
             return np.ceil(interpolated(e)).astype(int)
         self.max_harmonic = max_harmonic
 
+        # now calculate the dominant harmonics
+        dominant_harmonics = n_range[g_vals.argmax(axis=1)]
+        interpolated = interp1d(e_range, dominant_harmonics,
+                                bounds_error=False,
+                                fill_value=(2, np.max(harmonics_needed)))
+
+        def dominant_harmonic(e):   # pragma: no cover
+            return np.round(interpolated(e)).astype(int)
+
+        self.dominant_harmonic = dominant_harmonic
+
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
         We define this as the maximum eccentricity at which the n=2 harmonic
@@ -170,7 +185,7 @@ class Source():
             allowed error on the GW luminosity when calculating snrs
         """
         self._gw_lum_tol = gw_lum_tol
-        self.create_max_harmonics_function()
+        self.create_harmonics_functions()
         self.find_eccentric_transition()
 
     def set_g(self, interpolate_g):
@@ -228,20 +243,21 @@ class Source():
             raise ValueError("`circular` must be None, True or False")
 
         if stationary is None:
-            stationary_mask = np.repeat(True, self.n_sources)
+            stat_mask = np.repeat(True, self.n_sources)
         elif stationary is True or stationary is False:
-            stationary_mask = utils.determine_stationarity(self.m_1, self.m_2,
-                                                           self.f_orb, t_obs,
-                                                           self.ecc,
-                                                           self.stat_tol)
+            stat_mask = utils.determine_stationarity(m_c=self.m_c,
+                                                     f_orb_i=self.f_orb,
+                                                     t_evol=t_obs,
+                                                     ecc_i=self.ecc,
+                                                     stat_tol=self.stat_tol)
             if stationary is False:
-                stationary_mask = np.logical_not(stationary_mask)
+                stat_mask = np.logical_not(stat_mask)
         else:
             raise ValueError("`stationary` must be None, True or False")
 
-        return np.logical_and(circular_mask, stationary_mask)
+        return np.logical_and(circular_mask, stat_mask)
 
-    def get_h_0_n(self, harmonics):
+    def get_h_0_n(self, harmonics, which_sources=None):
         """Computes the strain for all binaries for the given `harmonics`
 
         Parameters
@@ -249,16 +265,25 @@ class Source():
         harmonics : `int/array`
             harmonic(s) at which to calculate the strain
 
+        which_sources : `boolean/array`
+            mask on which sources to compute values for (default is all)
+
         Returns
         -------
         h_0_n : `float/array`
             dimensionless strain in the quadrupole approximation (unitless)
             shape of array is `(number of sources, number of harmonics)`
         """
-        return strain.h_0_n(utils.chirp_mass(self.m_1, self.m_2), self.f_orb,
-                            self.ecc, harmonics, self.dist)
+        if which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
+        return strain.h_0_n(m_c=self.m_c[which_sources],
+                            f_orb=self.f_orb[which_sources],
+                            ecc=self.ecc[which_sources],
+                            n=harmonics,
+                            dist=self.dist[which_sources],
+                            interpolated_g=self.g)
 
-    def get_h_c_n(self, harmonics):
+    def get_h_c_n(self, harmonics, which_sources=None):
         """Computes the characteristic strain for all binaries
         for the given `harmonics`
 
@@ -267,14 +292,23 @@ class Source():
         harmonics : `int/array`
             harmonic(s) at which to calculate the strain
 
+        which_sources `boolean/array`
+            mask on which sources to compute values for (default is all)
+
         Returns
         -------
         h_c_n : `float/array`
             dimensionless characteristic strain in the quadrupole approximation
             shape of array is `(number of sources, number of harmonics)`
         """
-        return strain.h_c_n(utils.chirp_mass(self.m_1, self.m_2), self.f_orb,
-                            self.ecc, harmonics, self.dist)
+        if which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
+        return strain.h_c_n(m_c=self.m_c[which_sources],
+                            f_orb=self.f_orb[which_sources],
+                            ecc=self.ecc[which_sources],
+                            n=harmonics,
+                            dist=self.dist[which_sources],
+                            interpolated_g=self.g)
 
     def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
         """Computes the SNR for a generic binary
@@ -298,25 +332,25 @@ class Source():
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
         snr = np.zeros(self.n_sources)
-        stationary_mask = self.get_source_mask(circular=None, stationary=True,
-                                               t_obs=t_obs)
-        evolving_mask = np.logical_not(stationary_mask)
+        stat_mask = self.get_source_mask(circular=None, stationary=True,
+                                         t_obs=t_obs)
+        evol_mask = np.logical_not(stat_mask)
 
-        if stationary_mask.any():
+        if stat_mask.any():
             if verbose:
-                n_stat = len(snr[stationary_mask])
+                n_stat = len(snr[stat_mask])
                 print("\t{} sources are stationary".format(n_stat))
-            snr[stationary_mask] = self.get_snr_stationary(t_obs=t_obs,
-                                                           which_sources=stationary_mask,
-                                                           verbose=verbose)
-        if evolving_mask.any():
+            snr[stat_mask] = self.get_snr_stationary(t_obs=t_obs,
+                                                     which_sources=stat_mask,
+                                                     verbose=verbose)
+        if evol_mask.any():
             if verbose:
-                n_evol = len(snr[evolving_mask])
+                n_evol = len(snr[evol_mask])
                 print("\t{} sources are evolving".format(n_evol))
-            snr[evolving_mask] = self.get_snr_evolving(t_obs=t_obs,
-                                                       which_sources=evolving_mask,
-                                                       n_step=n_step,
-                                                       verbose=verbose)
+            snr[evol_mask] = self.get_snr_evolving(t_obs=t_obs,
+                                                   which_sources=evol_mask,
+                                                   n_step=n_step,
+                                                   verbose=verbose)
         self.snr = snr
         return snr
 
@@ -341,8 +375,6 @@ class Source():
         SNR : `array`
             the signal to noise ratio
         """
-        m_c = utils.chirp_mass(m_1=self.m_1, m_2=self.m_2)
-
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
         snr = np.zeros(self.n_sources)
@@ -354,7 +386,7 @@ class Source():
             if verbose:
                 print("\t\t{} sources are stationary and circular".format(
                     len(snr[ind_circ])))
-            snr[ind_circ] = sn.snr_circ_stationary(m_c=m_c[ind_circ],
+            snr[ind_circ] = sn.snr_circ_stationary(m_c=self.m_c[ind_circ],
                                                    f_orb=self.f_orb[ind_circ],
                                                    dist=self.dist[ind_circ],
                                                    t_obs=t_obs,
@@ -370,7 +402,7 @@ class Source():
                                            max_harmonics < upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
-                    snr[match] = sn.snr_ecc_stationary(m_c=m_c[match],
+                    snr[match] = sn.snr_ecc_stationary(m_c=self.m_c[match],
                                                        f_orb=self.f_orb[match],
                                                        ecc=self.ecc[match],
                                                        dist=self.dist[match],
@@ -444,6 +476,160 @@ class Source():
                                                      interpolated_g=self.g)
 
         return snr[which_sources]
+
+    def plot_source_variables(self, xstr, ystr=None,
+                              **kwargs):  # pragma: no cover
+        """plot distributions of Source variables. If two variables are
+        specified then produce a 2D distribution, otherwise a 1D distribution.
+        This function is a wrapper on `visualisation.plot_1D_dist` and
+        `visualisation.plot_2D_dist` and thus takes mostly the same parameters.
+
+        Params
+        ------
+        xstr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
+        snr' }}`
+            which variable to plot on the x axis
+
+        ystr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
+        snr' }}`
+            which variable to plot on the y axis
+            (if None then a 1D distribution is made using `xstr`)
+
+        Keyword Args
+        ------------
+        These are exactly the same as `visualisation.plot_1D_dist`, see those
+        docs for more details.
+
+        Note that if `xlabel` or `ylabel` is not passed then this function
+        automatically creates one using a default string and (if applicable)
+        the units of the variable.
+
+        Returns
+        -------
+        fig : `matplotlib Figure`
+            the figure on which the distribution is plotted
+
+        ax : `matplotlib Axis`
+            the axis on which the distribution is plotted
+        """
+        convert = {"m_1": self.m_1, "m_2": self.m_2,
+                   "m_c": utils.chirp_mass(self.m_1, self.m_2),
+                   "ecc": self.ecc * u.dimensionless_unscaled,
+                   "dist": self.dist, "f_orb": self.f_orb,
+                   "f_GW": self.f_orb * 2, "a": self.a,
+                   "snr": self.snr * u.dimensionless_unscaled}
+        labels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
+                  "m_c": "Chirp Mass", "ecc": "Eccentricity",
+                  "dist": "Distance", "f_orb": "Orbital Frequency",
+                  "f_GW": "Gravitational Wave Frequency",
+                  "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
+        unitless = set(["ecc", "snr"])
+
+        # ensure that the variable is a valid choice
+        for var_str in [xstr, ystr]:
+            if var_str not in convert.keys() and var_str is not None:
+                error_str = "`xstr` and `ystr` must be one of: " \
+                    + ', '.join(["`{}`".format(k)
+                                 for k in list(convert.keys())])
+                raise ValueError(error_str)
+
+        # check the instance variable has been already set
+        x = convert[xstr]
+        if x is None:
+            raise ValueError("x variable (`{}`)".format(xstr),
+                             "must be not be None")
+        if ystr is not None:
+            y = convert[ystr]
+            if y is None:
+                raise ValueError("y variable (`{}`)".format(ystr),
+                                 "must be not be None")
+
+        # create the x label if it wasn't provided
+        if "xlabel" not in kwargs.keys():
+            if xstr in unitless:
+                kwargs["xlabel"] = labels[xstr]
+            else:
+                kwargs["xlabel"] = r"{} [{:latex}]".format(labels[xstr],
+                                                           x.unit)
+
+        # create the y label if it wasn't provided and ystr was
+        if ystr is not None and "ylabel" not in kwargs.keys():
+            if ystr in unitless:
+                kwargs["ylabel"] = labels[ystr]
+            else:
+                kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr],
+                                                           y.unit)
+
+        # plot it!
+        if ystr is not None:
+            return vis.plot_2D_dist(x=x.value, y=y.value, **kwargs)
+        else:
+            return vis.plot_1D_dist(x=x.value, **kwargs)
+
+    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr,
+                           show=True): # pragma: no cover
+        """plot all sources in the class on the sensitivity curve
+
+        Params
+        ------
+        snr_cutoff : `float`
+            SNR below which sources will not be plotted (default is to plot
+            all sources)
+
+        t_obs : `float`
+            LISA observation time
+
+        show : `boolean`
+            whether to immediately show the plot
+
+        Returns
+        -------
+        fig : `matplotlib Figure`
+            the figure on which the sources are plotted
+
+        ax : `matplotlib Axis`
+            the axis on which the sources are plotted
+        """
+        # initialise as None to prevent unbound error
+        fig, ax = None, None
+
+        # plot circular and stationary sources
+        circ_stat = self.get_source_mask(circular=True, stationary=True)
+        if circ_stat.any():
+            f_orb = self.f_orb[circ_stat]
+            h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
+            fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb,
+                                                       h_0_2=h_0_2,
+                                                       snr=self.snr[circ_stat],
+                                                       snr_cutoff=snr_cutoff,
+                                                       t_obs=t_obs,
+                                                       show=False)
+
+        # plot eccentric and stationary sources
+        ecc_stat = self.get_source_mask(circular=False, stationary=True)
+        if ecc_stat.any():
+            n_dom = self.dominant_harmonic(self.ecc[ecc_stat])
+            f_dom = self.f_orb[ecc_stat] * n_dom
+            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
+                                                      snr=self.snr[ecc_stat],
+                                                      snr_cutoff=snr_cutoff,
+                                                      t_obs=t_obs, show=show,
+                                                      fig=fig, ax=ax)
+
+        # show warnings for evolving sources
+        circ_evol = self.get_source_mask(circular=True, stationary=False)
+        if circ_evol.any():
+            print("{} circular and evolving".format(len(circ_evol[circ_evol])),
+                  "sources detected, plotting not yet implemented for",
+                  "evolving sources.")
+
+        ecc_evol = self.get_source_mask(circular=False, stationary=False)
+        if ecc_evol.any():
+            print("{} eccentric and evolving".format(len(ecc_evol[ecc_evol])),
+                  "sources detected, plotting not yet implemented for",
+                  "evolving sources.")
+
+        return fig, ax
 
 
 class Stationary(Source):
