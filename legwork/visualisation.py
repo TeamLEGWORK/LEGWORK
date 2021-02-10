@@ -228,7 +228,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     # possible kwargs for matplotlib.hist
     scatter_args = {"s": None, "c": None, "marker": None, "cmap": None,
                     "norm": None, "vmin": None, "vmax": None, "alpha": None,
-                    "linewidths": None, "edgecolors": None}
+                    "linewidths": None, "edgecolors": None, "label": None}
 
     # possible kwargs for seaborn.kdeplot
     kde_args = {"gridsize": 200, "cut": 3, "clip": None, "legend": True,

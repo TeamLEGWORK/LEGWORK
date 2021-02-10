@@ -511,11 +511,12 @@ class Source():
             the axis on which the distribution is plotted
         """
         convert = {"m_1": self.m_1, "m_2": self.m_2,
-                   "m_c": utils.chirp_mass(self.m_1, self.m_2),
+                   "m_c": self.m_c,
                    "ecc": self.ecc * u.dimensionless_unscaled,
                    "dist": self.dist, "f_orb": self.f_orb,
                    "f_GW": self.f_orb * 2, "a": self.a,
-                   "snr": self.snr * u.dimensionless_unscaled}
+                   "snr": self.snr * u.dimensionless_unscaled
+                   if self.snr is not None else self.snr}
         labels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
                   "m_c": "Chirp Mass", "ecc": "Eccentricity",
                   "dist": "Distance", "f_orb": "Orbital Frequency",
@@ -565,7 +566,7 @@ class Source():
             return vis.plot_1D_dist(x=x.value, **kwargs)
 
     def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr,
-                           show=True): # pragma: no cover
+                           show=True):  # pragma: no cover
         """plot all sources in the class on the sensitivity curve
 
         Parameters
