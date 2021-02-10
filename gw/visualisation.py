@@ -420,7 +420,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False)
+        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs)
 
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff
@@ -443,7 +443,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
     return fig, ax
 
 
-def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0,
+def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
                                 fig=None, ax=None, show=True, **kwargs):
     """overlay eccentric/stationary sources on the LISA sensitivty curve.
     Each source is plotted at its dominant harmonic frequency such that
@@ -490,7 +490,7 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0,
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False)
+        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs)
 
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff

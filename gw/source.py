@@ -1,7 +1,6 @@
 """`circular binary stuff!`"""
 from astropy import units as u
 import numpy as np
-import matplotlib.pyplot as plt
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
@@ -155,10 +154,13 @@ class Source():
 
         # now calculate the dominant harmonics
         dominant_harmonics = n_range[g_vals.argmax(axis=1)]
-        interpolated = interp1d(e_range, dominant_harmonics, bounds_error=False,
+        interpolated = interp1d(e_range, dominant_harmonics,
+                                bounds_error=False,
                                 fill_value=(2, np.max(harmonics_needed)))
+
         def dominant_harmonic(e):
             return np.round(interpolated(e)).astype(int)
+
         self.dominant_harmonic = dominant_harmonic
 
     def find_eccentric_transition(self):
@@ -241,19 +243,19 @@ class Source():
             raise ValueError("`circular` must be None, True or False")
 
         if stationary is None:
-            stationary_mask = np.repeat(True, self.n_sources)
+            stat_mask = np.repeat(True, self.n_sources)
         elif stationary is True or stationary is False:
-            stationary_mask = utils.determine_stationarity(m_c=self.m_c,
-                                                           f_orb_i=self.f_orb,
-                                                           t_evol=t_obs,
-                                                           ecc_i=self.ecc,
-                                                           stat_tol=self.stat_tol)
+            stat_mask = utils.determine_stationarity(m_c=self.m_c,
+                                                     f_orb_i=self.f_orb,
+                                                     t_evol=t_obs,
+                                                     ecc_i=self.ecc,
+                                                     stat_tol=self.stat_tol)
             if stationary is False:
-                stationary_mask = np.logical_not(stationary_mask)
+                stat_mask = np.logical_not(stat_mask)
         else:
             raise ValueError("`stationary` must be None, True or False")
 
-        return np.logical_and(circular_mask, stationary_mask)
+        return np.logical_and(circular_mask, stat_mask)
 
     def get_h_0_n(self, harmonics, which_sources=None):
         """Computes the strain for all binaries for the given `harmonics`
@@ -330,25 +332,25 @@ class Source():
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
         snr = np.zeros(self.n_sources)
-        stationary_mask = self.get_source_mask(circular=None, stationary=True,
-                                               t_obs=t_obs)
-        evolving_mask = np.logical_not(stationary_mask)
+        stat_mask = self.get_source_mask(circular=None, stationary=True,
+                                         t_obs=t_obs)
+        evol_mask = np.logical_not(stat_mask)
 
-        if stationary_mask.any():
+        if stat_mask.any():
             if verbose:
-                n_stat = len(snr[stationary_mask])
+                n_stat = len(snr[stat_mask])
                 print("\t{} sources are stationary".format(n_stat))
-            snr[stationary_mask] = self.get_snr_stationary(t_obs=t_obs,
-                                                           which_sources=stationary_mask,
-                                                           verbose=verbose)
-        if evolving_mask.any():
+            snr[stat_mask] = self.get_snr_stationary(t_obs=t_obs,
+                                                     which_sources=stat_mask,
+                                                     verbose=verbose)
+        if evol_mask.any():
             if verbose:
-                n_evol = len(snr[evolving_mask])
+                n_evol = len(snr[evol_mask])
                 print("\t{} sources are evolving".format(n_evol))
-            snr[evolving_mask] = self.get_snr_evolving(t_obs=t_obs,
-                                                       which_sources=evolving_mask,
-                                                       n_step=n_step,
-                                                       verbose=verbose)
+            snr[evol_mask] = self.get_snr_evolving(t_obs=t_obs,
+                                                   which_sources=evol_mask,
+                                                   n_step=n_step,
+                                                   verbose=verbose)
         self.snr = snr
         return snr
 
@@ -562,6 +564,67 @@ class Source():
             return vis.plot_2D_dist(x=x.value, y=y.value, **kwargs)
         else:
             return vis.plot_1D_dist(x=x.value, **kwargs)
+
+    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr):
+        """plot all sources in the class on the sensitivity curve
+
+        Params
+        ------
+        snr_cutoff : `float`
+            SNR below which sources will not be plotted (default is to plot
+            all sources)
+
+        t_obs : `float`
+            LISA observation time
+
+        Returns
+        -------
+        fig : `matplotlib Figure`
+            the figure on which the sources are plotted
+
+        ax : `matplotlib Axis`
+            the axis on which the sources are plotted
+        """
+        # initialise as None to prevent unbound error
+        fig, ax = None, None
+
+        # plot circular and stationary sources
+        circ_stat = self.get_source_mask(circular=True, stationary=True)
+        if circ_stat.any():
+            f_orb = self.f_orb[circ_stat]
+            h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
+            fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb,
+                                                       h_0_2=h_0_2,
+                                                       snr=self.snr[circ_stat],
+                                                       snr_cutoff=snr_cutoff,
+                                                       t_obs=t_obs,
+                                                       show=False)
+
+        # plot eccentric and stationary sources
+        ecc_stat = self.get_source_mask(circular=False, stationary=True)
+        if ecc_stat.any():
+            n_dom = self.dominant_harmonic(self.ecc[ecc_stat])
+            f_dom = self.f_orb[ecc_stat] * n_dom
+            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
+                                                      snr=self.snr[ecc_stat],
+                                                      snr_cutoff=snr_cutoff,
+                                                      t_obs=t_obs, show=True,
+                                                      fig=fig, ax=ax)
+
+        # show warnings for evolving sources
+        circ_evol = self.get_source_mask(circular=True, stationary=False)
+        if circ_evol.any():
+            print("{} circular and evolving".format(len(circ_evol[circ_evol])),
+                  "sources detected, plotting not yet implemented for",
+                  "evolving sources.")
+
+        ecc_evol = self.get_source_mask(circular=False, stationary=False)
+        if ecc_evol.any():
+            print("{} eccentric and evolving".format(len(ecc_evol[ecc_evol])),
+                  "sources detected, plotting not yet implemented for",
+                  "evolving sources.")
+
+        return fig, ax
 
 
 class Stationary(Source):
