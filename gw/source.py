@@ -158,7 +158,7 @@ class Source():
                                 bounds_error=False,
                                 fill_value=(2, np.max(harmonics_needed)))
 
-        def dominant_harmonic(e):
+        def dominant_harmonic(e):   # pragma: no cover
             return np.round(interpolated(e)).astype(int)
 
         self.dominant_harmonic = dominant_harmonic
@@ -477,7 +477,8 @@ class Source():
 
         return snr[which_sources]
 
-    def plot_source_variables(self, xstr, ystr=None, **kwargs):
+    def plot_source_variables(self, xstr, ystr=None,
+                              **kwargs):  # pragma: no cover
         """plot distributions of Source variables. If two variables are
         specified then produce a 2D distribution, otherwise a 1D distribution.
         This function is a wrapper on `visualisation.plot_1D_dist` and
@@ -565,7 +566,8 @@ class Source():
         else:
             return vis.plot_1D_dist(x=x.value, **kwargs)
 
-    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr):
+    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr,
+                           show=True): # pragma: no cover
         """plot all sources in the class on the sensitivity curve
 
         Params
@@ -576,6 +578,9 @@ class Source():
 
         t_obs : `float`
             LISA observation time
+
+        show : `boolean`
+            whether to immediately show the plot
 
         Returns
         -------
@@ -608,7 +613,7 @@ class Source():
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
                                                       snr=self.snr[ecc_stat],
                                                       snr_cutoff=snr_cutoff,
-                                                      t_obs=t_obs, show=True,
+                                                      t_obs=t_obs, show=show,
                                                       fig=fig, ax=ax)
 
         # show warnings for evolving sources
