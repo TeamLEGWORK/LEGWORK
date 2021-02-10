@@ -17,8 +17,8 @@ class Source():
     def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True):
         """Initialise all parameters
-        Params
-        ------
+        Parameters
+        ----------
         m_1 : `float/array`
             primary mass
 
@@ -179,8 +179,8 @@ class Source():
         """Update GW luminosity tolerance and use updated value to
         recalculate max_harmonics function and transition to eccentric
 
-        Params
-        ------
+        Parameters
+        ----------
         gw_lum_tol : `float`
             allowed error on the GW luminosity when calculating snrs
         """
@@ -192,8 +192,8 @@ class Source():
         """Set Source g function if user wants to interpolate g(n,e).
         Otherwise just leave the function as None.
 
-        Params
-        ------
+        Parameters
+        ----------
         interpolate_g : `boolean`
             whether to interpolate the g(n,e) function from Peters (1964)
         """
@@ -215,8 +215,8 @@ class Source():
         are circular or eccentric and stationary or evolving.
         Tolerance levels are defined in the class.
 
-        Params
-        ------
+        Parameters
+        ----------
         circular : `bool`
             `None` means either, `True` means only circular
             binaries and `False` means only eccentric
@@ -260,8 +260,8 @@ class Source():
     def get_h_0_n(self, harmonics, which_sources=None):
         """Computes the strain for all binaries for the given `harmonics`
 
-        Params
-        ------
+        Parameters
+        ----------
         harmonics : `int/array`
             harmonic(s) at which to calculate the strain
 
@@ -287,8 +287,8 @@ class Source():
         """Computes the characteristic strain for all binaries
         for the given `harmonics`
 
-        Params
-        ------
+        Parameters
+        ----------
         harmonics : `int/array`
             harmonic(s) at which to calculate the strain
 
@@ -313,8 +313,8 @@ class Source():
     def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
         """Computes the SNR for a generic binary
 
-        Params
-        ------
+        Parameters
+        ----------
         t_obs : `array`
             observation duration (default: 4 years)
 
@@ -358,8 +358,8 @@ class Source():
                            verbose=False):
         """Computes the SNR assuming a stationary binary
 
-        Params
-        ------
+        Parameters
+        ----------
         t_obs : `array`
             observation duration in units of yr
 
@@ -416,8 +416,8 @@ class Source():
                          verbose=False):
         """Computes the SNR assuming an evolving binary
 
-        Params
-        ------
+        Parameters
+        ----------
         t_obs : `array`
             observation duration (default: 4 years)
 
