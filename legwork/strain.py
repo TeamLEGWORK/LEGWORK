@@ -1,7 +1,7 @@
 """Computes several types of gravitational wave strains"""
 
 import astropy.constants as c
-from gw.utils import peters_g, peters_f
+from legwork.utils import peters_g, peters_f
 import numpy as np
 
 

@@ -1,6 +1,6 @@
 """`evolve with peters!`"""
 
-import gw.utils as utils
+import legwork.utils as utils
 from numba import jit
 from scipy.integrate import odeint, quad
 import numpy as np

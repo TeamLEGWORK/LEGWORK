@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import astropy.units as u
-import gw.lisa as lisa
+import legwork.lisa as lisa
 
 # set the default font and fontsize
 plt.rc('font', family='serif')
@@ -25,8 +25,8 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     wrapper for `matplotlib.pyplot.hist`, `seaborn.kdeplot` and
     `seaborn.ecdfplot`
 
-    Params
-    ------
+    Parameters
+    ----------
     x : `float/int array`
         variable to plot, should be a 1D array
 
@@ -64,8 +64,6 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
 
-    Keyword Args
-    ------------
     The keyword args in this function are passed to the respective function
     that is used (set by `disttype`). Depending on your choice of `disttype`,
     there are many options:
@@ -157,8 +155,8 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     """plot a 2D distribution of `x` and `y` with `weights`. This function is a
     wrapper for `matplotlib.pyplot.scatter` and `seaborn.kdeplot`
 
-    Params
-    ------
+    Parameters
+    ----------
     x : `float/int array`
         variable to plot on the x axis, should be a 1D array
 
@@ -199,8 +197,6 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
 
-    Keyword Args
-    ------------
     The keyword args in this function are passed to the respective function
     that is used (set by `disttype`). Depending on your choice of `disttype`,
     there are many options:
@@ -282,8 +278,8 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
                            alpha=0.2, label=None, **kwargs):
     """plot the LISA sensitivity curve
 
-    Params
-    ------
+    Parameters
+    ----------
     frequency_range : `float array`
         frequency values at which to plot the sensitivity curve
 
@@ -317,8 +313,6 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
     label : `string`
         label for the sensitivity curve in legends
 
-    Keyword Args
-    ------------
     Keyword args are passed to `lisa.power_spectral_density`, see those docs
     for details on possible arguments.
 
@@ -374,8 +368,8 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
     Each source is plotted at its gravitational wave frequency (n = 2) such
     that its height above the curve is equal to it signal-to-noise ratio.
 
-    Params
-    ------
+    Parameters
+    ----------
     f_orb : `float/array`
         orbital frequency
 
@@ -404,8 +398,6 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
         whether to immediately show the plot or only return the Figure
         and Axis
 
-    Keyword Args
-    ------------
     This function is a wrapper on `visualisation.plot_2D_dist` and each kwarg
     is passed directly to this function. For example, you can write
     `disttype="kde"` for a kde density plot instead of a scatter plot.
@@ -449,8 +441,8 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
     Each source is plotted at its dominant harmonic frequency such that
     that its height above the curve is equal to it signal-to-noise ratio.
 
-    Params
-    ------
+    Parameters
+    ----------
     f_dom : `float/array`
         dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic
         with the maximum strain)
@@ -474,8 +466,6 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
         whether to immediately show the plot or only return the Figure
         and Axis
 
-    Keyword Args
-    ------------
     This function is a wrapper on `visualisation.plot_2D_dist` and each kwarg
     is passed directly to this function. For example, you can write
     `disttype="kde"` for a kde density plot instead of a scatter plot.

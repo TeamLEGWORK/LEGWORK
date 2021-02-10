@@ -1,10 +1,10 @@
-"""`snr calcs` for gw calcs"""
+"""`snr calcs` for legwork.calcs"""
 
 import numpy as np
-import gw.strain as strain
-import gw.lisa as lisa
-import gw.utils as utils
-import gw.evol as evol
+import legwork.strain as strain
+import legwork.lisa as lisa
+import legwork.utils as utils
+import legwork.evol as evol
 import astropy.units as u
 
 

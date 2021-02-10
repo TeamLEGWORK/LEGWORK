@@ -27,7 +27,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     """
     # try to load the values for interpolating R
     try:
-        with resources.path(package="gw", resource="R.npy") as path:
+        with resources.path(package="legwork", resource="R.npy") as path:
             f_R, R = np.load(path)
     except FileExistsError:                             # pragma: no cover
         print("WARNING: Can't find transfer function file, \

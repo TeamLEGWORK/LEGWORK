@@ -1,5 +1,5 @@
 import numpy as np
-import gw.evol as evol
+import legwork.evol as evol
 import unittest
 
 from astropy import units as u

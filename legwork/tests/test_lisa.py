@@ -1,5 +1,5 @@
 import numpy as np
-import gw.lisa as lisa
+import legwork.lisa as lisa
 import unittest
 from astropy import units as u
 

@@ -1,5 +1,5 @@
 import numpy as np
-import gw.utils as utils
+import legwork.utils as utils
 import unittest
 
 from astropy import units as u

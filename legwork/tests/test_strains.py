@@ -1,6 +1,6 @@
 import numpy as np
-import gw.strain as strain
-import gw.utils as utils
+import legwork.strain as strain
+import legwork.utils as utils
 import unittest
 
 from astropy import units as u

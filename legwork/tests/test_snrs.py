@@ -1,6 +1,6 @@
 import numpy as np
-import gw.snr as snr
-import gw.utils as utils
+import legwork.snr as snr
+import legwork.utils as utils
 import unittest
 
 from astropy import units as u

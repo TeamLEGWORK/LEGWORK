@@ -1,13 +1,13 @@
-"""`circular binary stuff!`"""
+"""`Class for generic GW sources`"""
 from astropy import units as u
 import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
-import gw.utils as utils
-import gw.strain as strain
-import gw.snr as sn
-import gw.visualisation as vis
+import legwork.utils as utils
+import legwork.strain as strain
+import legwork.snr as sn
+import legwork.visualisation as vis
 
 __all__ = ['Source', 'Stationary', 'Evolving']
 
@@ -113,7 +113,7 @@ class Source():
         2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values
-        with resources.path(package="gw", resource="harmonics.npz") as path:
+        with resources.path(package="legwork", resource="harmonics.npz") as path:
             lum_info = np.load(path)
 
         e_min, e_max, e_len = lum_info["e_lims"]
@@ -199,7 +199,7 @@ class Source():
         """
         if interpolate_g:
             # open file containing pre-calculated fine g(n,e) grid
-            with resources.path(package="gw",
+            with resources.path(package="legwork",
                                 resource="peters_g.npy") as path:
                 peters_g = np.load(path)
 
@@ -484,8 +484,8 @@ class Source():
         This function is a wrapper on `visualisation.plot_1D_dist` and
         `visualisation.plot_2D_dist` and thus takes mostly the same parameters.
 
-        Params
-        ------
+        Parameters
+        ----------
         xstr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
         snr' }}`
             which variable to plot on the x axis
@@ -495,8 +495,6 @@ class Source():
             which variable to plot on the y axis
             (if None then a 1D distribution is made using `xstr`)
 
-        Keyword Args
-        ------------
         These are exactly the same as `visualisation.plot_1D_dist`, see those
         docs for more details.
 
@@ -570,8 +568,8 @@ class Source():
                            show=True): # pragma: no cover
         """plot all sources in the class on the sensitivity curve
 
-        Params
-        ------
+        Parameters
+        ----------
         snr_cutoff : `float`
             SNR below which sources will not be plotted (default is to plot
             all sources)

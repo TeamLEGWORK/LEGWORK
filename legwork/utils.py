@@ -1,11 +1,11 @@
-"""`utils` for gw calcs"""
+"""`utils` for legwork"""
 
 from scipy.special import jv
 from astropy import constants as c
 from astropy import units as u
 import numpy as np
 
-import gw.evol as evol
+import legwork.evol as evol
 
 
 def chirp_mass(m_1, m_2):

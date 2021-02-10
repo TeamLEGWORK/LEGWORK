@@ -1,7 +1,7 @@
-gw
-==
+LEGWORK
+=======
 
 .. toctree::
    :maxdepth: 4
 
-   gw
+   legwork
