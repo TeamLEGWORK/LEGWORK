@@ -484,8 +484,8 @@ class Source():
         This function is a wrapper on `visualisation.plot_1D_dist` and
         `visualisation.plot_2D_dist` and thus takes mostly the same parameters.
 
-        Params
-        ------
+        Parameters
+        ----------
         xstr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
         snr' }}`
             which variable to plot on the x axis
@@ -495,8 +495,6 @@ class Source():
             which variable to plot on the y axis
             (if None then a 1D distribution is made using `xstr`)
 
-        Keyword Args
-        ------------
         These are exactly the same as `visualisation.plot_1D_dist`, see those
         docs for more details.
 
@@ -570,8 +568,8 @@ class Source():
                            show=True): # pragma: no cover
         """plot all sources in the class on the sensitivity curve
 
-        Params
-        ------
+        Parameters
+        ----------
         snr_cutoff : `float`
             SNR below which sources will not be plotted (default is to plot
             all sources)
