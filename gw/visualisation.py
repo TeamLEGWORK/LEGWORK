@@ -278,10 +278,10 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 
 
 def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
-                           ax=None, show=True, color="#18068b", fill=True, 
+                           ax=None, show=True, color="#18068b", fill=True,
                            alpha=0.2, label=None, **kwargs):
     """plot the LISA sensitivity curve
-    
+
     Params
     ------
     frequency_range : `float array`
@@ -298,7 +298,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
     ax: `matplotlib Axis`
         an axis on which to plot the distribution. Both `ax` and `fig` must be
         supplied for either to be used
-    
+
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
 
@@ -357,7 +357,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
         ax.set_ylabel(r'ASD $[\rm Hz^{-1/2}]$', fontsize=fs)
     else:
         ax.set_ylabel(r'Characteristic Strain', fontsize=fs)
-    
+
     ax.tick_params(axis='both', which='major', labelsize=fs)
     ax.set_xlim(np.min(frequency_range).value, np.max(frequency_range).value)
 
@@ -366,13 +366,14 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
 
     return fig, ax
 
+
 def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
                                  snr_cutoff=0, t_obs=4 * u.yr,
                                  fig=None, ax=None, show=True, **kwargs):
     """overlay circular/stationary sources on the LISA sensitivty curve.
     Each source is plotted at its gravitational wave frequency (n = 2) such
     that its height above the curve is equal to it signal-to-noise ratio.
-    
+
     Params
     ------
     f_orb : `float/array`
@@ -426,7 +427,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
     if not detectable.any():
         print("ERROR: There are no binaries above provided `snr_cutoff`")
         return fig, ax
-    
+
     # calculate the GW frequency and ASD for detectable binaries
     f_GW = f_orb[detectable] * 2
     asd = ((1/4 * t_obs)**(1/2) * h_0_2[detectable]).to(u.Hz**(-1/2))
@@ -441,13 +442,13 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
 
     return fig, ax
 
-def plot_sources_on_sc_ecc_stat(f_dom, snr,
-                                snr_cutoff=0, t_obs=4 * u.yr,
+
+def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0,
                                 fig=None, ax=None, show=True, **kwargs):
     """overlay eccentric/stationary sources on the LISA sensitivty curve.
     Each source is plotted at its dominant harmonic frequency such that
     that its height above the curve is equal to it signal-to-noise ratio.
-    
+
     Params
     ------
     f_dom : `float/array`
@@ -457,14 +458,9 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr,
     snr : `float/array`
         signal-to-noise ratio
 
-    plot_freq : `{{ "dominant", "gw" }}`
-
     snr_cutoff : `float`
         SNR above which to plot binaries (default is 0 such that all
         sources are plotted)
-
-    t_obs : `float`
-        LISA observation time
 
     fig: `matplotlib Figure`
         a figure on which to plot the distribution. Both `ax` and `fig`
@@ -501,7 +497,7 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr,
     if not detectable.any():
         print("ERROR: There are no binaries above provided `snr_cutoff`")
         return fig, ax
-    
+
     # calculate asd that makes it so height above curve is snr
     asd = snr[detectable] \
         * np.sqrt(lisa.power_spectral_density(f_dom[detectable]))
