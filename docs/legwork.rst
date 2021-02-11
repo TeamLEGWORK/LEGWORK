@@ -1,16 +1,9 @@
-legwork package
-===============
-
-Subpackages
------------
+legwork
+=======
 
 .. toctree::
    :maxdepth: 4
 
-   legwork.tests
-
-Submodules
-----------
 
 legwork.evol module
 -------------------
@@ -64,14 +57,6 @@ legwork.visualisation module
 ----------------------------
 
 .. automodule:: legwork.visualisation
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: legwork
    :members:
    :undoc-members:
    :show-inheritance:
