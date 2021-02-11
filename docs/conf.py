@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'gw-calcs'
+project = 'LEGWORK'
 copyright = '2021, Tom Wagg, Katie Breivik'
 author = 'Tom Wagg, Katie Breivik'
 
