@@ -19,7 +19,7 @@ plt.rcParams.update(params)
 
 
 def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
-                 xlabel="", ylabel="", xlim=None, ylim=None, color=None,
+                 xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
     """plot a 1D distribution of `x` with `weights`. This function is a
     wrapper for `matplotlib.pyplot.hist`, `seaborn.kdeplot` and
@@ -134,12 +134,16 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
                      **plot_args)
 
     # update axis labels
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
 
     # update axis limits
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
 
     # immediately show the plot if requested
     if show:
@@ -150,7 +154,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
 
 
 def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
-                 xlabel="", ylabel="", xlim=None, ylim=None, color=None,
+                 xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
     """plot a 2D distribution of `x` and `y` with `weights`. This function is a
     wrapper for `matplotlib.pyplot.scatter` and `seaborn.kdeplot`
@@ -258,12 +262,16 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
         sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
 
     # update axis labels
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
 
     # update axis limits
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
 
     # immediately show the plot if requested
     if show:
