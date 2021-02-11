@@ -28,10 +28,11 @@ You can find a list of examples here!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
-
+   
    installation/index
+   notebooks/Visualisation.ipynb
    modules
+
 
 Indices
 =======

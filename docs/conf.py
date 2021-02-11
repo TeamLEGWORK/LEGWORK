@@ -35,6 +35,7 @@ extensions = [
     'IPython.sphinxext.ipython_directive',
     'numpydoc',
     'sphinx_rtd_theme', 
+    'nbsphinx',
 ]
 
 # fix numpydoc autosummary
