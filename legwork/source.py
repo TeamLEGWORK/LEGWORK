@@ -113,7 +113,8 @@ class Source():
         2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values
-        with resources.path(package="legwork", resource="harmonics.npz") as path:
+        with resources.path(package="legwork",
+                            resource="harmonics.npz") as path:
             lum_info = np.load(path)
 
         e_min, e_max, e_len = lum_info["e_lims"]
@@ -511,11 +512,12 @@ class Source():
             the axis on which the distribution is plotted
         """
         convert = {"m_1": self.m_1, "m_2": self.m_2,
-                   "m_c": utils.chirp_mass(self.m_1, self.m_2),
+                   "m_c": self.m_c,
                    "ecc": self.ecc * u.dimensionless_unscaled,
                    "dist": self.dist, "f_orb": self.f_orb,
                    "f_GW": self.f_orb * 2, "a": self.a,
-                   "snr": self.snr * u.dimensionless_unscaled}
+                   "snr": self.snr * u.dimensionless_unscaled
+                   if self.snr is not None else self.snr}
         labels = {"m_1": "Primary Mass", "m_2": "Secondary Mass",
                   "m_c": "Chirp Mass", "ecc": "Eccentricity",
                   "dist": "Distance", "f_orb": "Orbital Frequency",
@@ -564,8 +566,8 @@ class Source():
         else:
             return vis.plot_1D_dist(x=x.value, **kwargs)
 
-    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr,
-                           show=True): # pragma: no cover
+    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr, fig=None,
+                           ax=None, show=True, **kwargs):  # pragma: no cover
         """plot all sources in the class on the sensitivity curve
 
         Parameters
@@ -588,9 +590,6 @@ class Source():
         ax : `matplotlib Axis`
             the axis on which the sources are plotted
         """
-        # initialise as None to prevent unbound error
-        fig, ax = None, None
-
         # plot circular and stationary sources
         circ_stat = self.get_source_mask(circular=True, stationary=True)
         if circ_stat.any():
@@ -601,7 +600,9 @@ class Source():
                                                        snr=self.snr[circ_stat],
                                                        snr_cutoff=snr_cutoff,
                                                        t_obs=t_obs,
-                                                       show=False)
+                                                       fig=fig, ax=ax,
+                                                       show=False,
+                                                       **kwargs)
 
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
@@ -612,7 +613,7 @@ class Source():
                                                       snr=self.snr[ecc_stat],
                                                       snr_cutoff=snr_cutoff,
                                                       t_obs=t_obs, show=show,
-                                                      fig=fig, ax=ax)
+                                                      fig=fig, ax=ax, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
