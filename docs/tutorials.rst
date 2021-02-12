@@ -6,7 +6,8 @@ of ``LEGWORK``. We are working to add more tutorials over time and are very open
 to feedback
 
 .. toctree::
-   :titlesonly:
-   :maxdepth: 1
+    :titlesonly:
+    :maxdepth: 1
 
-   Visualation <notebooks/Visualisation.ipynb>
+    Computing Gravitational Wave Strains <notebooks/Strains.ipynb>
+    Visualisation <notebooks/Visualisation.ipynb>
