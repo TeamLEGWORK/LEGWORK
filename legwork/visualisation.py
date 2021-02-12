@@ -74,11 +74,13 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     for more details.
 
     For `disttype="kde"` : gridsize, cut, clip, legend, cumulative, bw_method,
-                           bw_adjust, log_scale, fill, label
+                           bw_adjust, log_scale, fill, label, linewidth,
+                           linestyle
     See https://seaborn.pydata.org/generated/seaborn.kdeplot.html
     for more details.
 
-    For `disttype="ecdf"` : stat, complementary, log_scale, legend, label
+    For `disttype="ecdf"` : stat, complementary, log_scale, legend, label,
+                            linewidth, linestyle
     See https://seaborn.pydata.org/generated/seaborn.ecdfplot.html
     for more details.
 
@@ -103,11 +105,13 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     # possible kwargs for seaborn.kdeplot
     kde_args = {"gridsize": 200, "cut": 3, "clip": None, "legend": True,
                 "cumulative": False, "bw_method": 'scott', "bw_adjust": 1,
-                "log_scale": None, "fill": None, "label": None}
+                "log_scale": None, "fill": None, "label": None,
+                "linewidth": None, "linestyle": None}
 
     # possible kwargs for seaborn.ecdfplot
     ecdf_args = {"stat": 'proportion', "complementary": False,
-                 "log_scale": None, "legend": True, "label": None}
+                 "log_scale": None, "legend": True, "label": None,
+                 "linewidth": None, "linestyle": None}
 
     # set which ones we are using for this plot
     plot_args = hist_args if disttype == "hist" else \
