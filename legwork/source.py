@@ -145,22 +145,23 @@ class Source():
                 total_lum += g_vals[i][harmonics_needed[i] - 1]
 
         # interpolate the answer and return the max if e > e_max
-        interpolated = interp1d(e_range, harmonics_needed, bounds_error=False,
-                                fill_value=(2, np.max(harmonics_needed)))
+        interpolated_hn = interp1d(e_range, harmonics_needed,
+                                   bounds_error=False,
+                                   fill_value=(2, np.max(harmonics_needed)))
 
         # conservatively round up to nearest integer
         def max_harmonic(e):
-            return np.ceil(interpolated(e)).astype(int)
+            return np.ceil(interpolated_hn(e)).astype(int)
         self.max_harmonic = max_harmonic
 
         # now calculate the dominant harmonics
         dominant_harmonics = n_range[g_vals.argmax(axis=1)]
-        interpolated = interp1d(e_range, dominant_harmonics,
-                                bounds_error=False,
-                                fill_value=(2, np.max(harmonics_needed)))
+        interpolated_dh = interp1d(e_range, dominant_harmonics,
+                                   bounds_error=False,
+                                   fill_value=(2, np.max(harmonics_needed)))
 
         def dominant_harmonic(e):   # pragma: no cover
-            return np.round(interpolated(e)).astype(int)
+            return np.round(interpolated_dh(e)).astype(int)
 
         self.dominant_harmonic = dominant_harmonic
 
