@@ -208,7 +208,7 @@ class Source():
             # interpolate grid using scipy
             n_range = np.arange(1, 10000 + 1).astype(int)
             e_range = np.linspace(0, 1, 1000)
-            self.g = interp2d(n_range, e_range, peters_g)
+            self.g = interp2d(n_range, e_range, peters_g, kind="cubic")
         else:
             self.g = None
 
