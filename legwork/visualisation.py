@@ -358,13 +358,13 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
                         color=color)
 
     # adjust labels, sizes and frequency limits to plot is flush to the edges
-    ax.set_xlabel(r'Frequency [$\rm Hz$]', fontsize=fs)
+    ax.set_xlabel(r'Frequency [$\rm Hz$]')
     if y_quantity == "ASD":
-        ax.set_ylabel(r'ASD $[\rm Hz^{-1/2}]$', fontsize=fs)
+        ax.set_ylabel(r'ASD $[\rm Hz^{-1/2}]$')
     else:
-        ax.set_ylabel(r'Characteristic Strain', fontsize=fs)
+        ax.set_ylabel(r'Characteristic Strain')
 
-    ax.tick_params(axis='both', which='major', labelsize=fs)
+    ax.tick_params(axis='both', which='major')
     ax.set_xlim(np.min(frequency_range).value, np.max(frequency_range).value)
 
     if show:
