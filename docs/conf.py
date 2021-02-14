@@ -14,6 +14,9 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 
+# HACKS - credit to "https://github.com/rodluger/starry_process"
+sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
+import hacks
 
 # -- Project information -----------------------------------------------------
 
@@ -28,14 +31,19 @@ author = 'Tom Wagg, Katie Breivik'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
+    "matplotlib.sphinxext.plot_directive",
+    "nbsphinx",
     'sphinx_automodapi.automodapi',
-    'matplotlib.sphinxext.plot_directive',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
     'numpydoc',
     'sphinx_rtd_theme', 
-    'nbsphinx',
 ]
 
 # fix numpydoc autosummary
@@ -64,7 +72,28 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_theme = 'sphinx_rtd_theme'
 
+html_theme_options = {"display_version": True}
+html_last_updated_fmt = "%Y %b %d at %H:%M:%S UTC"
+html_show_sourcelink = False
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ["custom.css"]
+
+# autodocs
+autoclass_content = "both"
+autosummary_generate = True
+autodoc_docstring_signature = True
+
+# todos
+todo_include_todos = True
+
+# nbsphinx
+nbsphinx_prolog = """
+{% set docname = env.doc2path(env.docname, base=None) %}
+.. note:: This tutorial was generated from a Jupyter notebook that can be
+          downloaded `here <https://github.com/katiebreivik/LEGWORK/tree/main/docs/{{ docname }}>`_.
+"""
+nbsphinx_prompt_width = "0"

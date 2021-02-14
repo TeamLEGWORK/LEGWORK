@@ -145,22 +145,23 @@ class Source():
                 total_lum += g_vals[i][harmonics_needed[i] - 1]
 
         # interpolate the answer and return the max if e > e_max
-        interpolated = interp1d(e_range, harmonics_needed, bounds_error=False,
-                                fill_value=(2, np.max(harmonics_needed)))
+        interpolated_hn = interp1d(e_range, harmonics_needed,
+                                   bounds_error=False,
+                                   fill_value=(2, np.max(harmonics_needed)))
 
         # conservatively round up to nearest integer
         def max_harmonic(e):
-            return np.ceil(interpolated(e)).astype(int)
+            return np.ceil(interpolated_hn(e)).astype(int)
         self.max_harmonic = max_harmonic
 
         # now calculate the dominant harmonics
         dominant_harmonics = n_range[g_vals.argmax(axis=1)]
-        interpolated = interp1d(e_range, dominant_harmonics,
-                                bounds_error=False,
-                                fill_value=(2, np.max(harmonics_needed)))
+        interpolated_dh = interp1d(e_range, dominant_harmonics,
+                                   bounds_error=False,
+                                   fill_value=(2, np.max(harmonics_needed)))
 
         def dominant_harmonic(e):   # pragma: no cover
-            return np.round(interpolated(e)).astype(int)
+            return np.round(interpolated_dh(e)).astype(int)
 
         self.dominant_harmonic = dominant_harmonic
 
@@ -207,7 +208,7 @@ class Source():
             # interpolate grid using scipy
             n_range = np.arange(1, 10000 + 1).astype(int)
             e_range = np.linspace(0, 1, 1000)
-            self.g = interp2d(n_range, e_range, peters_g)
+            self.g = interp2d(n_range, e_range, peters_g, kind="cubic")
         else:
             self.g = None
 
@@ -478,7 +479,7 @@ class Source():
 
         return snr[which_sources]
 
-    def plot_source_variables(self, xstr, ystr=None,
+    def plot_source_variables(self, xstr, ystr=None, which_sources=None,
                               **kwargs):  # pragma: no cover
         """plot distributions of Source variables. If two variables are
         specified then produce a 2D distribution, otherwise a 1D distribution.
@@ -495,6 +496,9 @@ class Source():
         snr' }}`
             which variable to plot on the y axis
             (if None then a 1D distribution is made using `xstr`)
+
+        which_sources : `boolean array`
+            mask for which sources should be plotted (default is all sources)
 
         These are exactly the same as `visualisation.plot_1D_dist`, see those
         docs for more details.
@@ -524,6 +528,9 @@ class Source():
                   "f_GW": "Gravitational Wave Frequency",
                   "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
         unitless = set(["ecc", "snr"])
+
+        if which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
 
         # ensure that the variable is a valid choice
         for var_str in [xstr, ystr]:
@@ -562,9 +569,10 @@ class Source():
 
         # plot it!
         if ystr is not None:
-            return vis.plot_2D_dist(x=x.value, y=y.value, **kwargs)
+            return vis.plot_2D_dist(x=x[which_sources].value,
+                                    y=y[which_sources].value, **kwargs)
         else:
-            return vis.plot_1D_dist(x=x.value, **kwargs)
+            return vis.plot_1D_dist(x=x[which_sources].value, **kwargs)
 
     def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr, fig=None,
                            ax=None, show=True, **kwargs):  # pragma: no cover

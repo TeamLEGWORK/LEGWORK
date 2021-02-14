@@ -74,11 +74,13 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     for more details.
 
     For `disttype="kde"` : gridsize, cut, clip, legend, cumulative, bw_method,
-                           bw_adjust, log_scale, fill, label
+                           bw_adjust, log_scale, fill, label, linewidth,
+                           linestyle
     See https://seaborn.pydata.org/generated/seaborn.kdeplot.html
     for more details.
 
-    For `disttype="ecdf"` : stat, complementary, log_scale, legend, label
+    For `disttype="ecdf"` : stat, complementary, log_scale, legend, label,
+                            linewidth, linestyle
     See https://seaborn.pydata.org/generated/seaborn.ecdfplot.html
     for more details.
 
@@ -103,11 +105,13 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     # possible kwargs for seaborn.kdeplot
     kde_args = {"gridsize": 200, "cut": 3, "clip": None, "legend": True,
                 "cumulative": False, "bw_method": 'scott', "bw_adjust": 1,
-                "log_scale": None, "fill": None, "label": None}
+                "log_scale": None, "fill": None, "label": None,
+                "linewidth": None, "linestyle": None}
 
     # possible kwargs for seaborn.ecdfplot
     ecdf_args = {"stat": 'proportion', "complementary": False,
-                 "log_scale": None, "legend": True, "label": None}
+                 "log_scale": None, "legend": True, "label": None,
+                 "linewidth": None, "linestyle": None}
 
     # set which ones we are using for this plot
     plot_args = hist_args if disttype == "hist" else \
@@ -354,13 +358,13 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
                         color=color)
 
     # adjust labels, sizes and frequency limits to plot is flush to the edges
-    ax.set_xlabel(r'Frequency [$\rm Hz$]', fontsize=fs)
+    ax.set_xlabel(r'Frequency [$\rm Hz$]')
     if y_quantity == "ASD":
-        ax.set_ylabel(r'ASD $[\rm Hz^{-1/2}]$', fontsize=fs)
+        ax.set_ylabel(r'ASD $[\rm Hz^{-1/2}]$')
     else:
-        ax.set_ylabel(r'Characteristic Strain', fontsize=fs)
+        ax.set_ylabel(r'Characteristic Strain')
 
-    ax.tick_params(axis='both', which='major', labelsize=fs)
+    ax.tick_params(axis='both', which='major')
     ax.set_xlim(np.min(frequency_range).value, np.max(frequency_range).value)
 
     if show:

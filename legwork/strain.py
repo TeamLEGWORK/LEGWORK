@@ -61,6 +61,9 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     else:
         g_vals = interpolated_g(n, ecc)
 
+        # set negative values from cubic fit to 0.0
+        g_vals[g_vals < 0.0] = 0.0
+
         # unsort the output array if there is more than one eccentricity
         if isinstance(ecc, (np.ndarray, list)) and len(ecc) > 1:
             g_vals = g_vals[np.argsort(ecc).argsort()]
@@ -127,6 +130,9 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
         n_dependent_part = (peters_g(N, E) / N)**(1/2)
     else:
         g_vals = interpolated_g(n, ecc)
+
+        # set negative values from cubic fit to 0.0
+        g_vals[g_vals < 0.0] = 0.0
 
         # unsort the output array if there is more than one eccentricity
         if isinstance(ecc, (np.ndarray, list)) and len(ecc) > 1:

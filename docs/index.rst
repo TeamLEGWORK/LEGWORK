@@ -13,25 +13,15 @@ Eccentric and chirping? We've got you covered!
 
 Want to determine if *your* favorite source is detectable by LISA? Let us do the LEGWORK and keep the LISA literature free from spurious factors of 2!
 
-Installation
-============
-LEGWORK is available for installation of PyPI. You can find a list of dependencies in the :ref:`installation` tab.
-
-To install the latest stable version using ``pip`` use: ::
-
-    pip install legwork
-
-Tutorials
-=========
-You can find a list of examples here!
-
-
 .. toctree::
-   :maxdepth: 2
-   
-   installation/index
-   notebooks/Visualisation.ipynb
-   modules
+   :maxdepth: 1
+   :caption: Contents:
+
+    Installation <install>
+    Tutorials <tutorials>
+    GitHub <https://github.com/katiebreivik/LEGWORK>
+    Submit an issue <https://github.com/katiebreivik/LEGWORK/issues>
+    Modules <modules>
 
 
 Indices
