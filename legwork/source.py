@@ -479,7 +479,7 @@ class Source():
 
         return snr[which_sources]
 
-    def plot_source_variables(self, xstr, ystr=None,
+    def plot_source_variables(self, xstr, ystr=None, which_sources=None,
                               **kwargs):  # pragma: no cover
         """plot distributions of Source variables. If two variables are
         specified then produce a 2D distribution, otherwise a 1D distribution.
@@ -496,6 +496,9 @@ class Source():
         snr' }}`
             which variable to plot on the y axis
             (if None then a 1D distribution is made using `xstr`)
+
+        which_sources : `boolean array`
+            mask for which sources should be plotted (default is all sources)
 
         These are exactly the same as `visualisation.plot_1D_dist`, see those
         docs for more details.
@@ -525,6 +528,9 @@ class Source():
                   "f_GW": "Gravitational Wave Frequency",
                   "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
         unitless = set(["ecc", "snr"])
+
+        if which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
 
         # ensure that the variable is a valid choice
         for var_str in [xstr, ystr]:
@@ -563,9 +569,10 @@ class Source():
 
         # plot it!
         if ystr is not None:
-            return vis.plot_2D_dist(x=x.value, y=y.value, **kwargs)
+            return vis.plot_2D_dist(x=x[which_sources].value,
+                                    y=y[which_sources].value, **kwargs)
         else:
-            return vis.plot_1D_dist(x=x.value, **kwargs)
+            return vis.plot_1D_dist(x=x[which_sources].value, **kwargs)
 
     def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr, fig=None,
                            ax=None, show=True, **kwargs):  # pragma: no cover
