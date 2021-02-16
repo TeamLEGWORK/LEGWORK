@@ -3,8 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Documentation
-=============
+.. image:: images/legwork.png
+   :width: 400
+   :alt: logo for legwork
+   :align: center
+
+
 **LEGWORK** (**L**\ ISA **E**\ volution and **G**\ ravitational **W**\ ave **OR**\ bit **K**\ it) is a python package designed to calculate signal to noise ratios for GWs emitted from inspiraling binary systems that are potentially observable by LISA. 
 
 LEGWORK also contains a plotting module show you can show off those detectable GW sources of yours and treats any and all kinds of inspiralling binaries. 
