@@ -9,7 +9,7 @@
    :align: center
 
 
-**LEGWORK** (**L**\ ISA **Ev**\ olution and **G**\ ravitational **W**\ ave **OR**\ bit **K**\ it) is a python package designed to calculate signal to noise ratios for GWs emitted from inspiraling binary systems that are potentially observable by LISA. 
+**LEGWORK** (**L**\ ISA **E**\ volution and **G**\ ravitational **W**\ ave **OR**\ bit **K**\ it) is a python package designed to calculate signal to noise ratios for GWs emitted from inspiraling binary systems that are potentially observable by LISA. 
 
 LEGWORK also contains a plotting module show you can show off those detectable GW sources of yours and treats any and all kinds of inspiralling binaries. 
 Circular and stationary? No problem!
