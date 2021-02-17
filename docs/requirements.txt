@@ -9,3 +9,4 @@ nbsphinx
 numpydoc
 sphinx_rtd_theme
 sphinx_automodapi
+IPython
