@@ -64,27 +64,23 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
 
-    Kwargs
-    ------
-    The keyword args in this function are passed to the respective function
-    that is used (set by `disttype`). Depending on your choice of `disttype`,
-    there are many options:
+    **kwargs : `(if disttype=="hist")`
+        Include values for any of `bins, range, density, cumulative, bottom,
+        histtype, align, orientation, rwidth, log, label`. See
+        https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html
+        for more details.
 
-    For `disttype="hist"` : bins, range, density, cumulative, bottom, histtype,
-                            align, orientation, rwidth, log, label
-    See https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html
-    for more details.
+    **kwargs : `(if disttype=="kde")`
+        Include values for any of `gridsize, cut, clip, legend, cumulative,
+        bw_method, bw_adjust, log_scale, fill, label, linewidth, linestyle`.See
+        https://seaborn.pydata.org/generated/seaborn.kdeplot.html for more
+        details.
 
-    For `disttype="kde"` : gridsize, cut, clip, legend, cumulative, bw_method,
-                           bw_adjust, log_scale, fill, label, linewidth,
-                           linestyle
-    See https://seaborn.pydata.org/generated/seaborn.kdeplot.html
-    for more details.
-
-    For `disttype="ecdf"` : stat, complementary, log_scale, legend, label,
-                            linewidth, linestyle
-    See https://seaborn.pydata.org/generated/seaborn.ecdfplot.html
-    for more details.
+    **kwargs : `(if disttype=="ecdf")`
+        Include values for any of `stat, complementary, log_scale, legend,
+        label, linewidth, linestyle`. See
+        https://seaborn.pydata.org/generated/seaborn.ecdfplot.html
+        for more details.
 
     Returns
     -------
@@ -207,13 +203,13 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
 
-    **kwargs : `disttype=="scatter"`
+    **kwargs : `(if disttype=="scatter")`
         input any of `s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths,
         edgecolors`. See
         https://matplotlib.org/api/_as_gen/matplotlib.pyplot.scatter.html 
         for more details.
 
-    **kwargs : `disttype=="kde"`
+    **kwargs : `(if disttype=="kde")`
         input any of `gridsize, cut, clip, legend, cumulative, cbar, cbar_ax,
         cbar_kws, bw_method, hue, palette, hue_order, hue_norm, levels, thresh,
         bw_adjust, log_scale, fill, label`. See
@@ -294,7 +290,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
     frequency_range : `float array`
         frequency values at which to plot the sensitivity curve
 
-    y_quantity : `{{ "ASD", "h_c }}`
+    y_quantity : `{{ "ASD", "h_c" }}`
         which quantity to plot on the y axis (amplitude spectral density
         or characteristic strain)
 
@@ -324,15 +320,16 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
     label : `string`
         label for the sensitivity curve in legends
 
-    Keyword args are passed to `lisa.power_spectral_density`, see those docs
-    for details on possible arguments.
+    **kwargs : `various`
+        Keyword args are passed to :meth:`legwork.lisa.power_spectral_density`,
+        see those docs for details on possible arguments.
 
     Returns
     -------
     fig : `matplotlib Figure`
         the figure on which the distribution is plotted
 
-    fig : `matplotlib Axis`
+    ax : `matplotlib Axis`
         the axis on which the distribution is plotted
     """
     if frequency_range is None:
@@ -409,9 +406,10 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
         whether to immediately show the plot or only return the Figure
         and Axis
 
-    This function is a wrapper on `visualisation.plot_2D_dist` and each kwarg
-    is passed directly to this function. For example, you can write
-    `disttype="kde"` for a kde density plot instead of a scatter plot.
+    **kwargs : `various`
+        This function is a wrapper on `visualisation.plot_2D_dist` and each
+        kwarg is passed directly to this function. For example, you can write
+        `disttype="kde"` for a kde density plot instead of a scatter plot.
 
     Returns
     -------
@@ -477,9 +475,10 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
         whether to immediately show the plot or only return the Figure
         and Axis
 
-    This function is a wrapper on `visualisation.plot_2D_dist` and each kwarg
-    is passed directly to this function. For example, you can write
-    `disttype="kde"` for a kde density plot instead of a scatter plot.
+    **kwargs : `various`
+        This function is a wrapper on `visualisation.plot_2D_dist` and each
+        kwarg is passed directly to this function. For example, you can write
+        `disttype="kde"` for a kde density plot instead of a scatter plot.
 
     Returns
     -------
