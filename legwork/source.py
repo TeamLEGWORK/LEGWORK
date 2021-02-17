@@ -14,11 +14,11 @@ __all__ = ['Source', 'Stationary', 'Evolving']
 
 class Source():
     """Class for generic GW sources
-    
+
     This class is for analysing a generic set of sources that may be
     stationary/evolving and circular/eccentric. If the type of sources are
     known, then a more specific subclass may be more useful
-    
+
     Parameters
     ----------
     m_1 : `float/array`
@@ -46,8 +46,9 @@ class Source():
         This is used to calculate maximum harmonics needed and
         transition between 'eccentric' and 'circular'.
         This variable should be updated using the function
-        `update_gw_lum_tol` (not Source._gw_lum_tol =) to ensure
-        the cached calculations match the current tolerance.
+        :meth:`legwork.source.Source.update_gw_lum_tol` (not
+        ``Source._gw_lum_tol =``) to ensure the cached calculations match the
+        current tolerance.
 
     stat_tol : `float`
         fractional change in frequency above which a
@@ -71,7 +72,7 @@ class Source():
     ValueError
         If both `f_orb` and `a` are missing.
         If array-like parameters don't have the same length.
-        
+
     AssertionError
         If a parameter is missing units
     """
@@ -130,9 +131,11 @@ class Source():
         self.set_g(interpolate_g)
 
     def create_harmonics_functions(self):
-        """Create two functions:
+        """Create two harmonics related functions
+
         1. to calculate the maximum harmonics required to calculate the SNRs
         assuming provided tolerance `gw_lum_tol`
+        
         2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values

@@ -1,3 +1,4 @@
+/* Hide numbers with Jupyter notebook cells */
 div.nbinput.container div.prompt pre {
     display: none;
 }
@@ -6,6 +7,7 @@ div.nboutput.container div.prompt pre {
     display: none;
 }
 
+/* Shift notebook cells left to account for no numbers */
 div.highlight-python.notranslate pre {
     padding-left: 5px;
 }
