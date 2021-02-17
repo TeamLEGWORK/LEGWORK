@@ -1,9 +1,12 @@
-"""Computes LISA sensitivity curve"""
+"""Functions to compute LISA sensitivity curve"""
 
 import numpy as np
 import astropy.units as u
 from scipy.interpolate import splev, splrep
 from importlib import resources
+
+__all__ = ['load_transfer_function', 'approximate_transfer_function',
+           'power_spectral_density']
 
 
 def load_transfer_function(f, fstar=19.09e-3):

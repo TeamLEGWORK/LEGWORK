@@ -17,6 +17,9 @@ params = {'figure.figsize': (12, 8),
           'ytick.labelsize': 0.7 * fs}
 plt.rcParams.update(params)
 
+__all__ = ['plot_1D_dist', 'plot_2D_dist', 'plot_sensitivity_curve',
+           'plot_sources_on_sc_circ_stat', 'plot_sources_on_sc_ecc_stat']
+
 
 def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
                  xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,

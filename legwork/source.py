@@ -68,12 +68,12 @@ class Source():
 
     Raises
     ------
-        ValueError
-            If both `f_orb` and `a` are missing.
-            If array-like paramters don't have the same length.
-
-        AssertionError
-            If a parameter is missing units
+    ValueError
+        If both `f_orb` and `a` are missing.
+        If array-like parameters don't have the same length.
+        
+    AssertionError
+        If a parameter is missing units
     """
     def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True):

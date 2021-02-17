@@ -4,6 +4,8 @@ import astropy.constants as c
 from legwork.utils import peters_g, peters_f
 import numpy as np
 
+__all__ = ['h_0_n', 'h_c_n']
+
 
 def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     """Computes the dimensionless power of a general binary

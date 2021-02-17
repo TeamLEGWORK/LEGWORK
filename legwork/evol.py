@@ -1,4 +1,5 @@
-"""`evolve with peters!`"""
+"""Functions using equations from Peters (1964) to calculate inspiral times and
+evolve parameters."""
 
 import legwork.utils as utils
 from numba import jit
@@ -6,6 +7,9 @@ from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
 import astropy.constants as c
+
+__all__ = ['de_dt', 'get_a_evol', 'get_e_evol', 'get_f_and_e',
+           'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ']
 
 
 @jit

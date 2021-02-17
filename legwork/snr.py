@@ -1,4 +1,4 @@
-"""`snr calcs` for legwork.calcs"""
+"""Functions to calculate signal-to-noise ratio in four different cases"""
 
 import numpy as np
 import legwork.strain as strain
@@ -6,6 +6,9 @@ import legwork.lisa as lisa
 import legwork.utils as utils
 import legwork.evol as evol
 import astropy.units as u
+
+__all__ = ['snr_circ_stationary', 'snr_ecc_stationary', 'snr_circ_evolving',
+           'snr_ecc_evolving']
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
