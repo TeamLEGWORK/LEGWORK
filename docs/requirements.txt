@@ -8,3 +8,4 @@ seaborn >= 0.11.1'
 nbsphinx
 numpydoc
 sphinx_rtd_theme
+sphinx_automodapi
