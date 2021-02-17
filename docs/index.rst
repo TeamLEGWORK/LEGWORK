@@ -15,11 +15,10 @@ LEGWORK also contains a plotting module show you can show off those detectable G
 Circular and stationary? No problem!
 Eccentric and chirping? We've got you covered!
 
-Want to determine if *your* favorite source is detectable by LISA? Let us do the LEGWORK and keep the LISA literature free from spurious factors of 2!
+Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK do the legwork and keep the LISA literature free from spurious factors of 2!
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
 
     Installation <install>
     Tutorials <tutorials>
