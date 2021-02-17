@@ -54,7 +54,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
         lower and upper limits for the x axis, passed to Axes.set_xlim()
 
     ylim : `tuple`
-        lower and upper limits for the u axis, passed to Axes.set_ylim()
+        lower and upper limits for the y axis, passed to Axes.set_ylim()
 
     color : `string or tuple`
         colour to use for the plot, see
@@ -64,6 +64,8 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
 
+    Kwargs
+    ------
     The keyword args in this function are passed to the respective function
     that is used (set by `disttype`). Depending on your choice of `disttype`,
     there are many options:
@@ -205,21 +207,18 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
 
-    The keyword args in this function are passed to the respective function
-    that is used (set by `disttype`). Depending on your choice of `disttype`,
-    there are many options:
+    **kwargs : `disttype=="scatter"`
+        input any of `s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths,
+        edgecolors`. See
+        https://matplotlib.org/api/_as_gen/matplotlib.pyplot.scatter.html 
+        for more details.
 
-    For `disttype="scatter"` : s, c, marker, cmap, norm, vmin, vmax, alpha,
-                               linewidths, edgecolors
-    See https://matplotlib.org/api/_as_gen/matplotlib.pyplot.scatter.html
-    for more details.
-
-    For `disttype="kde"` : gridsize, cut, clip, legend, cumulative, cbar,
-                           cbar_ax, cbar_kws, bw_method, hue, palette,
-                           hue_order, hue_norm, levels, thresh, bw_adjust,
-                           log_scale, fill, label
-    See https://seaborn.pydata.org/generated/seaborn.kdeplot.html
-    for more details.
+    **kwargs : `disttype=="kde"`
+        input any of `gridsize, cut, clip, legend, cumulative, cbar, cbar_ax,
+        cbar_kws, bw_method, hue, palette, hue_order, hue_norm, levels, thresh,
+        bw_adjust, log_scale, fill, label`. See
+        https://seaborn.pydata.org/generated/seaborn.kdeplot.html
+        for more details.
 
     Returns
     -------
