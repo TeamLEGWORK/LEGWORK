@@ -36,6 +36,7 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     "nbsphinx",
     'sphinx_automodapi.automodapi',
+    'sphinx_automodapi.smart_resolver',
     'sphinx.ext.graphviz',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
