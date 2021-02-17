@@ -1,12 +1,1 @@
-numpy >= 1.16'
-scipy >= 0.12.1'
-astropy >= 4.0'
-numba >= 0.50'
-scipy >= 1.5.0'
-matplotlib >= 3.3.2'
-seaborn >= 0.11.1'
-nbsphinx
-numpydoc
-sphinx_rtd_theme
-sphinx_automodapi
-IPython
+-e .[docs]
