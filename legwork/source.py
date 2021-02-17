@@ -17,6 +17,7 @@ class Source():
     def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True):
         """Initialise all parameters
+        
         Parameters
         ----------
         m_1 : `float/array`
@@ -488,6 +489,7 @@ class Source():
 
         Parameters
         ----------
+
         xstr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
         snr' }}`
             which variable to plot on the x axis
@@ -500,12 +502,14 @@ class Source():
         which_sources : `boolean array`
             mask for which sources should be plotted (default is all sources)
 
-        These are exactly the same as `visualisation.plot_1D_dist`, see those
-        docs for more details.
-
-        Note that if `xlabel` or `ylabel` is not passed then this function
-        automatically creates one using a default string and (if applicable)
-        the units of the variable.
+        **kwargs : `various`
+            When only `xstr` is provided, the kwargs are the same as
+            :meth:`legwork.visualisation.plot_1D_dist`. When both `xstr` and
+            `ystr` are provided, the kwargs are the same as
+            :meth:`legwork.visualisation.plot_2D_dist`. Note that if `xlabel`
+            or `ylabel` is not passed then this function automatically creates
+            one using a default string and (if applicable) the Astropy units
+            of the variable.
 
         Returns
         -------
