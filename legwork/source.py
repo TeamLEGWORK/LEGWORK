@@ -1,4 +1,4 @@
-"""`Class for generic GW sources`"""
+"""A collection of classes for analysing gravitational wave sources"""
 from astropy import units as u
 import numpy as np
 from importlib import resources
@@ -13,47 +13,70 @@ __all__ = ['Source', 'Stationary', 'Evolving']
 
 
 class Source():
-    """Superclass for generic sources"""
+    """Class for generic GW sources
+    
+    This class is for analysing a generic set of sources that may be
+    stationary/evolving and circular/eccentric. If the type of sources are
+    known, then a more specific subclass may be more useful
+    
+    Parameters
+    ----------
+    m_1 : `float/array`
+        Primary mass. Must have astropy units of mass.
+
+    m_2 : `float/array`
+        secondary mass. Must have astropy units of mass.
+
+    ecc : `float/array`
+        initial eccentricity
+
+    dist : `float/array`
+        luminosity distance to source. Must have astropy units of distance.
+
+    f_orb : `float/array`
+        orbital frequency (either `a` or `f_orb` must be supplied)
+        This takes precedence over `a`. Must have astropy units of frequency.
+
+    a : `float/array`
+        semi-major axis (either `a` or `f_orb` must be supplied). Must have
+        astropy units of length.
+
+    gw_lum_tol : `float`
+        allowed error on the GW luminosity when calculating snrs.
+        This is used to calculate maximum harmonics needed and
+        transition between 'eccentric' and 'circular'.
+        This variable should be updated using the function
+        `update_gw_lum_tol` (not Source._gw_lum_tol =) to ensure
+        the cached calculations match the current tolerance.
+
+    stat_tol : `float`
+        fractional change in frequency above which a
+        binary should be considered to be stationary
+
+    interpolate_g : `boolean`
+        whether to interpolate the g(n,e) function from Peters (1964)
+
+    Attributes
+    ----------
+    m_c : array_like
+        chirp mass. Set using `m_1` and `m_2` in
+        :meth:`legwork.utils.chirp_mass`
+
+    ecc_tol : float
+        eccentricity above which a binary is considered eccentric. Set by
+        :meth:`legwork.source.Source.find_eccentric_transition`
+
+    Raises
+    ------
+    ValueError
+        If both `f_orb` and `a` are missing.
+        If array-like parameters don't have the same length.
+        
+    AssertionError
+        If a parameter is missing units
+    """
     def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True):
-        """Initialise all parameters
-        Parameters
-        ----------
-        m_1 : `float/array`
-            primary mass
-
-        m_2 : `float/array`
-            secondary mass
-
-        ecc : `float/array`
-            initial eccentricity
-
-        dist : `float/array`
-            luminosity distance to source
-
-        forb : `float/array`
-            orbital frequency (either a or forb must be supplied)
-            This takes precedence over a
-
-        a : `float/array`
-            semi-major axis (either a or forb must be supplied)
-
-        gw_lum_tol : `float`
-            allowed error on the GW luminosity when calculating snrs.
-            This is used to calculate maximum harmonics needed and
-            transition between 'eccentric' and 'circular'.
-            This variable should be updated using the function
-            `update_gw_lum_tol` (not Source._gw_lum_tol =) to ensure
-            the cached calculations match the current tolerance.
-
-        stat_tol : `float`
-            fractional change in frequency above which a
-            binary should be considered to be stationary
-
-
-        interpolate_g : `boolean`
-            whether to interpolate the g(n,e) function from Peters (1964)
-        """
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
             raise ValueError("Either `f_orb` or `a` must be specified")
@@ -483,29 +506,30 @@ class Source():
                               **kwargs):  # pragma: no cover
         """plot distributions of Source variables. If two variables are
         specified then produce a 2D distribution, otherwise a 1D distribution.
-        This function is a wrapper on `visualisation.plot_1D_dist` and
-        `visualisation.plot_2D_dist` and thus takes mostly the same parameters.
 
         Parameters
         ----------
-        xstr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
-        snr' }}`
+
+        xstr : `{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',\
+                'snr' }`
             which variable to plot on the x axis
 
-        ystr : `{{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',
-        snr' }}`
+        ystr : `{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',\
+                snr' }`
             which variable to plot on the y axis
             (if None then a 1D distribution is made using `xstr`)
 
         which_sources : `boolean array`
             mask for which sources should be plotted (default is all sources)
 
-        These are exactly the same as `visualisation.plot_1D_dist`, see those
-        docs for more details.
-
-        Note that if `xlabel` or `ylabel` is not passed then this function
-        automatically creates one using a default string and (if applicable)
-        the units of the variable.
+        **kwargs : `various`
+            When only `xstr` is provided, the kwargs are the same as
+            :meth:`legwork.visualisation.plot_1D_dist`. When both `xstr` and
+            `ystr` are provided, the kwargs are the same as
+            :meth:`legwork.visualisation.plot_2D_dist`. Note that if `xlabel`
+            or `ylabel` is not passed then this function automatically creates
+            one using a default string and (if applicable) the Astropy units
+            of the variable.
 
         Returns
         -------

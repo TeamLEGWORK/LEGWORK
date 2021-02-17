@@ -32,14 +32,12 @@ author = 'Tom Wagg, Katie Breivik'
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
-    "sphinx.ext.todo",
     "matplotlib.sphinxext.plot_directive",
     "nbsphinx",
     'sphinx_automodapi.automodapi',
+    'sphinx_automodapi.smart_resolver',
+    'sphinx.ext.graphviz',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
     'numpydoc',
