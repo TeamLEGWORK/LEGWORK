@@ -263,12 +263,99 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
             t_evol = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i, beta=beta)
         timesteps = np.linspace(0 * u.s, t_evol, n_step).T
     # broadcast the times to every source if only one array provided
-    elif np.ndim(timesteps) == 1 and isinstance(ecc_i, (np.ndarray, list)):
+    elif np.ndim(timesteps) == 1 and isinstance(a_i.value, (np.ndarray, list)):
         timesteps = np.broadcast_to(timesteps.value,
-                                    (len(ecc_i),
+                                    (len(a_i),
                                      len(timesteps))) * timesteps.unit
     return timesteps
 
+
+def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
+                             beta=None, m_1=None, m_2=None, a_i=None,
+                             f_orb_i=None, output_vars=['f_orb']):
+    """Evolve an array of circular binaries for ``t_evol`` time
+
+    Parameters
+    ----------
+
+    t_evol : `float/array`
+        amount of time for which to evolve each binaries. Required if
+        ``timesteps`` is None. Defaults to merger times.
+
+    n_steps : `int`
+        Number of timesteps to take between t=0 and t=``t_evol``. Required if
+        ``timesteps`` is None. Defaults to 100.
+
+    timesteps : `float/array`
+        Array of exact timesteps to take when evolving each binary. Must be
+        monotonically increasing and start with t=0. Either supply a 1D array
+        to use for every binary or a 2D array that has a different array of
+        timesteps for each binary. ``timesteps`` is used in place of
+        ``t_evol`` and ``n_steps`` and takes precedence over them.
+
+    beta : `float/array`
+        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied ``m_1`` and
+        `m_2` are ignored)
+
+    m_1 : `float/array`
+        primary mass (required if ``beta`` is None or if ``output_vars``
+        contains a frequency)
+
+    m_2 : `float/array`
+        secondary mass (required if ``beta`` is None or if ``output_vars``
+        contains a frequency)
+
+    a_i : `float/array`
+        initial semi major axis (if supplied ``f_orb_i`` is ignored)
+
+    f_orb_i : `float/array`
+        initial orbital frequency (required if ``a_i`` is None)
+
+    output_vars : `array`
+        list of **ordered** output vars, choose from any of ``a``,
+        ``f_orb`` and ``f_GW`` for which of eccentricty, semi-major axis and
+        orbital/GW frequency that you want. Default is [``f_orb``]
+
+    Returns
+    -------
+    evolution : `tuple`
+        tuple possibly containing eccentricty, semi-major axis and frequency
+        at each timestep. Content determined by ``output_vars``
+    """
+    beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
+                                      a_i=a_i, f_orb_i=f_orb_i)
+    if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0\
+        and (m_1 is None or m_2 is None):
+        raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
+                         "contains a frequency")
+    timesteps = create_timesteps_array(a_i=a_i, beta=beta,
+                                       ecc_i=np.zeros_like(a_i), t_evol=t_evol,
+                                       n_step=n_step, timesteps=timesteps)
+
+    # perform the evolution
+    difference = a_i**4 - 4 * beta * timesteps
+    difference = np.where(difference.value <= 0.0, 0.0, difference)
+    a_evol = difference**(1/4)
+
+    # calculate f_orb_evol if any frequency requested
+    if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
+        # change merged binaries to extremely small separations
+        a_not0 = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
+        f_orb_evol = utils.get_f_orb_from_a(a=a_not0, m_1=m_1, m_2=m_2)
+
+        # change frequencies back to 1Hz since LISA can't measure above
+        f_orb_evol = np.where(a_evol.value == 1e-30, 1 * u.Hz, f_orb_evol)
+
+    # construct evolution output
+    evolution = []
+    for var in output_vars:
+        if var == "a":
+            evolution.append(a_evol.to(u.AU))
+        elif var == "f_orb":
+            evolution.append(f_orb_evol.to(u.Hz))
+        elif var == "f_GW":
+            evolution.append(2 * f_orb_evol.to(u.Hz))
+    return evolution
 
 def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
                               beta=None, m_1=None, m_2=None, a_i=None,
@@ -300,10 +387,12 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
         `m_2` are ignored)
 
     m_1 : `float/array`
-        primary mass (required if ``beta`` is None)
+        primary mass (required if ``beta`` is None or if ``output_vars``
+        contains a frequency)
 
     m_2 : `float/array`
-        secondary mass (required if ``beta`` is None)
+        secondary mass (required if ``beta`` is None or if ``output_vars``
+        contains a frequency)
 
     a_i : `float/array`
         initial semi major axis (if supplied ``f_orb_i`` is ignored)
@@ -321,10 +410,13 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
     evolution : `tuple`
         tuple possibly containing eccentricty, semi-major axis and frequency
         at each timestep. Content determined by ``output_vars``
-
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
+    if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0\
+        and (m_1 is None or m_2 is None):
+        raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
+                         "contains a frequency")
     c_0 = utils.c_0(a_i=a_i, ecc_i=ecc_i)
     timesteps = create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc_i,
                                        t_evol=t_evol, n_step=n_step,
@@ -343,6 +435,7 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
     # same but for single source
     else:
         ecc_evol = odeint(de_dt, ecc_i, timesteps, args=(beta, c_0)).flatten()
+    ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
     # calculate a_evol if any frequency or separation requested
     if len(set(["a", "f_orb", "f_GW"]) & set(output_vars)) > 0:
@@ -355,7 +448,7 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
             f_orb_evol = utils.get_f_orb_from_a(a=a_not0, m_1=m_1, m_2=m_2)
 
             # change frequencies back to 1Hz since LISA can't measure above
-            f_orb_evol = np.where(a_evol.value == 1e-30, 1 * u.Hz, f_orb_evol)
+            f_orb_evol = np.where(a_not0.value == 1e-30, 1 * u.Hz, f_orb_evol)
 
     # construct evolution output
     evolution = []
