@@ -73,7 +73,7 @@ def get_a_evol(a_i, e_evol, beta, c_0, times):
         separation evolution for eccentricity evolution in SI
     """
 
-    if e_evol.all() == 0.0:
+    if np.all(e_evol == 0.0):
         difference = a_i**4 - 4*beta*times
         difference = np.where(difference.value <= 0.0, 0.0, difference)
         a_evol = difference**(1/4)
