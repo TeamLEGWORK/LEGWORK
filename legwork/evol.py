@@ -42,141 +42,6 @@ def de_dt(e, times, beta, c_0):                             # pragma: no cover
     return dedt
 
 
-def get_a_evol(a_i, e_evol, beta, c_0, times):
-    """Calculates the separation evolution of a binary following
-    Peters 1964
-
-
-    Parameters
-    ----------
-    a_i : `float`
-        initial separation in SI units
-
-    ecc_i : `float`
-        initial eccentricity
-
-    e_evol : `float`
-        eccentricity evolution
-
-    beta : `float`
-        factor defined in Peters and Mathews 1964 in SI
-
-    c_0 : `float`
-        factor defined in Peters and Mathews 1964 in SI
-
-    times : `array`
-        array of times for evolution in SI units
-
-    Returns
-    -------
-    a_evol : `float`
-        separation evolution for eccentricity evolution in SI
-    """
-
-    if np.all(e_evol == 0.0):
-        difference = a_i**4 - 4*beta*times
-        difference = np.where(difference.value <= 0.0, 0.0, difference)
-        a_evol = difference**(1/4)
-    else:
-        term_1 = c_0 * e_evol**(12/19) / (1-e_evol**2)
-        term_2 = (1 + (121/304)*e_evol**2)**(870/2299)
-        a_evol = term_1 * term_2
-
-    return a_evol
-
-
-def get_e_evol(beta, c_0, ecc_i, times):
-    """Calculates the eccentricity evolution of a binary
-    with beta and c_0 factors and evolution times following
-    Peters 1964
-
-    Parameters
-    ----------
-    beta : `float`
-        Peters beta parameter in SI units, calculated in utils
-
-    c_0 : `float`
-        Peters c_0 parameter in SI units, calculated in utils
-
-    ecc_i : `float`
-        initial eccentricity
-
-    times : `array`
-        array of times for evolution in SI units
-
-    Returns
-    -------
-    e_evol : `array`
-        array of eccentricities evolved for the times provided
-    """
-    e_evol = odeint(de_dt, ecc_i, times.to(u.s),
-                    args=(beta.to(u.m**4 / u.s).value, c_0.to(u.m).value))
-
-    return e_evol.flatten()
-
-
-def get_f_and_e(m_1, m_2, f_orb_i, ecc_i, t_evol, n_step):
-    """Evolves a binary due to the emission of gravitational waves
-    and returns the final separation at t_evol
-
-    Parameters
-    ----------
-    m_1 : `float/array`
-        more massive binary component in units of kg
-
-    m_2 : `float/array`
-        less massive binary component in units of kg
-
-    f_orb_i : `float/array`
-        initial orbital frequency in units of Hz
-
-    ecc_i : `float/array`
-        initial eccentricity
-
-    t_evol : `float`
-        evolution duration in units of sec
-
-    n_step : `int`
-        number of steps to take in evolution
-
-    Returns
-    -------
-    f_orb_evol : `array`
-        frequency evolution for n_step times up to t_evol
-
-    e_evol : `array`
-        eccentricity evolution for n_step times up to t_evol
-    """
-
-    a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
-    beta = utils.beta(m_1, m_2)
-    times = np.linspace(0 * u.s, t_evol, n_step).to(u.s)
-
-    # Only treat single eccentric sources, so any cases where
-    # len(ecc_i) > 1 are circular.
-    if type(ecc_i) != np.float64:
-        c_0 = 0.0
-        # treat as circular
-        e_evol = np.zeros_like(n_step)
-
-    else:
-        c_0 = utils.c_0(a_i, ecc_i)
-        # treat as eccentric but since we have to integrate one by one,
-        # we call get_f_e for a binary one by one
-        e_evol = get_e_evol(beta=beta, c_0=c_0, ecc_i=ecc_i, times=times)
-
-    a_evol = get_a_evol(a_i=a_i, e_evol=e_evol,
-                        beta=beta, c_0=c_0, times=times)
-
-    # change merged binaries to extremely small separations
-    a_evol = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
-    f_orb_evol = utils.get_f_orb_from_a(a=a_evol, m_1=m_1, m_2=m_2)
-
-    # change frequencies back to 1Hz since LISA can't measure above
-    f_orb_evol = np.where(a_evol.value == 1e-30, 1 * u.Hz, f_orb_evol)
-    return f_orb_evol.to(u.Hz), e_evol
-
-
 def check_mass_freq_input(beta=None, m_1=None, m_2=None,
                           a_i=None, f_orb_i=None):
     """check that mass and frequency input is valid
@@ -422,7 +287,7 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
                                        t_evol=t_evol, n_step=n_step,
                                        timesteps=timesteps)
 
-    # get rid of the units for speeeed
+    # get rid of the units for faster integration
     c_0 = c_0.to(u.m).value
     beta = beta.to(u.m**4 / u.s).value
     timesteps = timesteps.to(u.s).value
@@ -642,3 +507,138 @@ def evolve_f_orb_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
     # fill in the values for binaries that are still inspiraling
     f_orb_f[inspiral] = np.power(inner_part[inspiral], -3/8)
     return f_orb_f
+
+def get_a_evol(a_i, e_evol, beta, c_0, times):
+    """Calculates the separation evolution of a binary following
+    Peters 1964
+
+
+    Parameters
+    ----------
+    a_i : `float`
+        initial separation in SI units
+
+    ecc_i : `float`
+        initial eccentricity
+
+    e_evol : `float`
+        eccentricity evolution
+
+    beta : `float`
+        factor defined in Peters and Mathews 1964 in SI
+
+    c_0 : `float`
+        factor defined in Peters and Mathews 1964 in SI
+
+    times : `array`
+        array of times for evolution in SI units
+
+    Returns
+    -------
+    a_evol : `float`
+        separation evolution for eccentricity evolution in SI
+    """
+
+    if np.all(e_evol == 0.0):
+        difference = a_i**4 - 4*beta*times
+        difference = np.where(difference.value <= 0.0, 0.0, difference)
+        a_evol = difference**(1/4)
+    else:
+        term_1 = c_0 * e_evol**(12/19) / (1-e_evol**2)
+        term_2 = (1 + (121/304)*e_evol**2)**(870/2299)
+        a_evol = term_1 * term_2
+
+    return a_evol
+
+
+def get_e_evol(beta, c_0, ecc_i, times):
+    """Calculates the eccentricity evolution of a binary
+    with beta and c_0 factors and evolution times following
+    Peters 1964
+
+    Parameters
+    ----------
+    beta : `float`
+        Peters beta parameter in SI units, calculated in utils
+
+    c_0 : `float`
+        Peters c_0 parameter in SI units, calculated in utils
+
+    ecc_i : `float`
+        initial eccentricity
+
+    times : `array`
+        array of times for evolution in SI units
+
+    Returns
+    -------
+    e_evol : `array`
+        array of eccentricities evolved for the times provided
+    """
+    e_evol = odeint(de_dt, ecc_i, times.to(u.s),
+                    args=(beta.to(u.m**4 / u.s).value, c_0.to(u.m).value))
+
+    return e_evol.flatten()
+
+
+
+def get_f_and_e(m_1, m_2, f_orb_i, ecc_i, t_evol, n_step):
+    """Evolves a binary due to the emission of gravitational waves
+    and returns the final separation at t_evol
+
+    Parameters
+    ----------
+    m_1 : `float/array`
+        more massive binary component in units of kg
+
+    m_2 : `float/array`
+        less massive binary component in units of kg
+
+    f_orb_i : `float/array`
+        initial orbital frequency in units of Hz
+
+    ecc_i : `float/array`
+        initial eccentricity
+
+    t_evol : `float`
+        evolution duration in units of sec
+
+    n_step : `int`
+        number of steps to take in evolution
+
+    Returns
+    -------
+    f_orb_evol : `array`
+        frequency evolution for n_step times up to t_evol
+
+    e_evol : `array`
+        eccentricity evolution for n_step times up to t_evol
+    """
+
+    a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
+    beta = utils.beta(m_1, m_2)
+    times = np.linspace(0 * u.s, t_evol, n_step).to(u.s)
+
+    # Only treat single eccentric sources, so any cases where
+    # len(ecc_i) > 1 are circular.
+    if type(ecc_i) != np.float64:
+        c_0 = 0.0
+        # treat as circular
+        e_evol = np.zeros_like(n_step)
+
+    else:
+        c_0 = utils.c_0(a_i, ecc_i)
+        # treat as eccentric but since we have to integrate one by one,
+        # we call get_f_e for a binary one by one
+        e_evol = get_e_evol(beta=beta, c_0=c_0, ecc_i=ecc_i, times=times)
+
+    a_evol = get_a_evol(a_i=a_i, e_evol=e_evol,
+                        beta=beta, c_0=c_0, times=times)
+
+    # change merged binaries to extremely small separations
+    a_evol = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
+    f_orb_evol = utils.get_f_orb_from_a(a=a_evol, m_1=m_1, m_2=m_2)
+
+    # change frequencies back to 1Hz since LISA can't measure above
+    f_orb_evol = np.where(a_evol.value == 1e-30, 1 * u.Hz, f_orb_evol)
+    return f_orb_evol.to(u.Hz), e_evol
