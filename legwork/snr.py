@@ -157,12 +157,11 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     t_evol = np.minimum(t_merge, t_obs)
 
     # get f_orb, ecc evolution
-    f_evol, e_evol = evol.get_f_and_e(m_1=m_1,
-                                      m_2=m_2,
-                                      f_orb_i=f_orb_i,
-                                      ecc_i=0,
-                                      t_evol=t_evol,
-                                      n_step=n_step)
+    f_evol = evol.evol_circ(t_evol=t_evol,
+                            n_step=n_step,
+                            m_1=m_1,
+                            m_2=m_2,
+                            f_orb_i=f_orb_i)
 
     # calculate the characteristic power
     h_c_n_2 = strain.h_c_n(m_c=np.tile(m_c, n_step),
