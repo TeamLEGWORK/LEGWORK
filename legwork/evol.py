@@ -45,10 +45,10 @@ def de_dt(e, times, beta, c_0):                             # pragma: no cover
 def check_mass_freq_input(beta=None, m_1=None, m_2=None,
                           a_i=None, f_orb_i=None):
     """check that mass and frequency input is valid
-    
+
     Parameters
     ----------
-    
+
     beta : `float/array`
         beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied ``m_1`` and
         `m_2` are ignored)
@@ -64,7 +64,7 @@ def check_mass_freq_input(beta=None, m_1=None, m_2=None,
 
     f_orb_i : `float/array`
         initial orbital frequency (required if ``a_i`` is None)
-    
+
     Returns
     -------
     beta : `float/array`
@@ -89,10 +89,11 @@ def check_mass_freq_input(beta=None, m_1=None, m_2=None,
         a_i = utils.get_a_from_f_orb(f_orb=f_orb_i, m_1=m_1, m_2=m_2)
     return beta, a_i
 
+
 def create_timesteps_array(a_i, beta, ecc_i=None,
                            t_evol=None, n_step=100, timesteps=None):
     """Create an array of timesteps
-    
+
     Parameters
     ----------
     t_evol : `float/array`
@@ -115,7 +116,7 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
 
     a_i : `float/array`
         initial semi major axis
-        
+
     Returns
     -------
     timesteps : `float/array`
@@ -189,8 +190,8 @@ def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
-    if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0\
-        and (m_1 is None or m_2 is None):
+    if len(set(["f_orb", "f_GW"])
+           & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
                          "contains a frequency")
     timesteps = create_timesteps_array(a_i=a_i, beta=beta,
@@ -221,6 +222,7 @@ def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
         elif var == "f_GW":
             evolution.append(2 * f_orb_evol.to(u.Hz))
     return evolution
+
 
 def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
                               beta=None, m_1=None, m_2=None, a_i=None,
@@ -278,8 +280,8 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
-    if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0\
-        and (m_1 is None or m_2 is None):
+    if len(set(["f_orb", "f_GW"])
+           & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
                          "contains a frequency")
     c_0 = utils.c_0(a_i=a_i, ecc_i=ecc_i)
@@ -357,7 +359,7 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
         merger time
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
-                                        a_i=a_i, f_orb_i=f_orb_i)
+                                      a_i=a_i, f_orb_i=f_orb_i)
 
     # apply Peters 1964 Eq. 5.9
     t_merge = a_i**4 / (4 * beta)
@@ -509,9 +511,6 @@ def evolve_f_orb_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
     return f_orb_f
 
 
-############################### old version ###################################
-
-
 def get_a_evol(a_i, e_evol, beta, c_0, times):
     """Calculates the separation evolution of a binary following
     Peters 1964
@@ -583,7 +582,6 @@ def get_e_evol(beta, c_0, ecc_i, times):
                     args=(beta.to(u.m**4 / u.s).value, c_0.to(u.m).value))
 
     return e_evol.flatten()
-
 
 
 def get_f_and_e(m_1, m_2, f_orb_i, ecc_i, t_evol, n_step):
