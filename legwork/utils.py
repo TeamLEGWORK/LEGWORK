@@ -180,6 +180,31 @@ def c_0(a_i, ecc_i):
     return c0
 
 
+def get_a_from_ecc(ecc, c_0):
+    """Convert eccentricity to semi-major axis
+
+    Use initial conditions and Peters (1964) Eq. 5.11 to convert ``ecc`` to
+    ``a``.
+
+    Parameters
+    ----------
+    ecc : `float/array`
+        eccentricity
+
+    c_0 : `float/array`
+        peters c_0 constant, must have units of length
+        (see :meth:`legwork.utils.c_0`)
+
+    Returns
+    -------
+    a : `float/array`
+        semi-major axis"""
+
+    a = c_0 * ecc**(12/19) / (1 - ecc**2) \
+        * (1 + (121/304) * ecc**2)**(870/2299)
+    return a
+
+
 def determine_stationarity(f_orb_i, t_evol, ecc_i,
                            m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
     """Determine whether a binary is stationary by checking how

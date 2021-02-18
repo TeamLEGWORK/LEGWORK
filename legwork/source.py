@@ -135,7 +135,7 @@ class Source():
 
         1. to calculate the maximum harmonics required to calculate the SNRs
         assuming provided tolerance `gw_lum_tol`
-        
+
         2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values
