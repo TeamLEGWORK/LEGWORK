@@ -170,13 +170,13 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
                            n=2,
                            dist=np.tile(dist, n_step),
                            interpolated_g=interpolated_g)**2
-    h_c_n_2 = h_c_n_2.flatten().reshape(n_step, len(m_c))
+    h_c_n_2 = h_c_n_2.flatten().reshape(len(m_c), n_step)
 
     # calculate the characteristic noise power
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
     h_c_lisa_2 = 4 * (2 * f_evol)**2 * h_f_lisa_2
 
-    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_evol, axis=0)**0.5
+    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_evol, axis=1)**0.5
 
     return snr.decompose()
 

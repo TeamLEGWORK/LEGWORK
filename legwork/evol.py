@@ -129,10 +129,8 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
             t_evol = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i, beta=beta)
         timesteps = np.linspace(0 * u.s, t_evol, n_step).T
     # broadcast the times to every source if only one array provided
-    elif np.ndim(timesteps) == 1 and isinstance(a_i.value, (np.ndarray, list)):
-        timesteps = np.broadcast_to(timesteps.value,
-                                    (len(a_i),
-                                     len(timesteps))) * timesteps.unit
+    elif np.ndim(timesteps) == 1:
+        timesteps = timesteps[:, np.newaxis]
     return timesteps
 
 
@@ -198,7 +196,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
                                        n_step=n_step, timesteps=timesteps)
 
     # perform the evolution
-    difference = a_i**4 - 4 * beta * timesteps
+    difference = a_i[:, np.newaxis]**4 - 4 * beta[:, np.newaxis] * timesteps
     difference = np.where(difference.value <= 0.0, 0.0, difference)
     a_evol = difference**(1/4)
 
@@ -210,7 +208,9 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
         # change merged binaries to extremely small separations
         a_not0 = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
-        f_orb_evol = utils.get_f_orb_from_a(a=a_not0, m_1=m_1, m_2=m_2)
+        f_orb_evol = utils.get_f_orb_from_a(a=a_not0,
+                                            m_1=m_1[:, np.newaxis],
+                                            m_2=m_2[:, np.newaxis])
 
         # change frequencies back to 1Hz since LISA can't measure above
         f_orb_evol = np.where(a_not0.value == 1e-30, 1 * u.Hz, f_orb_evol)
@@ -305,6 +305,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     # same but for single source
     else:
         ecc_evol = odeint(de_dt, ecc_i, timesteps, args=(beta, c_0)).flatten()
+    c_0 = c_0[:, np.newaxis] * u.m
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
     # convert output_vars to array if only str provided
@@ -313,13 +314,15 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
 
     # calculate a_evol if any frequency or separation requested
     if len(set(["a", "f_orb", "f_GW"]) & set(output_vars)) > 0:
-        a_evol = utils.get_a_from_ecc(ecc_evol, c_0 * u.m)
+        a_evol = utils.get_a_from_ecc(ecc_evol, c_0)
 
         # calculate f_orb_evol if any frequency requested
         if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
             # change merged binaries to extremely small separations
             a_not0 = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
-            f_orb_evol = utils.get_f_orb_from_a(a=a_not0, m_1=m_1, m_2=m_2)
+            f_orb_evol = utils.get_f_orb_from_a(a=a_not0,
+                                                m_1=m_1[:, np.newaxis],
+                                                m_2=m_2[:, np.newaxis])
 
             # change frequencies back to 1Hz since LISA can't measure above
             f_orb_evol = np.where(a_not0.value == 1e-30, 1 * u.Hz, f_orb_evol)
