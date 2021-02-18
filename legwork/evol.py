@@ -52,7 +52,7 @@ def get_a_evol(a_i, e_evol, beta, c_0, times):
     a_i : `float`
         initial separation in SI units
 
-    e_i : `float`
+    ecc_i : `float`
         initial eccentricity
 
     e_evol : `float`
@@ -115,7 +115,7 @@ def get_e_evol(beta, c_0, ecc_i, times):
     return e_evol.flatten()
 
 
-def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
+def get_f_and_e(m_1, m_2, f_orb_i, ecc_i, t_evol, n_step):
     """Evolves a binary due to the emission of gravitational waves
     and returns the final separation at t_evol
 
@@ -130,7 +130,7 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
     f_orb_i : `float/array`
         initial orbital frequency in units of Hz
 
-    e_i : `float/array`
+    ecc_i : `float/array`
         initial eccentricity
 
     t_evol : `float`
@@ -153,17 +153,17 @@ def get_f_and_e(m_1, m_2, f_orb_i, e_i, t_evol, n_step):
     times = np.linspace(0 * u.s, t_evol, n_step).to(u.s)
 
     # Only treat single eccentric sources, so any cases where
-    # len(e_i) > 1 are circular.
-    if type(e_i) != np.float64:
+    # len(ecc_i) > 1 are circular.
+    if type(ecc_i) != np.float64:
         c_0 = 0.0
         # treat as circular
         e_evol = np.zeros_like(n_step)
 
     else:
-        c_0 = utils.c_0(a_i, e_i)
+        c_0 = utils.c_0(a_i, ecc_i)
         # treat as eccentric but since we have to integrate one by one,
         # we call get_f_e for a binary one by one
-        e_evol = get_e_evol(beta=beta, c_0=c_0, ecc_i=e_i, times=times)
+        e_evol = get_e_evol(beta=beta, c_0=c_0, ecc_i=ecc_i, times=times)
 
     a_evol = get_a_evol(a_i=a_i, e_evol=e_evol,
                         beta=beta, c_0=c_0, times=times)

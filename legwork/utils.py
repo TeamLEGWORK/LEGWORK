@@ -158,7 +158,7 @@ def beta(m_1, m_2):
     return b
 
 
-def c_0(a_i, e_i):
+def c_0(a_i, ecc_i):
     """Computes the c_0 factor in Peters and Mathews calculations
 
     Parameters
@@ -166,7 +166,7 @@ def c_0(a_i, e_i):
     a_i : `array`
         initial separation with astropy units
 
-    e_i : `array`
+    ecc_i : `array`
         initial eccentricity
 
     Returns
@@ -175,8 +175,8 @@ def c_0(a_i, e_i):
         c factor in SI units
     """
 
-    c0 = a_i * (1 - e_i**2) * e_i**(-12/19) \
-        * (1 + (121/304)*e_i**2)**(-870/2299)
+    c0 = a_i * (1 - ecc_i**2) * ecc_i**(-12/19) \
+        * (1 + (121/304)*ecc_i**2)**(-870/2299)
     return c0
 
 

@@ -160,7 +160,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     f_evol, e_evol = evol.get_f_and_e(m_1=m_1,
                                       m_2=m_2,
                                       f_orb_i=f_orb_i,
-                                      e_i=0,
+                                      ecc_i=0,
                                       t_evol=t_evol,
                                       n_step=n_step)
 
@@ -246,7 +246,100 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
         f_evol, e_evol = evol.get_f_and_e(m_1=m_1[i],
                                           m_2=m_2[i],
                                           f_orb_i=f_orb_i[i],
-                                          e_i=ecc[i],
+                                          ecc_i=ecc[i],
+                                          t_evol=t_evol[i],
+                                          n_step=n_step)
+
+        merged = np.isnan(e_evol)
+        e_evol[merged] = 0.0
+        f_evol[merged] = 1 * u.Hz
+
+        # calculate the characteristic power
+        snr_n_2 = []
+        for n in range(1, max_harmonic+1):
+            h_c_n_2 = strain.h_c_n(m_c=m_c[i],
+                                   f_orb=f_evol,
+                                   ecc=e_evol,
+                                   n=n,
+                                   dist=dist[i],
+                                   interpolated_g=interpolated_g)**2
+
+            # calculate the characteristic noise power
+            h_f_lisa_2 = lisa.power_spectral_density(f=n * f_evol, t_obs=t_obs)
+            h_c_lisa_2 = 4 * (n * f_evol)**2 * h_f_lisa_2
+
+            # compute the snr for the nth harmonic
+            snr_n_2.append(np.trapz(y=h_c_n_2.flatten() / h_c_lisa_2,
+                                    x=n * f_evol))
+        snr.append(np.sum(snr_n_2)**0.5)
+
+    return snr
+
+
+def snr_ecc_evolving_fast(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
+                     interpolated_g=None):
+
+    """Computes the signal to noise ratio for evolving and
+    eccentric binaries. This function will not work for exactly
+    circular (ecc = 0.0) binaries.
+
+
+    Parameters
+    ----------
+    m_1 : `float/array`
+        primary mass
+
+    m_2 : `float/array`
+        secondary mass
+
+    f_orb_i : `float/array`
+        initial orbital frequency
+
+    dist : `float/array`
+        distance to the source
+
+    ecc : `float/array`
+        eccentricity
+
+    max_harmonic : `int`
+        maximum integer harmonic to compute
+
+    t_obs : `float`
+        total duration of the observation
+
+    n_step : `int`
+        number of time steps during observation duration
+
+    interpolated_g : `function`
+        A function returned by scipy.interpolate.interp2d that
+        computes g(n,e) from Peters (1964). The code assumes
+        that the function returns the output sorted as with the
+        interp2d returned functions (and thus unsorts).
+        Default is None and uses exact g(n,e) in this case.
+
+    Returns
+    -------
+    sn : `array`
+        snr for each binary
+    """
+
+    m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
+
+    # calculate minimum of observation time and merger time
+    t_merge = evol.get_t_merge_ecc(m_1=m_1,
+                                   m_2=m_2,
+                                   f_orb_i=f_orb_i,
+                                   ecc_i=ecc)
+    t_evol = np.minimum(t_merge, t_obs).to(u.s)
+
+
+
+    snr = []
+    for i in range(len(m_c)):
+        f_evol, e_evol = evol.get_f_and_e(m_1=m_1[i],
+                                          m_2=m_2[i],
+                                          f_orb_i=f_orb_i[i],
+                                          ecc_i=ecc[i],
                                           t_evol=t_evol[i],
                                           n_step=n_step)
 
