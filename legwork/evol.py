@@ -8,7 +8,7 @@ import numpy as np
 import astropy.units as u
 import astropy.constants as c
 
-__all__ = ['de_dt', 'get_a_evol', 'get_e_evol', 'get_f_and_e',
+__all__ = ['de_dt', 'evolve_circular_binaries', 'evolve_eccentric_binaries',
            'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ']
 
 
@@ -507,6 +507,10 @@ def evolve_f_orb_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
     # fill in the values for binaries that are still inspiraling
     f_orb_f[inspiral] = np.power(inner_part[inspiral], -3/8)
     return f_orb_f
+
+
+############################### old version ###################################
+
 
 def get_a_evol(a_i, e_evol, beta, c_0, times):
     """Calculates the separation evolution of a binary following
