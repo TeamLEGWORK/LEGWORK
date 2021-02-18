@@ -1,6 +1,7 @@
 """Functions using equations from Peters (1964) to calculate inspiral times and
 evolve parameters."""
 
+from numpy.lib.arraysetops import isin
 import legwork.utils as utils
 from numba import jit
 from scipy.integrate import odeint, quad
@@ -8,7 +9,7 @@ import numpy as np
 import astropy.units as u
 import astropy.constants as c
 
-__all__ = ['de_dt', 'evolve_circular_binaries', 'evolve_eccentric_binaries',
+__all__ = ['de_dt', 'evol_circ', 'evol_ecc',
            'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ']
 
 
@@ -136,9 +137,8 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
     return timesteps
 
 
-def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
-                             beta=None, m_1=None, m_2=None, a_i=None,
-                             f_orb_i=None, output_vars=['f_orb']):
+def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
+              m_2=None, a_i=None, f_orb_i=None, output_vars='f_orb'):
     """Evolve an array of circular binaries for ``t_evol`` time
 
     Parameters
@@ -177,16 +177,16 @@ def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
     f_orb_i : `float/array`
         initial orbital frequency (required if ``a_i`` is None)
 
-    output_vars : `array`
-        list of **ordered** output vars, choose from any of ``a``,
-        ``f_orb`` and ``f_GW`` for which of eccentricty, semi-major axis and
-        orbital/GW frequency that you want. Default is [``f_orb``]
+    output_vars : `str/array`
+        list of **ordered** output vars, or a single var. Choose from any of
+        ``a``, ``f_orb`` and ``f_GW`` for which of semi-major axis and
+        orbital/GW frequency that you want. Default is ``f_orb``.
 
     Returns
     -------
-    evolution : `tuple`
-        tuple possibly containing eccentricty, semi-major axis and frequency
-        at each timestep. Content determined by ``output_vars``
+    evolution : `array`
+        array possibly containing semi-major axis and frequency
+        at each timestep. Content determined by ``output_vars``.
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
@@ -203,6 +203,10 @@ def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
     difference = np.where(difference.value <= 0.0, 0.0, difference)
     a_evol = difference**(1/4)
 
+    # convert output_vars to array if only str provided
+    if isinstance(output_vars, str):
+        output_vars = [output_vars]
+
     # calculate f_orb_evol if any frequency requested
     if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
         # change merged binaries to extremely small separations
@@ -210,7 +214,7 @@ def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
         f_orb_evol = utils.get_f_orb_from_a(a=a_not0, m_1=m_1, m_2=m_2)
 
         # change frequencies back to 1Hz since LISA can't measure above
-        f_orb_evol = np.where(a_evol.value == 1e-30, 1 * u.Hz, f_orb_evol)
+        f_orb_evol = np.where(a_not0.value == 1e-30, 1 * u.Hz, f_orb_evol)
 
     # construct evolution output
     evolution = []
@@ -221,12 +225,12 @@ def evolve_circular_binaries(t_evol=None, n_step=100, timesteps=None,
             evolution.append(f_orb_evol.to(u.Hz))
         elif var == "f_GW":
             evolution.append(2 * f_orb_evol.to(u.Hz))
-    return evolution
+    return evolution if len(evolution) > 1 else evolution[0]
 
 
-def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
-                              beta=None, m_1=None, m_2=None, a_i=None,
-                              f_orb_i=None, output_vars=['ecc', 'f_orb']):
+def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
+             m_1=None, m_2=None, a_i=None, f_orb_i=None,
+             output_vars=['ecc', 'f_orb']):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     Parameters
@@ -304,6 +308,10 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
         ecc_evol = odeint(de_dt, ecc_i, timesteps, args=(beta, c_0)).flatten()
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
+    # convert output_vars to array if only str provided
+    if isinstance(output_vars, str):
+        output_vars = [output_vars]
+
     # calculate a_evol if any frequency or separation requested
     if len(set(["a", "f_orb", "f_GW"]) & set(output_vars)) > 0:
         a_evol = utils.get_a_from_ecc(ecc_evol, c_0 * u.m)
@@ -328,7 +336,7 @@ def evolve_eccentric_binaries(ecc_i, t_evol=None, n_step=100, timesteps=None,
             evolution.append(f_orb_evol.to(u.Hz))
         elif var == "f_GW":
             evolution.append(2 * f_orb_evol.to(u.Hz))
-    return evolution
+    return evolution if len(evolution) > 1 else evolution[0]
 
 
 def get_t_merge_circ(beta=None, m_1=None, m_2=None,
