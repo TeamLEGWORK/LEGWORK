@@ -1,7 +1,6 @@
 """Functions using equations from Peters (1964) to calculate inspiral times and
 evolve parameters."""
 
-from numpy.lib.arraysetops import isin
 import legwork.utils as utils
 from numba import jit
 from scipy.integrate import odeint, quad

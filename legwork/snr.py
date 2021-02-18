@@ -240,36 +240,29 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     # get f_orb, ecc evolution for each binary one by one
     # since we have to integrate the de/de ode
 
+    e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step,
+                                       m_1=m_1, m_2=m_2, f_orb_i=f_orb_i)
+
     snr = []
     for i in range(len(m_c)):
-        f_evol, e_evol = evol.get_f_and_e(m_1=m_1[i],
-                                          m_2=m_2[i],
-                                          f_orb_i=f_orb_i[i],
-                                          ecc_i=ecc[i],
-                                          t_evol=t_evol[i],
-                                          n_step=n_step)
-
-        merged = np.isnan(e_evol)
-        e_evol[merged] = 0.0
-        f_evol[merged] = 1 * u.Hz
-
         # calculate the characteristic power
         snr_n_2 = []
         for n in range(1, max_harmonic+1):
             h_c_n_2 = strain.h_c_n(m_c=m_c[i],
-                                   f_orb=f_evol,
-                                   ecc=e_evol,
+                                   f_orb=f_orb_evol[i],
+                                   ecc=e_evol[i],
                                    n=n,
                                    dist=dist[i],
                                    interpolated_g=interpolated_g)**2
 
             # calculate the characteristic noise power
-            h_f_lisa_2 = lisa.power_spectral_density(f=n * f_evol, t_obs=t_obs)
-            h_c_lisa_2 = 4 * (n * f_evol)**2 * h_f_lisa_2
+            h_f_lisa_2 = lisa.power_spectral_density(f=n * f_orb_evol[i],
+                                                     t_obs=t_obs)
+            h_c_lisa_2 = 4 * (n * f_orb_evol[i])**2 * h_f_lisa_2
 
             # compute the snr for the nth harmonic
             snr_n_2.append(np.trapz(y=h_c_n_2.flatten() / h_c_lisa_2,
-                                    x=n * f_evol))
+                                    x=n * f_orb_evol[i]))
         snr.append(np.sum(snr_n_2)**0.5)
 
     return snr
