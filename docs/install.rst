@@ -3,7 +3,7 @@ Installation
 
 Stable Version
 --------------
-LEGWORK is *almost* available for installation of PyPI.
+LEGWORK is *almost* available for installation on PyPI.
 Soon you will be able to install the latest stable version using ``pip`` as: ::
 
     pip install legwork
