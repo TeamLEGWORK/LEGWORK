@@ -45,4 +45,4 @@ class Test(unittest.TestCase):
                                        f_orb_i=f_orb, dist=dist, n_step=100,
                                        t_obs=t_obs, max_harmonic=10)
 
-        self.assertTrue(np.allclose(snr_circ, snr_ecc))
+        self.assertTrue(np.allclose(snr_circ, snr_ecc, atol=1e-1, rtol=1e-2))
