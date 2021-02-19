@@ -4,8 +4,7 @@ import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
-import legwork.utils as utils
-import legwork.strain as strain
+from legwork import utils, strain, lisa
 import legwork.snr as sn
 import legwork.visualisation as vis
 
@@ -14,11 +13,11 @@ __all__ = ['Source', 'Stationary', 'Evolving']
 
 class Source():
     """Class for generic GW sources
-    
+
     This class is for analysing a generic set of sources that may be
     stationary/evolving and circular/eccentric. If the type of sources are
     known, then a more specific subclass may be more useful
-    
+
     Parameters
     ----------
     m_1 : `float/array`
@@ -46,8 +45,9 @@ class Source():
         This is used to calculate maximum harmonics needed and
         transition between 'eccentric' and 'circular'.
         This variable should be updated using the function
-        `update_gw_lum_tol` (not Source._gw_lum_tol =) to ensure
-        the cached calculations match the current tolerance.
+        :meth:`legwork.source.Source.update_gw_lum_tol` (not
+        ``Source._gw_lum_tol =``) to ensure the cached calculations match the
+        current tolerance.
 
     stat_tol : `float`
         fractional change in frequency above which a
@@ -55,6 +55,15 @@ class Source():
 
     interpolate_g : `boolean`
         whether to interpolate the g(n,e) function from Peters (1964)
+
+    interpolate_sc : `boolean`
+        whether to interpolate the LISA sensitivity curve
+
+    sc_params : `dict`
+        parameters for interpolated sensitivity curve. Include any of ``t_obs``
+        , ``L``, ``fstar``, ``approximate_R`` and ``include_confusion_noise``.
+        Default values are: 4 years, 2.5e9, 19.09e-3, False and True. This is
+        ignored if ``interpolate_sc`` is False.
 
     Attributes
     ----------
@@ -71,12 +80,13 @@ class Source():
     ValueError
         If both `f_orb` and `a` are missing.
         If array-like parameters don't have the same length.
-        
+
     AssertionError
         If a parameter is missing units
     """
     def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None,
-                 gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True):
+                 gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
+                 interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
             raise ValueError("Either `f_orb` or `a` must be specified")
@@ -125,14 +135,19 @@ class Source():
         self.a = a
         self.snr = None
         self.n_sources = len(m_1)
+        self.interpolate_sc = interpolate_sc
+        self._sc_params = sc_params
 
         self.update_gw_lum_tol(gw_lum_tol)
         self.set_g(interpolate_g)
+        self.set_sc()
 
     def create_harmonics_functions(self):
-        """Create two functions:
+        """Create two harmonics related functions
+
         1. to calculate the maximum harmonics required to calculate the SNRs
         assuming provided tolerance `gw_lum_tol`
+
         2. to calculate the dominant harmonic frequency (max strain)"""
 
         # open file containing pre-calculated g(n,e) and F(e) values
@@ -234,6 +249,47 @@ class Source():
             self.g = interp2d(n_range, e_range, peters_g, kind="cubic")
         else:
             self.g = None
+
+    def set_sc(self):
+        """Set Source sensitivity curve function
+
+        If user wants to interpolate then perform interpolation of LISA
+        sensitivity curve using ``sn_params``. Otherwise just leave the
+        function as None."""
+        if self.interpolate_sc:
+            # update the default settings with current params
+            default_params = {
+                "t_obs": 4 * u.yr,
+                "L": 2.5e9,
+                "fstar": 19.09e-3,
+                "approximate_R": False,
+                "include_confusion_noise": True
+            }
+            default_params.update(self._sc_params)
+
+            # get values
+            frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
+            sc = lisa.power_spectral_density(frequency_range, **default_params)
+
+            # interpolate
+            interp_sc = interp1d(frequency_range, sc, bounds_error=False,
+                                 fill_value=1e30)
+
+            # add units back
+            self.sc = lambda f: interp_sc(f.to(u.Hz)) / u.Hz
+        else:
+            self.sc = None
+
+    def update_sc_params(self, sc_params):
+        """update sensitivity curve parameters
+
+        Update the parameters used to interpolate sensitivity curve and perform
+        interpolation again to match new params"""
+        # check whether params have actually changed
+        if sc_params != self._sc_params:
+            # change values and re-interpolate
+            self._sc_params = sc_params
+            self.set_sc()
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
         """Produce a mask of the sources based on whether binaries
@@ -415,7 +471,8 @@ class Source():
                                                    f_orb=self.f_orb[ind_circ],
                                                    dist=self.dist[ind_circ],
                                                    t_obs=t_obs,
-                                                   interpolated_g=self.g)
+                                                   interpolated_g=self.g,
+                                                   interpolated_sc=self.sc)
         if ind_ecc.any():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
@@ -433,7 +490,8 @@ class Source():
                                                        dist=self.dist[match],
                                                        t_obs=t_obs,
                                                        max_harmonic=upper - 1,
-                                                       interpolated_g=self.g)
+                                                       interpolated_g=self.g,
+                                                       interpolated_sc=self.sc)
 
         return snr[which_sources]
 
@@ -478,7 +536,8 @@ class Source():
                                                  dist=self.dist[ind_circ],
                                                  t_obs=t_obs,
                                                  n_step=n_step,
-                                                 interpolated_g=self.g)
+                                                 interpolated_g=self.g,
+                                                 interpolated_sc=self.sc)
         if ind_ecc.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
@@ -498,7 +557,8 @@ class Source():
                                                      max_harmonic=upper - 1,
                                                      t_obs=t_obs,
                                                      n_step=n_step,
-                                                     interpolated_g=self.g)
+                                                     interpolated_g=self.g,
+                                                     interpolated_sc=self.sc)
 
         return snr[which_sources]
 

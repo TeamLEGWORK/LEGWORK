@@ -209,7 +209,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     **kwargs : `(if disttype=="scatter")`
         input any of `s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths,
         edgecolors`. See
-        https://matplotlib.org/api/_as_gen/matplotlib.pyplot.scatter.html 
+        https://matplotlib.org/api/_as_gen/matplotlib.pyplot.scatter.html
         for more details.
 
     **kwargs : `(if disttype=="kde")`

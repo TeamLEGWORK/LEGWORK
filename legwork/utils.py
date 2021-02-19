@@ -158,7 +158,7 @@ def beta(m_1, m_2):
     return b
 
 
-def c_0(a_i, e_i):
+def c_0(a_i, ecc_i):
     """Computes the c_0 factor in Peters and Mathews calculations
 
     Parameters
@@ -166,7 +166,7 @@ def c_0(a_i, e_i):
     a_i : `array`
         initial separation with astropy units
 
-    e_i : `array`
+    ecc_i : `array`
         initial eccentricity
 
     Returns
@@ -175,9 +175,34 @@ def c_0(a_i, e_i):
         c factor in SI units
     """
 
-    c0 = a_i * (1 - e_i**2) * e_i**(-12/19) \
-        * (1 + (121/304)*e_i**2)**(-870/2299)
+    c0 = a_i * (1 - ecc_i**2) * ecc_i**(-12/19) \
+        * (1 + (121/304)*ecc_i**2)**(-870/2299)
     return c0
+
+
+def get_a_from_ecc(ecc, c_0):
+    """Convert eccentricity to semi-major axis
+
+    Use initial conditions and Peters (1964) Eq. 5.11 to convert ``ecc`` to
+    ``a``.
+
+    Parameters
+    ----------
+    ecc : `float/array`
+        eccentricity
+
+    c_0 : `float/array`
+        peters c_0 constant, must have units of length
+        (see :meth:`legwork.utils.c_0`)
+
+    Returns
+    -------
+    a : `float/array`
+        semi-major axis"""
+
+    a = c_0 * ecc**(12/19) / (1 - ecc**2) \
+        * (1 + (121/304) * ecc**2)**(870/2299)
+    return a
 
 
 def determine_stationarity(f_orb_i, t_evol, ecc_i,

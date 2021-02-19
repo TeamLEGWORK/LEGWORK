@@ -150,5 +150,5 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
     Sn = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
 
     # replace values for bad frequencies (set to extremely high value)
-    Sn = np.where(np.logical_and(f > MIN_F, f < MAX_F), Sn, HUGE_NOISE)
+    Sn = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), Sn, HUGE_NOISE)
     return Sn / u.Hz
