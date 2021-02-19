@@ -154,27 +154,27 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
                                     f_orb_i=f_orb_i)
     t_evol = np.minimum(t_merge, t_obs)
 
-    # get f_orb, ecc evolution
-    f_evol = evol.evol_circ(t_evol=t_evol,
-                            n_step=n_step,
-                            m_1=m_1,
-                            m_2=m_2,
-                            f_orb_i=f_orb_i)
+    # get f_orb evolution
+    f_orb_evol = evol.evol_circ(t_evol=t_evol,
+                                n_step=n_step,
+                                m_1=m_1,
+                                m_2=m_2,
+                                f_orb_i=f_orb_i)
 
     # calculate the characteristic power
     h_c_n_2 = strain.h_c_n(m_c=m_c,
-                           f_orb=f_evol,
-                           ecc=np.zeros_like(f_evol).value,
+                           f_orb=f_orb_evol,
+                           ecc=np.zeros_like(f_orb_evol).value,
                            n=2,
                            dist=dist,
                            interpolated_g=interpolated_g)**2
     h_c_n_2 = h_c_n_2.reshape(len(m_c), n_step)
 
     # calculate the characteristic noise power
-    h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
-    h_c_lisa_2 = 4 * (2 * f_evol)**2 * h_f_lisa_2
+    h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs)
+    h_c_lisa_2 = 4 * (2 * f_orb_evol)**2 * h_f_lisa_2
 
-    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_evol, axis=1)**0.5
+    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1)**0.5
 
     return snr.decompose()
 
@@ -229,32 +229,27 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
     # calculate minimum of observation time and merger time
-    # need to implement t_merge_ecc!
-    t_merge = evol.get_t_merge_ecc(m_1=m_1,
-                                   m_2=m_2,
-                                   f_orb_i=f_orb_i,
-                                   ecc_i=ecc)
+    t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
+                                   f_orb_i=f_orb_i, ecc_i=ecc)
     t_evol = np.minimum(t_merge, t_obs).to(u.s)
-    # get f_orb, ecc evolution for each binary one by one
-    # since we have to integrate the de/de ode
 
+    # get eccentricity and f_orb evolutions
     e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step,
                                        m_1=m_1, m_2=m_2, f_orb_i=f_orb_i)
 
-    n_range = np.arange(1, max_harmonic + 1).astype(int)
-    f_n_evol = n_range[np.newaxis, np.newaxis, :] * f_orb_evol[..., np.newaxis]
+    # create harmonics list and multiply for nth frequency evolution
+    harms = np.arange(1, max_harmonic + 1).astype(int)
+    f_n_evol = harms[np.newaxis, np.newaxis, :] * f_orb_evol[..., np.newaxis]
 
-    h_c_n_2 = strain.h_c_n(m_c=m_c,
-                           f_orb=f_orb_evol,
-                           ecc=e_evol,
-                           n=n_range,
-                           dist=dist,
-                           interpolated_g=interpolated_g)**2
+    # calculate the characteristic strain
+    h_c_n_2 = strain.h_c_n(m_c=m_c, f_orb=f_orb_evol, ecc=e_evol, n=harms,
+                           dist=dist, interpolated_g=interpolated_g)**2
 
     # calculate the characteristic noise power
     h_f_lisa = lisa.power_spectral_density(f=f_n_evol, t_obs=t_obs)
     h_c_lisa_2 = 4 * f_n_evol**2 * h_f_lisa
 
+    # integrate, sum and square root to get SNR
     snr_n_2 = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=f_n_evol, axis=1)
     snr_2 = snr_n_2.sum(axis=1)
     snr = np.sqrt(snr_2)
