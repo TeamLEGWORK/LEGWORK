@@ -205,7 +205,7 @@ class Test(unittest.TestCase):
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         dist = np.random.uniform(0, 30, n_values) * u.kpc
         f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
-        ecc = np.random.uniform(0.0, 0.9, n_values)
+        ecc = np.random.uniform(0.0, 0.4, n_values)
 
         # compare snr calculated directly with through Source
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
