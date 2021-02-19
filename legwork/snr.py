@@ -182,7 +182,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
 
 
 def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
-                          interpolated_g=None):
+                     interpolated_g=None):
 
     """Computes the signal to noise ratio for evolving and
     eccentric binaries. This function will not work for exactly
