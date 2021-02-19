@@ -9,7 +9,7 @@ __all__ = ['h_0_n', 'h_c_n']
 
 def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     """Computes strain amplitude
-    
+
     Computes the dimensionless power of a general binary
     radiating gravitational waves in the quadrupole approximation
     at ``n`` harmonics of the orbital frequency

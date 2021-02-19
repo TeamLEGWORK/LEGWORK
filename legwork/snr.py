@@ -12,8 +12,7 @@ __all__ = ['snr_circ_stationary', 'snr_ecc_stationary', 'snr_circ_evolving',
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
-    """Computes the signal to noise ratio for stationary and
-    circular binaries
+    """Computes SNR for circular and stationary sources
 
     Parameters
     ----------
@@ -38,7 +37,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
 
     Returns
     -------
-    sn : `float/array`
+    snr : `float/array`
         snr for each binary
     """
 
@@ -56,9 +55,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
 
 def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
                        interpolated_g=None):
-    """Computes the signal to noise ratio for stationary and
-    eccentric binaries
-
+    """Computes SNR for eccentric and stationary sources
 
     Parameters
     ----------
@@ -89,8 +86,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
 
     Returns
     -------
-    sn : `float/array`
-        sn for each binary
+    snr : `float/array`
+        snr for each binary
     """
     # define range of harmonics
     n_range = np.arange(1, max_harmonic + 1).astype(int)
@@ -99,21 +96,23 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
     h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
                                ecc=ecc, n=n_range, dist=dist,
                                interpolated_g=interpolated_g)**2
+
+    # reshape the output since only one timestep
+    h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), max_harmonic)
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
-    # turn n_range into grid and calcualte noise
-    N, F = np.meshgrid(n_range, f_orb)
-    h_f_lisa_n_2 = lisa.power_spectral_density(f=N * F, t_obs=t_obs)
+    # calculate harmonic frequencies and noise
+    f_n = n_range[np.newaxis, :] * f_orb[:, np.newaxis]
+    h_f_lisa_n_2 = lisa.power_spectral_density(f=f_n, t_obs=t_obs)
 
     # calculate the signal-to-noise ratio
-    snr = (np.sum(h_f_src_ecc_2 / (4*h_f_lisa_n_2), axis=1))**0.5
+    snr = (np.sum(h_f_src_ecc_2 / (4 * h_f_lisa_n_2), axis=1))**0.5
     return snr.decompose()
 
 
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
                       interpolated_g=None):
-    """Computes the signal to noise ratio for stationary and
-    circular binaries
+    """Computes SNR for circular and stationary sources
 
     Parameters
     ----------
@@ -147,7 +146,6 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     sn : `float/array`
         snr for each binary
     """
-
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
     # calculate minimum of observation time and merger time
@@ -164,13 +162,13 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
                             f_orb_i=f_orb_i)
 
     # calculate the characteristic power
-    h_c_n_2 = strain.h_c_n(m_c=np.tile(m_c, n_step),
-                           f_orb=f_evol.flatten(),
-                           ecc=np.zeros_like(f_evol.flatten()).value,
+    h_c_n_2 = strain.h_c_n(m_c=m_c,
+                           f_orb=f_evol,
+                           ecc=np.zeros_like(f_evol).value,
                            n=2,
-                           dist=np.tile(dist, n_step),
+                           dist=dist,
                            interpolated_g=interpolated_g)**2
-    h_c_n_2 = h_c_n_2.flatten().reshape(len(m_c), n_step)
+    h_c_n_2 = h_c_n_2.reshape(len(m_c), n_step)
 
     # calculate the characteristic noise power
     h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_evol, t_obs=t_obs)
