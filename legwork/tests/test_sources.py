@@ -194,7 +194,7 @@ class Test(unittest.TestCase):
         interp_snr = sources_interp.get_snr(verbose=True)
         snr = sources.get_snr(verbose=True)
 
-        self.assertTrue(np.allclose(interp_snr, snr, atol=1e-1, rtol=1e-2))
+        self.assertTrue(np.allclose(interp_snr, snr, atol=1e-1, rtol=1e-1))
 
     def test_bad_input(self):
         """checks that Source handles bad input well"""
