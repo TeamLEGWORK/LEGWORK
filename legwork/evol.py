@@ -187,6 +187,11 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
+
+    # convert output_vars to array if only str provided
+    if isinstance(output_vars, str):
+        output_vars = [output_vars]
+
     if len(set(["f_orb", "f_GW"])
            & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
@@ -199,10 +204,6 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     difference = a_i[:, np.newaxis]**4 - 4 * beta[:, np.newaxis] * timesteps
     difference = np.where(difference.value <= 0.0, 0.0, difference)
     a_evol = difference**(1/4)
-
-    # convert output_vars to array if only str provided
-    if isinstance(output_vars, str):
-        output_vars = [output_vars]
 
     # calculate f_orb_evol if any frequency requested
     if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
@@ -283,6 +284,11 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
+
+    # convert output_vars to array if only str provided
+    if isinstance(output_vars, str):
+        output_vars = [output_vars]
+
     if len(set(["f_orb", "f_GW"])
            & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
@@ -297,20 +303,12 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     beta = beta.to(u.m**4 / u.s).value
     timesteps = timesteps.to(u.s).value
 
-    # perform the evolution for an array of sources
-    if isinstance(ecc_i, (np.ndarray, list)):
-        ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
-                                    args=(beta[i], c_0[i])).flatten()
-                             for i in range(len(ecc_i))])
-    # same but for single source
-    else:
-        ecc_evol = odeint(de_dt, ecc_i, timesteps, args=(beta, c_0)).flatten()
+    # perform the evolution
+    ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
+                                args=(beta[i], c_0[i])).flatten()
+                            for i in range(len(ecc_i))])
     c_0 = c_0[:, np.newaxis] * u.m
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
-
-    # convert output_vars to array if only str provided
-    if isinstance(output_vars, str):
-        output_vars = [output_vars]
 
     # calculate a_evol if any frequency or separation requested
     if len(set(["a", "f_orb", "f_GW"]) & set(output_vars)) > 0:

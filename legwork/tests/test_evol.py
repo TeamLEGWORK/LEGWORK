@@ -1,5 +1,5 @@
 import numpy as np
-import legwork.evol as evol
+from legwork import evol, utils
 import unittest
 
 from astropy import units as u
@@ -40,13 +40,13 @@ class Test(unittest.TestCase):
 
         self.assertTrue(np.allclose(circ_time, ecc_time))
 
-    def test_t_merge_circ_bad_input(self):
-        """checks that the t_merge circ function handles bad input well"""
+    def test_bad_input(self):
+        """checks that functions handle bad input well"""
         # missing masses
         no_worries = True
         try:
-            evol.get_t_merge_circ(beta=None, m_1=None, m_2=None,
-                                  f_orb_i=1e-3 * u.Hz)
+            evol.check_mass_freq_input(beta=None, m_1=None, m_2=None,
+                                       f_orb_i=1e-3 * u.Hz, a_i=None)
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
@@ -54,8 +54,8 @@ class Test(unittest.TestCase):
         # missing individual masses and no a_i
         no_worries = True
         try:
-            evol.get_t_merge_circ(beta=10 * u.m**4 / u.s,
-                                  f_orb_i=1e-3 * u.Hz, a_i=None)
+            evol.check_mass_freq_input(beta=10 * u.m**4 / u.s,
+                                       f_orb_i=1e-3 * u.Hz, a_i=None)
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
@@ -63,40 +63,34 @@ class Test(unittest.TestCase):
         # missing frequency and separation
         no_worries = True
         try:
-            evol.get_t_merge_circ(m_1=10 * u.Msun, m_2=10 * u.Msun,
-                                  f_orb_i=None, a_i=None)
+            evol.check_mass_freq_input(m_1=10 * u.Msun, m_2=10 * u.Msun,
+                                       f_orb_i=None, a_i=None)
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
 
-    def test_t_merge_ecc_bad_input(self):
-        """checks that the t_merge ecc function handles bad input well"""
-        # missing masses
+        # missing masses if frequency
         no_worries = True
         try:
-            evol.get_t_merge_ecc(beta=None, m_1=None, m_2=None,
-                                 f_orb_i=1e-3 * u.Hz, ecc_i=0.0)
+            evol.evol_circ(t_evol=None, n_step=100, timesteps=None,
+                           beta=1 * u.m**4 / u.s, m_1=None, m_2=None,
+                           f_orb_i=1e-3 * u.Hz, a_i=0.1 * u.AU,
+                           output_vars='f_orb')
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
 
-        # missing individual masses and no a_i
+        # missing masses if frequency
         no_worries = True
         try:
-            evol.get_t_merge_ecc(beta=10 * u.m**4 / u.s,
-                                 f_orb_i=1e-3 * u.Hz, a_i=None, ecc_i=0.0)
+            evol.evol_ecc(ecc_i=0.0, t_evol=None, n_step=100, timesteps=None,
+                          beta=1 * u.m**4 / u.s, m_1=None, m_2=None,
+                          f_orb_i=1e-3 * u.Hz, a_i=0.1 * u.AU,
+                          output_vars='f_orb')
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
-
-        # missing frequency and separation
-        no_worries = True
-        try:
-            evol.get_t_merge_ecc(m_1=10 * u.Msun, m_2=10 * u.Msun,
-                                 f_orb_i=None, a_i=None, ecc_i=0.0)
-        except ValueError:
-            no_worries = False
-        self.assertFalse(no_worries)
+                           
 
     def test_t_merge_special_cases(self):
         """checks that t_merge_ecc operates properly with exactly circular
@@ -123,3 +117,49 @@ class Test(unittest.TestCase):
             single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0],
                                                ecc_i=ecc_i[0]).to(u.yr)
             self.assertTrue(array_time[0] == single_time)
+
+    
+    def test_timestep_creation(self):
+        n_values = 10
+
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        ecc = np.random.uniform(0.0, 0.9, n_values)
+
+        a_i = utils.get_a_from_f_orb(f_orb, m_1, m_2)
+        beta = utils.beta(m_1, m_2)
+
+        t_merge = evol.get_t_merge_ecc(ecc, a_i=a_i, beta=beta)
+        real_times = np.linspace(0 * u.s, t_merge, 100).T
+        created_times = evol.create_timesteps_array(a_i=a_i, beta=beta,
+                                                    ecc_i=ecc, n_step=100)
+
+        self.assertTrue(np.allclose(real_times, created_times))
+
+        timesteps = np.linspace(0, 100, 100) * u.s
+        created_times = evol.create_timesteps_array(a_i=a_i, beta=beta,
+                                                    ecc_i=ecc,
+                                                    timesteps=timesteps)
+        real_times = np.array([timesteps.value for i in range(len(a_i))]).T \
+            * timesteps.unit
+        self.assertTrue(np.allclose(real_times, created_times))
+
+    def test_evol_output_vars(self):
+        n_values = 10
+
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        ecc = np.random.uniform(0.0, 0.9, n_values)
+
+        a_i = utils.get_a_from_f_orb(f_orb, m_1, m_2)
+        beta = utils.beta(m_1, m_2)
+
+        evolution = evol.evol_circ(m_1=m_1, m_2=m_2, a_i=a_i,
+                                   output_vars=["a", "f_GW"])
+        self.assertTrue(len(evolution) == 2)
+
+        evolution = evol.evol_ecc(ecc_i=ecc, m_1=m_1, m_2=m_2, a_i=a_i,
+                                   output_vars=["a", "f_GW"])
+        self.assertTrue(len(evolution) == 2)
