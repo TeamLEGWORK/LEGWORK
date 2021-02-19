@@ -44,7 +44,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None):
 
     # only need to compute n=2 harmonic for circular
     h_0_circ_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
-                              ecc=0.0, n=2, dist=dist,
+                              ecc=np.zeros_like(f_orb).value, n=2, dist=dist,
                               interpolated_g=interpolated_g).flatten()**2
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
