@@ -90,7 +90,6 @@ class Test(unittest.TestCase):
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
-                           
 
     def test_t_merge_special_cases(self):
         """checks that t_merge_ecc operates properly with exactly circular
@@ -118,7 +117,6 @@ class Test(unittest.TestCase):
                                                ecc_i=ecc_i[0]).to(u.yr)
             self.assertTrue(array_time[0] == single_time)
 
-    
     def test_timestep_creation(self):
         n_values = 10
 
@@ -154,12 +152,11 @@ class Test(unittest.TestCase):
         ecc = np.random.uniform(0.0, 0.9, n_values)
 
         a_i = utils.get_a_from_f_orb(f_orb, m_1, m_2)
-        beta = utils.beta(m_1, m_2)
 
         evolution = evol.evol_circ(m_1=m_1, m_2=m_2, a_i=a_i,
                                    output_vars=["a", "f_GW"])
         self.assertTrue(len(evolution) == 2)
 
         evolution = evol.evol_ecc(ecc_i=ecc, m_1=m_1, m_2=m_2, a_i=a_i,
-                                   output_vars=["a", "f_GW"])
+                                  output_vars=["a", "f_GW"])
         self.assertTrue(len(evolution) == 2)

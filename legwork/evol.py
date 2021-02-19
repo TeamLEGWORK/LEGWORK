@@ -306,7 +306,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     # perform the evolution
     ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
                                 args=(beta[i], c_0[i])).flatten()
-                            for i in range(len(ecc_i))])
+                         for i in range(len(ecc_i))])
     c_0 = c_0[:, np.newaxis] * u.m
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
