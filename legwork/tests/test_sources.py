@@ -196,6 +196,30 @@ class Test(unittest.TestCase):
 
         self.assertTrue(np.allclose(interp_snr, snr, atol=1e-1, rtol=1e-1))
 
+    def test_interpolated_sc(self):
+        """checks that interpolated of LISA SC is not producing any large
+        errors"""
+        # create random binaries
+        n_values = 50
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        ecc = np.random.uniform(0.0, 0.9, n_values)
+
+        # compare snr calculated directly with through Source
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist)
+        interp_snr = sources.get_snr(verbose=True)
+
+        # erase interpolation
+        sources.interpolate_sc = False
+        sources.update_sc_params(None)
+
+        snr = sources.get_snr(verbose=True)
+
+        self.assertTrue(np.allclose(interp_snr, snr, atol=1e-1, rtol=1e-1))
+
     def test_bad_input(self):
         """checks that Source handles bad input well"""
 
