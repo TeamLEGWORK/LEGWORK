@@ -135,6 +135,14 @@ class Test(unittest.TestCase):
 
         self.assertTrue(np.allclose(real_times, created_times))
 
+        t_evol = np.repeat(4, len(a_i)) * u.yr
+        real_times = np.linspace(0 * u.s, t_evol, 100).T
+        created_times = evol.create_timesteps_array(a_i=a_i, beta=beta,
+                                                    ecc_i=ecc, t_evol=4 * u.yr,
+                                                    n_step=100)
+
+        self.assertTrue(np.allclose(real_times, created_times))
+
         timesteps = np.linspace(0, 100, 100) * u.s
         created_times = evol.create_timesteps_array(a_i=a_i, beta=beta,
                                                     ecc_i=ecc,

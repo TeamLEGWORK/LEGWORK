@@ -253,6 +253,12 @@ class Test(unittest.TestCase):
                       ecc=0.1, dist=8 * u.kpc, f_orb=3e-4 * u.Hz)
         self.assertTrue(no_worries)
 
+        # try creating sources with only single source with some in arrays
+        no_worries = True
+        source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun,
+                      ecc=[0.1], dist=8 * u.kpc, f_orb=3e-4 * u.Hz)
+        self.assertTrue(no_worries)
+
         # try creating sources with different length arrays
         no_worries = True
         dist = np.append(dist, 8 * u.kpc)
