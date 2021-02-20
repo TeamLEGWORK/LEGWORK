@@ -10,7 +10,7 @@ import astropy.constants as c
 
 __all__ = ['de_dt', 'evol_circ', 'evol_ecc',
            'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ',
-           'check_mass_freq_input', 'create_timesteps_array',]
+           'check_mass_freq_input', 'create_timesteps_array']
 
 
 @jit
@@ -128,6 +128,8 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
         # if not evolution times given use merger times
         if t_evol is None:
             t_evol = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i, beta=beta)
+        elif not isinstance(t_evol.value, np.ndarray):
+            t_evol = np.repeat(t_evol.value, len(a_i)) * t_evol.unit
         timesteps = np.linspace(0 * u.s, t_evol, n_step).T
     # broadcast the times to every source if only one array provided
     elif np.ndim(timesteps) == 1:
@@ -138,6 +140,9 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
 def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
               m_2=None, a_i=None, f_orb_i=None, output_vars='f_orb'):
     """Evolve an array of circular binaries for ``t_evol`` time
+
+    Note that all of {``beta``, ``m_1``, ``m_2``, ``a_i``, ``f_orb_i``} must
+    have the same dimenions.
 
     Parameters
     ----------
@@ -186,15 +191,18 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
         array possibly containing semi-major axis and frequency
         at each timestep. Content determined by ``output_vars``.
     """
+    # transform input if only a single source
+    arrayed_args, single_source = utils.ensure_array(m_1, m_2, beta, a_i,
+                                                     f_orb_i)
+    m_1, m_2, beta, a_i, f_orb_i = arrayed_args
+    output_vars = np.array([output_vars]) if isinstance(output_vars, str)\
+        else output_vars
+
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
 
-    # convert output_vars to array if only str provided
-    if isinstance(output_vars, str):
-        output_vars = [output_vars]
-
-    if len(set(["f_orb", "f_GW"])
-           & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
+    if np.isin(output_vars, ["f_orb", "f_GW"]).any() and (m_1 is None
+                                                          or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
                          "contains a frequency")
     timesteps = create_timesteps_array(a_i=a_i, beta=beta,
@@ -207,7 +215,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     a_evol = difference**(1/4)
 
     # calculate f_orb_evol if any frequency requested
-    if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
+    if np.isin(output_vars, ["f_orb", "f_GW"]).any():
         # change merged binaries to extremely small separations
         a_not0 = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
         f_orb_evol = utils.get_f_orb_from_a(a=a_not0,
@@ -221,10 +229,13 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     evolution = []
     for var in output_vars:
         if var == "a":
+            a_evol = a_evol.flatten() if single_source else a_evol
             evolution.append(a_evol.to(u.AU))
         elif var == "f_orb":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(f_orb_evol.to(u.Hz))
         elif var == "f_GW":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(2 * f_orb_evol.to(u.Hz))
     return evolution if len(evolution) > 1 else evolution[0]
 
@@ -233,6 +244,9 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
              output_vars=['ecc', 'f_orb']):
     """Evolve an array of eccentric binaries for ``t_evol`` time
+
+    Note that all of {``beta``, ``m_1``, ``m_2``, ``ecc_i``m ``a_i``,
+    ``f_orb_i``} must have the same dimenions.
 
     Parameters
     ----------
@@ -283,17 +297,21 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         tuple possibly containing eccentricty, semi-major axis and frequency
         at each timestep. Content determined by ``output_vars``
     """
+    # transform input if only a single source
+    arrayed_args, single_source = utils.ensure_array(m_1, m_2, beta, a_i,
+                                                     f_orb_i, ecc_i)
+    m_1, m_2, beta, a_i, f_orb_i, ecc_i = arrayed_args
+    output_vars = np.array([output_vars]) if isinstance(output_vars, str)\
+        else output_vars
+
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
 
-    # convert output_vars to array if only str provided
-    if isinstance(output_vars, str):
-        output_vars = [output_vars]
-
-    if len(set(["f_orb", "f_GW"])
-           & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
+    if np.isin(output_vars, ["f_orb", "f_GW"]).any() and (m_1 is None
+                                                          or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
                          "contains a frequency")
+
     c_0 = utils.c_0(a_i=a_i, ecc_i=ecc_i)
     timesteps = create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc_i,
                                        t_evol=t_evol, n_step=n_step,
@@ -312,11 +330,11 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
     # calculate a_evol if any frequency or separation requested
-    if len(set(["a", "f_orb", "f_GW"]) & set(output_vars)) > 0:
+    if np.isin(output_vars, ["a", "f_orb", "f_GW"]).any():
         a_evol = utils.get_a_from_ecc(ecc_evol, c_0)
 
         # calculate f_orb_evol if any frequency requested
-        if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
+        if np.isin(output_vars, ["f_orb", "f_GW"]).any():
             # change merged binaries to extremely small separations
             a_not0 = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
             f_orb_evol = utils.get_f_orb_from_a(a=a_not0,
@@ -330,12 +348,16 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     evolution = []
     for var in output_vars:
         if var == "ecc":
+            ecc_evol = ecc_evol.flatten() if single_source else ecc_evol
             evolution.append(ecc_evol)
         elif var == "a":
+            a_evol = a_evol.flatten() if single_source else a_evol
             evolution.append(a_evol.to(u.AU))
         elif var == "f_orb":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(f_orb_evol.to(u.Hz))
         elif var == "f_GW":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(2 * f_orb_evol.to(u.Hz))
     return evolution if len(evolution) > 1 else evolution[0]
 

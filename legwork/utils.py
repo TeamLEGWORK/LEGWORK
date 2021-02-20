@@ -285,3 +285,34 @@ def fn_dot(m_c, f_orb, e, n):
     fn_dot = (48 * n) / (5 * np.pi) * (c.G * m_c)**(5/3) / c.c**5 \
         * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
     return fn_dot.to(u.Hz / u.yr)
+
+
+def ensure_array(*args):
+    """convert arguments to numpy arrays
+
+    Ignore any None values, convert any lists to numpy arrays, wrap any other
+    types in lists and convert to numpy arrays
+    """
+    array_args = [None for i in range(len(args))]
+    any_not_arrays = False
+    for i in range(len(array_args)):
+        exists = args[i] is not None
+        has_units = isinstance(args[i], u.quantity.Quantity)
+        if exists and has_units:
+            if not isinstance(args[i].value, np.ndarray):
+                any_not_arrays = True
+                array_args[i] = np.asarray([args[i].value]) * args[i].unit
+            else:
+                array_args[i] = args[i]
+        elif exists and not has_units:
+            if not isinstance(args[i], np.ndarray):
+                if not isinstance(args[i], list):
+                    any_not_arrays = True
+                    array_args[i] = np.asarray([args[i]])
+                else:
+                    array_args[i] = np.asarray(args[i])
+            else:
+                array_args[i] = args[i]
+        else:
+            array_args[i] = args[i]
+    return array_args, any_not_arrays
