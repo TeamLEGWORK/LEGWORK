@@ -426,9 +426,6 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     if np.all(ecc_i == 0.0):
         return get_t_merge_circ(beta=beta, a_i=a_i)
 
-    # calculate c0 from Peters Eq. 5.11
-    c0 = utils.c_0(a_i, ecc_i)
-
     @jit(nopython=True)
     def peters_5_14(e):                                 # pragma: no cover
         """ merger time from Peters Eq. 5.14 """
@@ -442,6 +439,11 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
         small_e = np.logical_and(ecc_i > 0.0, ecc_i < small_e_tol)
         large_e = ecc_i > large_e_tol
         other_e = np.logical_and(ecc_i >= small_e_tol, ecc_i <= large_e_tol)
+
+        # calculate c0 from Peters Eq. 5.11 (avoid circular binaries)
+        c0 = np.zeros_like(a_i)
+        not_circ = np.logical_not(circular)
+        c0[not_circ] = utils.c_0(a_i[not_circ], ecc_i[not_circ])
 
         t_merge = np.zeros(len(ecc_i)) * u.Gyr
 
@@ -464,6 +466,9 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
                                      for i in range(len(ecc_i[other_e]))]
     # case with only one binary
     else:
+        # calculate c0 from Peters Eq. 5.11
+        c0 = utils.c_0(a_i, ecc_i)
+
         # conditions as above (no need for ecc=0.0 since it never reaches here)
         if ecc_i < small_e_tol:
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19)
