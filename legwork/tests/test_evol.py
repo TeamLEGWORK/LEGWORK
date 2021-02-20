@@ -152,19 +152,18 @@ class Test(unittest.TestCase):
         self.assertTrue(np.allclose(real_times, created_times))
 
     def test_evol_output_vars(self):
-        n_values = 10
 
-        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
-        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
-        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
-        ecc = np.random.uniform(0.0, 0.9, n_values)
+        m_1 = np.random.uniform(0, 10) * u.Msun
+        m_2 = np.random.uniform(0, 10) * u.Msun
+        f_orb = 10**(np.random.uniform(-5, -1)) * u.Hz
+        ecc = np.random.uniform(0.0, 0.9)
 
         a_i = utils.get_a_from_f_orb(f_orb, m_1, m_2)
 
         evolution = evol.evol_circ(m_1=m_1, m_2=m_2, a_i=a_i,
-                                   output_vars=["a", "f_GW"])
-        self.assertTrue(len(evolution) == 2)
+                                   output_vars=["a", "f_GW", "timesteps"])
+        self.assertTrue(len(evolution) == 3)
 
         evolution = evol.evol_ecc(ecc_i=ecc, m_1=m_1, m_2=m_2, a_i=a_i,
-                                  output_vars=["a", "f_GW"])
-        self.assertTrue(len(evolution) == 2)
+                                  output_vars=["a", "f_GW", "timesteps"])
+        self.assertTrue(len(evolution) == 3)
