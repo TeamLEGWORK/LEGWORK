@@ -134,6 +134,10 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
     # broadcast the times to every source if only one array provided
     elif np.ndim(timesteps) == 1:
         timesteps = timesteps[np.newaxis, :]
+        if isinstance(a_i.value, np.ndarray):
+            timesteps = np.broadcast_to(timesteps.value,
+                                        (len(a_i), len(timesteps[0])))\
+                                            * timesteps.unit
     return timesteps
 
 
@@ -231,7 +235,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     for var in output_vars:
         if var == "timesteps":
             timesteps = timesteps.flatten() if single_source else timesteps
-            evolution.append(timesteps)
+            evolution.append(timesteps.to(u.yr))
         elif var == "a":
             a_evol = a_evol.flatten() if single_source else a_evol
             evolution.append(a_evol.to(u.AU))
@@ -354,7 +358,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     for var in output_vars:
         if var == "timesteps":
             timesteps = timesteps.flatten() if single_source else timesteps
-            evolution.append(timesteps)
+            evolution.append((timesteps * u.s).to(u.yr))
         elif var == "ecc":
             ecc_evol = ecc_evol.flatten() if single_source else ecc_evol
             evolution.append(ecc_evol)
