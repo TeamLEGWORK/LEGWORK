@@ -133,7 +133,7 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
         timesteps = np.linspace(0 * u.s, t_evol, n_step).T
     # broadcast the times to every source if only one array provided
     elif np.ndim(timesteps) == 1:
-        timesteps = timesteps[:, np.newaxis]
+        timesteps = timesteps[np.newaxis, :]
     return timesteps
 
 
@@ -182,8 +182,9 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
 
     output_vars : `str/array`
         list of **ordered** output vars, or a single var. Choose from any of
-        ``a``, ``f_orb`` and ``f_GW`` for which of semi-major axis and
-        orbital/GW frequency that you want. Default is ``f_orb``.
+        ``timesteps``, ``a``, ``f_orb`` and ``f_GW`` for which of timesteps,
+        semi-major axis and orbital/GW frequency that you want.
+        Default is ``f_orb``.
 
     Returns
     -------
@@ -228,7 +229,10 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     # construct evolution output
     evolution = []
     for var in output_vars:
-        if var == "a":
+        if var == "timesteps":
+            timesteps = timesteps.flatten() if single_source else timesteps
+            evolution.append(timesteps)
+        elif var == "a":
             a_evol = a_evol.flatten() if single_source else a_evol
             evolution.append(a_evol.to(u.AU))
         elif var == "f_orb":
@@ -287,9 +291,10 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         initial orbital frequency (required if ``a_i`` is None)
 
     output_vars : `array`
-        list of **ordered** output vars, choose from any of ``ecc``, ``a``,
-        ``f_orb`` and ``f_GW`` for which of eccentricty, semi-major axis and
-        orbital/GW frequency that you want. Default is [``ecc``, ``f_orb``]
+        list of **ordered** output vars, choose from any of ``timesteps``,
+        ``ecc``, ``a``, ``f_orb`` and ``f_GW`` for which of timesteps,
+        eccentricty, semi-major axis and orbital/GW frequency that you want.
+        Default is [``ecc``, ``f_orb``]
 
     Returns
     -------
@@ -347,7 +352,10 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     # construct evolution output
     evolution = []
     for var in output_vars:
-        if var == "ecc":
+        if var == "timesteps":
+            timesteps = timesteps.flatten() if single_source else timesteps
+            evolution.append(timesteps)
+        elif var == "ecc":
             ecc_evol = ecc_evol.flatten() if single_source else ecc_evol
             evolution.append(ecc_evol)
         elif var == "a":
