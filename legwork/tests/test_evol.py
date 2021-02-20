@@ -147,8 +147,9 @@ class Test(unittest.TestCase):
         created_times = evol.create_timesteps_array(a_i=a_i, beta=beta,
                                                     ecc_i=ecc,
                                                     timesteps=timesteps)
-        real_times = np.array([timesteps.value for i in range(len(a_i))]).T \
-            * timesteps.unit
+        real_times = timesteps[np.newaxis, :]
+        real_times = np.broadcast_to(timesteps.value,
+                                     (n_values, 100)) * timesteps.unit
         self.assertTrue(np.allclose(real_times, created_times))
 
     def test_evol_output_vars(self):
