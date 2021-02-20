@@ -96,34 +96,23 @@ class Source():
         a = utils.get_a_from_f_orb(f_orb, m_1, m_2) if a is None else a
 
         # define which arguments must have units
+        unit_args = [m_1, m_2, dist, f_orb, a]
         unit_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a']
 
-        # define which arguments must be arrays of same length
-        array_args = [m_1, m_2, dist, f_orb, a, ecc]
-        array_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a', 'ecc']
+        for i in range(len(unit_args)):
+            assert(isinstance(unit_args[i], u.quantity.Quantity)), \
+                    "`{}` must have units".format(unit_args_str[i])
 
-        # convert args to numpy arrays if only single values are entered
-        for i in range(len(array_args)):
-            if array_args_str[i] in unit_args_str:
-                # check that every arg has units if it should
-                assert(isinstance(array_args[i], u.quantity.Quantity)), \
-                        "`{}` must have units".format(array_args_str[i])
-
-                if not isinstance(array_args[i].value, (np.ndarray, list)):
-                    array_args[i] = np.array([array_args[i].value]) \
-                                  * array_args[i].unit
-            else:
-                if not isinstance(array_args[i], (np.ndarray, list)):
-                    array_args[i] = np.array([array_args[i]])
+        # make sure the inputs are arrays
+        fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, a, ecc)
+        m_1, m_2, dist, f_orb, a, ecc = fixed_args
 
         # ensure all array arguments are the same length
+        array_args = [m_1, m_2, dist, f_orb, a, ecc]
         length_check = np.array([len(arg) != len(array_args[0])
                                  for arg in array_args])
         if length_check.any():
             raise ValueError("All input arrays must have the same length")
-
-        # reset the arguments with the new converted ones
-        m_1, m_2, dist, f_orb, a, ecc = array_args
 
         self.m_1 = m_1
         self.m_2 = m_2
