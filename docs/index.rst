@@ -15,7 +15,7 @@ Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK d
 
 .. raw:: html
 
-    <div class="container" style="margin-bottom:50px;">
+    <div class="toms-nav-container" style="margin-bottom:50px;">
         <div class="box" data-href="install.html">Install LEGWORK</div>
         <div class="box" data-href="tutorials.html">Learn from tutorials</div>
         <div class="box" data-href="modules.html">Explore the modules</div>

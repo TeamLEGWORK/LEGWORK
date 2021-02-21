@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
     // add links to nav boxes
-    boxes = document.querySelectorAll(".container .box");
+    boxes = document.querySelectorAll(".toms-nav-container .box");
     console.log(boxes)
     boxes.forEach(element => {
         console.log(element);

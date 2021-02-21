@@ -12,7 +12,8 @@ div.highlight-python.notranslate pre {
     padding-left: 5px;
 }
 
-.container {
+/* Create grid of blocks for navigation */
+.toms-nav-container {
     margin: 20px auto;
     width: 600px;
     height: 150px;
@@ -24,7 +25,7 @@ div.highlight-python.notranslate pre {
     grid-row-gap: 20px;
 }
 
-.container .box {
+.toms-nav-container .box {
     background-color: #333;
     padding: 20px;
     border-radius: 10px;
@@ -38,7 +39,13 @@ div.highlight-python.notranslate pre {
     cursor: pointer;
 }
 
-.container .box:hover {
+/* shrink on hover */
+.toms-nav-container .box:hover {
     transform: scale(0.9);
     background-color: #2980b9;
+}
+
+/* let the content go wider (default is 800px) */
+.wy-nav-content {
+    max-width: 1000px;
 }
