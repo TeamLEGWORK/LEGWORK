@@ -15,11 +15,11 @@ div.highlight-python.notranslate pre {
 .container {
     margin: 20px auto;
     width: 600px;
-    height: 300px;
+    height: 150px;
     background-color: #fff;
     display: grid;
     grid-template-columns: 300px 300px;
-    grid-template-rows: 150px 150px;
+    grid-template-rows: 75px 75px;
     grid-column-gap: 20px;
     grid-row-gap: 20px;
 }
@@ -32,13 +32,13 @@ div.highlight-python.notranslate pre {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
+    font-size: 23px;
     text-align: center;
-    transition: 0.3s;
+    transition: 0.2s;
     cursor: pointer;
 }
 
 .container .box:hover {
-    transform: scale(0.8);
+    transform: scale(0.9);
     background-color: #2980b9;
 }
