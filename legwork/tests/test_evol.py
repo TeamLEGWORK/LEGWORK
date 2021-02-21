@@ -1,6 +1,8 @@
 import numpy as np
 from legwork import evol, utils
 import unittest
+from scipy.integrate import odeint
+from schwimmbad import MultiPool
 
 from astropy import units as u
 
@@ -160,3 +162,41 @@ class Test(unittest.TestCase):
         evolution = evol.evol_ecc(ecc_i=ecc, m_1=m_1, m_2=m_2, a_i=a_i,
                                   output_vars=["a", "f_GW"])
         self.assertTrue(len(evolution) == 2)
+
+    def test_de_dt_integrate(self):
+        n_values = 10
+
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        ecc = np.random.uniform(0.0, 0.9, n_values)
+        a_i = utils.get_a_from_f_orb(f_orb, m_1, m_2)
+        beta = utils.beta(m_1=m_1, m_2=m_2)
+        beta, a_i = evol.check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
+                                               a_i=a_i, f_orb_i=f_orb)
+        n_step = 100
+        c_0 = utils.c_0(a_i=a_i, ecc_i=ecc)
+        t_evol = np.ones(n_values) * u.yr
+        timesteps = evol.create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc,
+                                                t_evol=t_evol, n_step=n_step,
+                                                )
+    
+        # get rid of the units for faster integration
+        c_0 = c_0.to(u.m).value
+        beta = beta.to(u.m**4 / u.s).value
+        timesteps = timesteps.to(u.s).value
+    
+        # integrate by hand:
+        ecc_evol = np.array([odeint(evol.de_dt, ecc[i], timesteps[i],
+                                    args=(beta[i], c_0[i])).flatten()
+                             for i in range(len(ecc))])
+
+        # integrate with function:
+        with MultiPool(processes=1) as pool:
+            ecc_pool = np.array(list(pool.map(evol.integrate_de_dt,
+                                              zip(ecc,
+                                                  timesteps.tolist(),
+                                                  beta,
+                                                  c_0))))
+
+        self.assertTrue(np.allclose(ecc_evol, ecc_pool, equal_nan=True))

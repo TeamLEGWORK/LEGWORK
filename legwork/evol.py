@@ -9,7 +9,7 @@ import astropy.units as u
 import astropy.constants as c
 from schwimmbad import MultiPool
 
-__all__ = ['de_dt', 'evol_circ', 'evol_ecc',
+__all__ = ['de_dt', 'evol_circ', 'integrate_de_dt', 'evol_ecc',
            'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ',
            'check_mass_freq_input', 'create_timesteps_array', ]
 
