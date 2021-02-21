@@ -230,6 +230,30 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     return evolution if len(evolution) > 1 else evolution[0]
 
 
+def integrate_de_dt(args):
+    """Function that integrates de_dt with odeint
+    Parameters
+    ----------
+    ecc_i : `float`
+        Initial eccentricity
+    timesteps : `array`
+        Array of exact timesteps to take when evolving each binary. Must be
+        monotonically increasing and start with t=0.
+    beta : `float`
+        beta(m_1, m_2) from Peters 1964 Eq. 5.9
+    c_0 : `float`
+        factor defined in Peters 1964
+    Outputs
+    -------
+    e : `array`
+       eccentricity evolution
+    """
+    ecc_i, timesteps, beta, c_0 = args
+    e = odeint(de_dt, ecc_i, timesteps,
+               args=(beta, c_0)).flatten()
+    return e
+
+
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
              output_vars=['ecc', 'f_orb'], n_proc=1):
@@ -311,14 +335,6 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
 
     # perform the evolution
     if n_proc > 1:
-        def integrate_de_dt(args):                             # pragma: no cover
-            ecc_i, timesteps, beta, c_0 = args
-            e = odeint(de_dt, ecc_i, timesteps,
-                       args=(beta, c_0)).flatten()
-
-            return e
-
-
         with MultiPool(processes=n_proc) as pool:
             ecc_evol = np.array(list(pool.map(integrate_de_dt,
                                               zip(ecc_i,

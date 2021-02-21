@@ -54,29 +54,20 @@ class Test(unittest.TestCase):
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         m_c = utils.chirp_mass(m_1, m_2)
         dist = np.random.uniform(0, 30, n_values) * u.kpc
-        f_orb = 10**(np.random.uniform(-5, -4, n_values)) * u.Hz
-        ecc = np.repeat(0.0, n_values)
+        f_orb = 10**(np.random.uniform(-3, -2, n_values)) * u.Hz
+        ecc = np.random.uniform(0.1, 0.2, n_values)
         n_proc = 2
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist, n_proc=n_proc)
 
-        # compare snr calculated directly with through Source
-        snr_direct = snr.snr_circ_stationary(m_c=m_c, f_orb=f_orb,
-                                             dist=dist, t_obs=t_obs)
-        snr_source = sources.get_snr(verbose=True)
+        sources_1 = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist, n_proc=1) 
+        
+        # compare using 1 or 2 processors
+        snr_2 = sources.get_snr(verbose=True)
+        snr_1 = sources_1.get_snr(verbose=True)
 
-        self.assertTrue(np.allclose(snr_direct, snr_source))
-
-        # repeat the same test for eccentric systems
-        ecc = np.random.uniform(sources.ecc_tol, 0.1, n_values)
-        sources.ecc = ecc
-
-        snr_direct = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb, ecc=ecc,
-                                            dist=dist, t_obs=t_obs,
-                                            max_harmonic=10)
-        snr_source = sources.get_snr(verbose=True)
-
-        self.assertTrue(np.allclose(snr_direct, snr_source))
+        self.assertTrue(np.allclose(snr_2, snr_1))
 
     def test_source_strain(self):
         """check that source calculate strain correctly"""
