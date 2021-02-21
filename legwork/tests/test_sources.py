@@ -23,9 +23,42 @@ class Test(unittest.TestCase):
         dist = np.random.uniform(0, 30, n_values) * u.kpc
         f_orb = 10**(np.random.uniform(-5, -4, n_values)) * u.Hz
         ecc = np.repeat(0.0, n_values)
-
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist)
+
+        # compare snr calculated directly with through Source
+        snr_direct = snr.snr_circ_stationary(m_c=m_c, f_orb=f_orb,
+                                             dist=dist, t_obs=t_obs)
+        snr_source = sources.get_snr(verbose=True)
+
+        self.assertTrue(np.allclose(snr_direct, snr_source))
+
+        # repeat the same test for eccentric systems
+        ecc = np.random.uniform(sources.ecc_tol, 0.1, n_values)
+        sources.ecc = ecc
+
+        snr_direct = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb, ecc=ecc,
+                                            dist=dist, t_obs=t_obs,
+                                            max_harmonic=10)
+        snr_source = sources.get_snr(verbose=True)
+
+        self.assertTrue(np.allclose(snr_direct, snr_source))
+
+    def test_source_snr_multi(self):
+        """check that source calculates snr in correct way"""
+
+        # create random (circular/stationary) binaries
+        n_values = 500
+        t_obs = 4 * u.yr
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_c = utils.chirp_mass(m_1, m_2)
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-5, -4, n_values)) * u.Hz
+        ecc = np.repeat(0.0, n_values)
+        n_proc = 2
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist, n_proc=n_proc)
 
         # compare snr calculated directly with through Source
         snr_direct = snr.snr_circ_stationary(m_c=m_c, f_orb=f_orb,
@@ -177,6 +210,7 @@ class Test(unittest.TestCase):
         """checks that the interpolation of g(n,e) is not producing
         any large errors"""
         # create random binaries
+        np.random.seed(42)
         n_values = 50
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
