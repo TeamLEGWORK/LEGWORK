@@ -12,4 +12,5 @@ to feedback
     Quickstart <notebooks/Quickstart.ipynb>
     Using the Source Class <notebooks/Source.ipynb>
     Computing Gravitational Wave Strains <notebooks/Strains.ipynb>
+    Binary Evolution <notebooks/Evolution.ipynb>
     Visualisation <notebooks/Visualisation.ipynb>

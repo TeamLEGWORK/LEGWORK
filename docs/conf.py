@@ -41,7 +41,7 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
     'numpydoc',
-    'sphinx_rtd_theme', 
+    'sphinx_rtd_theme',
 ]
 
 # fix numpydoc autosummary
@@ -95,3 +95,8 @@ nbsphinx_prolog = """
           downloaded `here <https://github.com/katiebreivik/LEGWORK/tree/main/docs/{{ docname }}>`_.
 """
 nbsphinx_prompt_width = "0"
+
+nbsphinx_execute_arguments = [
+    "--InlineBackend.figure_formats={'svg', 'pdf'}",
+    "--InlineBackend.rc={'figure.dpi': 96}",
+]
