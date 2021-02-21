@@ -1,6 +1,3 @@
-The LEGWORK Package
-===================
-
 .. image:: images/legwork.png
    :width: 400
    :alt: logo for legwork
@@ -23,11 +20,9 @@ Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK d
         <div class="box" data-href="notebooks/derivations.html">Delve into the derivations</div>
     </div>
 
-Quick Links
-===========
-
 .. toctree::
     :maxdepth: 1
+    :hidden:
 
     Installation <install>
     Tutorials <tutorials>
@@ -35,9 +30,3 @@ Quick Links
     Derviations <notebooks/Derivations.ipynb>
     GitHub <https://github.com/katiebreivik/LEGWORK>
     Submit an issue <https://github.com/katiebreivik/LEGWORK/issues>
-
-
-Index
-=======
-
-* :ref:`Index Page <genindex>`
