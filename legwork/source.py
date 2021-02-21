@@ -32,6 +32,9 @@ class Source():
     dist : `float/array`
         luminosity distance to source. Must have astropy units of distance.
 
+    n_proc : `int`
+        number of processors to split eccentric evolution over if needed
+
     f_orb : `float/array`
         orbital frequency (either `a` or `f_orb` must be supplied)
         This takes precedence over `a`. Must have astropy units of frequency.
@@ -84,7 +87,7 @@ class Source():
     AssertionError
         If a parameter is missing units
     """
-    def __init__(self, m_1, m_2, ecc, dist, f_orb=None, a=None,
+    def __init__(self, m_1, m_2, ecc, dist, n_proc, f_orb=None, a=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
@@ -133,6 +136,7 @@ class Source():
         self.stat_tol = stat_tol
         self.f_orb = f_orb
         self.a = a
+        self.n_proc = n_proc
         self.snr = None
         self.n_sources = len(m_1)
         self.interpolate_sc = interpolate_sc
@@ -558,7 +562,8 @@ class Source():
                                                      t_obs=t_obs,
                                                      n_step=n_step,
                                                      interpolated_g=self.g,
-                                                     interpolated_sc=self.sc)
+                                                     interpolated_sc=self.sc,
+                                                     n_proc=self.n_proc)
 
         return snr[which_sources]
 
