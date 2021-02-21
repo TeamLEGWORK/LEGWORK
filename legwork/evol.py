@@ -230,7 +230,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     return evolution if len(evolution) > 1 else evolution[0]
 
 
-def integrate_de_dt(args):
+def integrate_de_dt(args):                                 # pragma: no cover
     """Function that integrates de_dt with odeint
     Parameters
     ----------
