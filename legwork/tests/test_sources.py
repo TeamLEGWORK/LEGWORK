@@ -23,7 +23,6 @@ class Test(unittest.TestCase):
         dist = np.random.uniform(0, 30, n_values) * u.kpc
         f_orb = 10**(np.random.uniform(-5, -4, n_values)) * u.Hz
         ecc = np.repeat(0.0, n_values)
-
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist)
 
@@ -44,6 +43,29 @@ class Test(unittest.TestCase):
         snr_source = sources.get_snr(verbose=True)
 
         self.assertTrue(np.allclose(snr_direct, snr_source))
+
+    def test_source_snr_multi(self):
+        """check that source calculates snr in correct way"""
+
+        # create random (circular/stationary) binaries
+        n_values = 500
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-3, -2, n_values)) * u.Hz
+        ecc = np.random.uniform(0.1, 0.2, n_values)
+        n_proc = 2
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist, n_proc=n_proc)
+
+        sources_1 = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                  ecc=ecc, dist=dist, n_proc=1) 
+        
+        # compare using 1 or 2 processors
+        snr_2 = sources.get_snr(verbose=True)
+        snr_1 = sources_1.get_snr(verbose=True)
+
+        self.assertTrue(np.allclose(snr_2, snr_1))
 
     def test_source_strain(self):
         """check that source calculate strain correctly"""
@@ -177,6 +199,7 @@ class Test(unittest.TestCase):
         """checks that the interpolation of g(n,e) is not producing
         any large errors"""
         # create random binaries
+        np.random.seed(42)
         n_values = 50
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
