@@ -1,13 +1,10 @@
-.. legwork documentation master file, created by
-   sphinx-quickstart on Mon Feb  8 22:30:58 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+The LEGWORK Package
+===================
 
 .. image:: images/legwork.png
    :width: 400
    :alt: logo for legwork
    :align: center
-
 
 **LEGWORK** (**L**\ ISA **E**\ volution and **G**\ ravitational **W**\ ave **OR**\ bit **K**\ it) is a python package designed to calculate signal to noise ratios for GWs emitted from inspiraling binary systems that are potentially observable by LISA. 
 
@@ -17,19 +14,30 @@ Eccentric and chirping? We've got you covered!
 
 Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK do the legwork and keep the LISA literature free from spurious factors of 2!
 
+.. raw:: html
+
+    <div class="container" style="margin-bottom:50px;">
+        <div class="box" data-href="install.html">Install LEGWORK</div>
+        <div class="box" data-href="tutorials.html">Learn from tutorials</div>
+        <div class="box" data-href="modules.html">Explore the modules</div>
+        <div class="box" data-href="notebooks/derivations.html">Delve into the derivations</div>
+    </div>
+
+Quick Links
+===========
+
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
 
     Installation <install>
     Tutorials <tutorials>
+    Modules <modules>
+    Derviations <notebooks/Derivations.ipynb>
     GitHub <https://github.com/katiebreivik/LEGWORK>
     Submit an issue <https://github.com/katiebreivik/LEGWORK/issues>
-    Modules <modules>
 
 
-Indices
+Index
 =======
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+* :ref:`Index Page <genindex>`
