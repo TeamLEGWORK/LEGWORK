@@ -309,13 +309,16 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     beta = beta.to(u.m**4 / u.s).value
     timesteps = timesteps.to(u.s).value
 
-    def integrate_de_dt(args):                                 # pragma: no cover
-        ecc_i, timesteps, beta, c_0 = args
-        e = odeint(de_dt, ecc_i, timesteps,
-                   args=(beta, c_0)).flatten()
-    
     # perform the evolution
     if n_proc > 1:
+        def integrate_de_dt(args):                             # pragma: no cover
+            ecc_i, timesteps, beta, c_0 = args
+            e = odeint(de_dt, ecc_i, timesteps,
+                       args=(beta, c_0)).flatten()
+
+            return e
+
+
         with MultiPool(processes=n_proc) as pool:
             ecc_evol = np.array(list(pool.map(integrate_de_dt,
                                               zip(ecc_i,
