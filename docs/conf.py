@@ -42,7 +42,10 @@ extensions = [
     'IPython.sphinxext.ipython_directive',
     'numpydoc',
     'sphinx_rtd_theme',
+    'sphinxcontrib.bibtex',
 ]
+
+bibtex_bibfiles = ['notebooks/refs.bib']
 
 # fix numpydoc autosummary
 numpydoc_show_class_members = False
@@ -101,3 +104,7 @@ nbsphinx_execute_arguments = [
     "--InlineBackend.figure_formats={'svg', 'pdf'}",
     "--InlineBackend.rc={'figure.dpi': 96}",
 ]
+
+mathjax_config = {
+    'TeX': {'equationNumbers': {'autoNumber': 'AMS', 'useLabelIds': True}},
+}
