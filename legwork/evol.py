@@ -338,14 +338,18 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     timesteps = timesteps.to(u.s).value
 
     # perform the evolution
-    with MultiPool(processes=n_proc) as pool:
-        ecc_evol = list(pool.map(integrate_de_dt, 
-                                 zip(ecc_i, 
-                                     timesteps.tolist(), 
-                                     beta, 
-                                     c_0)))
-
-    ecc_evol = np.array(ecc_evol)
+    if n_proc > 1:
+        with MultiPool(processes=n_proc) as pool:
+            ecc_evol = np.array(list(pool.map(integrate_de_dt, 
+                                              zip(ecc_i, 
+                                                  timesteps.tolist(), 
+                                                  beta, 
+                                                  c_0))))
+    else:
+        ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
+                                args=(beta[i], c_0[i])).flatten()
+                         for i in range(len(ecc_i))])
+    
     c_0 = c_0[:, np.newaxis] * u.m
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
