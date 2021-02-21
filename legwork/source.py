@@ -87,7 +87,7 @@ class Source():
     AssertionError
         If a parameter is missing units
     """
-    def __init__(self, m_1, m_2, ecc, dist, n_proc=None, f_orb=None, a=None,
+    def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
@@ -127,10 +127,6 @@ class Source():
 
         # reset the arguments with the new converted ones
         m_1, m_2, dist, f_orb, a, ecc = array_args
-
-        # if n_proc not specified, set n_proc=1
-        if n_proc is None:
-            n_proc = 1
 
         self.m_1 = m_1
         self.m_2 = m_2
