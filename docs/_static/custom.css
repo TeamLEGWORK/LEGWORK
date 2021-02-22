@@ -25,7 +25,7 @@ div.highlight-python.notranslate pre {
     grid-row-gap: 20px;
 }
 
-.toms-nav-container .box {
+.toms-nav-container .box, .toms-nav-box {
     background-color: #333;
     padding: 20px;
     border-radius: 10px;
@@ -40,7 +40,7 @@ div.highlight-python.notranslate pre {
 }
 
 /* shrink on hover */
-.toms-nav-container .box:hover {
+.toms-nav-container .box:hover, .toms-nav-box:hover {
     transform: scale(0.9);
     background-color: #2980b9;
 }

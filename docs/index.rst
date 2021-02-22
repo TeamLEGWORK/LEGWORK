@@ -29,6 +29,6 @@ Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK d
     Installation <install>
     Tutorials <tutorials>
     Modules <modules>
-    Derviations <notebooks/Derivations.ipynb>
+    Derivations <notebooks/Derivations.ipynb>
     GitHub <https://github.com/katiebreivik/LEGWORK>
     Submit an issue <https://github.com/katiebreivik/LEGWORK/issues/new>
