@@ -7,8 +7,9 @@ from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
 import astropy.constants as c
+from schwimmbad import MultiPool
 
-__all__ = ['de_dt', 'evol_circ', 'evol_ecc',
+__all__ = ['de_dt', 'evol_circ', 'integrate_de_dt', 'evol_ecc',
            'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ',
            'check_mass_freq_input', 'create_timesteps_array']
 
@@ -248,9 +249,33 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     return evolution if len(evolution) > 1 else evolution[0]
 
 
+def integrate_de_dt(args):                                 # pragma: no cover
+    """Function that integrates de_dt with odeint
+    Parameters
+    ----------
+    ecc_i : `float`
+        Initial eccentricity
+    timesteps : `array`
+        Array of exact timesteps to take when evolving each binary. Must be
+        monotonically increasing and start with t=0.
+    beta : `float`
+        beta(m_1, m_2) from Peters 1964 Eq. 5.9
+    c_0 : `float`
+        factor defined in Peters 1964
+    Outputs
+    -------
+    e : `array`
+       eccentricity evolution
+    """
+    ecc_i, timesteps, beta, c_0 = args
+    e = odeint(de_dt, ecc_i, timesteps,
+               args=(beta, c_0)).flatten()
+    return e
+
+
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
-             output_vars=['ecc', 'f_orb']):
+             output_vars=['ecc', 'f_orb'], n_proc=1):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     Note that all of {``beta``, ``m_1``, ``m_2``, ``ecc_i``m ``a_i``,
@@ -300,6 +325,10 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         eccentricty, semi-major axis and orbital/GW frequency that you want.
         Default is [``ecc``, ``f_orb``]
 
+    n_proc : `int`
+        Number of processors to split eccentricity evolution over, where
+        the default is n_proc=1
+
     Returns
     -------
     evolution : `tuple`
@@ -332,9 +361,18 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     timesteps = timesteps.to(u.s).value
 
     # perform the evolution
-    ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
-                                args=(beta[i], c_0[i])).flatten()
-                         for i in range(len(ecc_i))])
+    if n_proc > 1:
+        with MultiPool(processes=n_proc) as pool:
+            ecc_evol = np.array(list(pool.map(integrate_de_dt,
+                                              zip(ecc_i,
+                                                  timesteps.tolist(),
+                                                  beta,
+                                                  c_0))))
+    else:
+        ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
+                                    args=(beta[i], c_0[i])).flatten()
+                             for i in range(len(ecc_i))])
+
     c_0 = c_0[:, np.newaxis] * u.m
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
