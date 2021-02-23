@@ -38,7 +38,7 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
         Distance to each binary. Shape should be (x,)
 
     interpolated_g : `function`
-        A function returned by scipy.interpolate.interp2d that
+        A function returned by :class:`scipy.interpolate.interp2d` that
         computes g(n,e) from Peters (1964). The code assumes
         that the function returns the output sorted as with the
         interp2d returned functions (and thus unsorts).
@@ -125,7 +125,7 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
         Distance to each binary. Shape should be (x,)
 
     interpolated_g : `function`
-        A function returned by scipy.interpolate.interp2d that
+        A function returned by :class:`scipy.interpolate.interp2d` that
         computes g(n,e) from Peters (1964). The code assumes
         that the function returns the output sorted as with the
         interp2d returned functions (and thus unsorts).
