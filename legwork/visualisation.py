@@ -24,74 +24,72 @@ __all__ = ['plot_1D_dist', 'plot_2D_dist', 'plot_sensitivity_curve',
 def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
                  xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
-    """plot a 1D distribution of `x` with `weights`. This function is a
-    wrapper for `matplotlib.pyplot.hist`, `seaborn.kdeplot` and
-    `seaborn.ecdfplot`
+    """plot a 1D distribution of ``x``.
+    
+    This function is a wrapper for :func:`matplotlib.pyplot.hist`,
+    :func:`seaborn.kdeplot` and :func:`seaborn.ecdfplot`.
 
     Parameters
     ----------
     x : `float/int array`
-        variable to plot, should be a 1D array
+        Variable to plot, should be a 1D array
 
     weights : `float/int array`
-        weights for each variable in `x`, must have the same shape
+        Weights for each variable in ``x``, must have the same shape
 
     disttype : `{{ "hist", "kde", "ecdf" }}`
-        which type of distribution plot to use
+        Which type of distribution plot to use
 
     fig: `matplotlib Figure`
-        a figure on which to plot the distribution. Both `ax` and `fig` must be
+        A figure on which to plot the distribution. Both `ax` and `fig` must be
         supplied for either to be used
 
     ax: `matplotlib Axis`
-        an axis on which to plot the distribution. Both `ax` and `fig` must be
+        An axis on which to plot the distribution. Both `ax` and `fig` must be
         supplied for either to be used
 
     xlabel : `string`
-        label for the x axis, passed to Axes.set_xlabel()
+        Label for the x axis, passed to Axes.set_xlabel()
 
     ylabel : `string`
-        label for the y axis, passed to Axes.set_ylabel()
+        Label for the y axis, passed to Axes.set_ylabel()
 
     xlim : `tuple`
-        lower and upper limits for the x axis, passed to Axes.set_xlim()
+        Lower and upper limits for the x axis, passed to Axes.set_xlim()
 
     ylim : `tuple`
-        lower and upper limits for the y axis, passed to Axes.set_ylim()
+        Lower and upper limits for the y axis, passed to Axes.set_ylim()
 
     color : `string or tuple`
-        colour to use for the plot, see
+        Colour to use for the plot, see
         https://matplotlib.org/tutorials/colors/colors.html for details on how
         to specify a colour
 
     show : `boolean`
-        whether to immediately show the plot or only return the Figure and Axis
+        Whether to immediately show the plot or only return the Figure and Axis
 
     **kwargs : `(if disttype=="hist")`
         Include values for any of `bins, range, density, cumulative, bottom,
         histtype, align, orientation, rwidth, log, label`. See
-        https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html
-        for more details.
+        :func:`matplotlib.pyplot.hist` for more details.
 
     **kwargs : `(if disttype=="kde")`
         Include values for any of `gridsize, cut, clip, legend, cumulative,
-        bw_method, bw_adjust, log_scale, fill, label, linewidth, linestyle`.See
-        https://seaborn.pydata.org/generated/seaborn.kdeplot.html for more
-        details.
+        bw_method, bw_adjust, log_scale, fill, label, linewidth, linestyle`.
+        See :func:`seaborn.kdeplot` for more details.
 
     **kwargs : `(if disttype=="ecdf")`
         Include values for any of `stat, complementary, log_scale, legend,
-        label, linewidth, linestyle`. See
-        https://seaborn.pydata.org/generated/seaborn.ecdfplot.html
+        label, linewidth, linestyle`. See :func:`seaborn.edcfplot`
         for more details.
 
     Returns
     -------
     fig : `matplotlib Figure`
-        the figure on which the distribution is plotted
+        The figure on which the distribution is plotted
 
     ax : `matplotlib Axis`
-        the axis on which the distribution is plotted
+        The axis on which the distribution is plotted
     """
     # create new figure and axes is either weren't provided
     if fig is None or ax is None:
@@ -161,71 +159,70 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
 def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
                  xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
-    """plot a 2D distribution of `x` and `y` with `weights`. This function is a
-    wrapper for `matplotlib.pyplot.scatter` and `seaborn.kdeplot`
+    """Plot a 2D distribution of `x` and `y`
+    
+    This function is a wrapper for :func:`matplotlib.pyplot.scatter` and 
+    :func:`seaborn.kdeplot`.
 
     Parameters
     ----------
     x : `float/int array`
-        variable to plot on the x axis, should be a 1D array
+        Variable to plot on the x axis, should be a 1D array
 
     y : `float/int array`
-        variable to plot on the x axis, should be a 1D array
+        Variable to plot on the y axis, should be a 1D array
 
     weights : `float/int array`
-        weights for each variable in `variable`, must have the same shape
+        Weights for each variable pair (``x``, ``y``), must have the same shape
 
     disttype : `{{ "scatter", "kde" }}`
-        which type of distribution plot to use
+        Which type of distribution plot to use
 
     fig: `matplotlib Figure`
-        a figure on which to plot the distribution. Both `ax` and `fig` must be
+        A figure on which to plot the distribution. Both `ax` and `fig` must be
         supplied for either to be used
 
     ax: `matplotlib Axis`
-        an axis on which to plot the distribution. Both `ax` and `fig` must be
+        An axis on which to plot the distribution. Both `ax` and `fig` must be
         supplied for either to be used
 
     xlabel : `string`
-        label for the x axis, passed to Axes.set_xlabel()
+        Label for the x axis, passed to Axes.set_xlabel()
 
     ylabel : `string`
-        label for the y axis, passed to Axes.set_ylabel()
+        Label for the y axis, passed to Axes.set_ylabel()
 
     xlim : `tuple`
-        lower and upper limits for the x axis, passed to Axes.set_xlim()
+        Lower and upper limits for the x axis, passed to Axes.set_xlim()
 
     ylim : `tuple`
-        lower and upper limits for the u axis, passed to Axes.set_ylim()
+        Lower and upper limits for the u axis, passed to Axes.set_ylim()
 
     color : `string or tuple`
-        colour to use for the plot, see
+        Colour to use for the plot, see
         https://matplotlib.org/tutorials/colors/colors.html for details on how
         to specify a colour
 
     show : `boolean`
-        whether to immediately show the plot or only return the Figure and Axis
+        Whether to immediately show the plot or only return the Figure and Axis
 
     **kwargs : `(if disttype=="scatter")`
-        input any of `s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths,
-        edgecolors`. See
-        https://matplotlib.org/api/_as_gen/matplotlib.pyplot.scatter.html
-        for more details.
+        Input any of `s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths,
+        edgecolors`. See :func:`matplotlib.pyplot.scatter` for more details.
 
     **kwargs : `(if disttype=="kde")`
-        input any of `gridsize, cut, clip, legend, cumulative, cbar, cbar_ax,
+        Input any of `gridsize, cut, clip, legend, cumulative, cbar, cbar_ax,
         cbar_kws, bw_method, hue, palette, hue_order, hue_norm, levels, thresh,
-        bw_adjust, log_scale, fill, label`. See
-        https://seaborn.pydata.org/generated/seaborn.kdeplot.html
-        for more details.
+        bw_adjust, log_scale, fill, label`. See :func:`seaborn.kdeplot` for
+        more details.
 
     Returns
     -------
     fig : `matplotlib Figure`
-        the figure on which the distribution is plotted
+        The figure on which the distribution is plotted
 
     ax : `matplotlib Axis`
-        the axis on which the distribution is plotted
+        The axis on which the distribution is plotted
     """
     # create new figure and axes is either weren't provided
     if fig is None or ax is None:
@@ -286,42 +283,42 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
                            ax=None, show=True, color="#18068b", fill=True,
                            alpha=0.2, label=None, **kwargs):
-    """plot the LISA sensitivity curve
+    """Plot the LISA sensitivity curve
 
     Parameters
     ----------
     frequency_range : `float array`
-        frequency values at which to plot the sensitivity curve
+        Frequency values at which to plot the sensitivity curve
 
     y_quantity : `{{ "ASD", "h_c" }}`
-        which quantity to plot on the y axis (amplitude spectral density
+        Which quantity to plot on the y axis (amplitude spectral density
         or characteristic strain)
 
     fig: `matplotlib Figure`
-        a figure on which to plot the distribution. Both `ax` and `fig` must be
+        A figure on which to plot the distribution. Both `ax` and `fig` must be
         supplied for either to be used
 
     ax: `matplotlib Axis`
-        an axis on which to plot the distribution. Both `ax` and `fig` must be
+        An axis on which to plot the distribution. Both `ax` and `fig` must be
         supplied for either to be used
 
     show : `boolean`
-        whether to immediately show the plot or only return the Figure and Axis
+        Shether to immediately show the plot or only return the Figure and Axis
 
     color : `string or tuple`
-        colour to use for the curve, see
+        Colour to use for the curve, see
         https://matplotlib.org/tutorials/colors/colors.html for details on how
         to specify a colour
 
     fill : `boolean`
-        whether to fill the area below the sensitivity curve
+        Whether to fill the area below the sensitivity curve
 
     alpha : `float`
-        opacity of the filled area below the sensitivity curve (ignored if fill
+        Opacity of the filled area below the sensitivity curve (ignored if fill
         is `False`)
 
     label : `string`
-        label for the sensitivity curve in legends
+        Label for the sensitivity curve in legends
 
     **kwargs : `various`
         Keyword args are passed to :meth:`legwork.lisa.power_spectral_density`,
@@ -330,10 +327,10 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
     Returns
     -------
     fig : `matplotlib Figure`
-        the figure on which the distribution is plotted
+        The figure on which the distribution is plotted
 
     ax : `matplotlib Axis`
-        the axis on which the distribution is plotted
+        The axis on which the distribution is plotted
     """
     if frequency_range is None:
         frequency_range = np.logspace(-5, 0, 1000) * u.Hz
@@ -375,20 +372,21 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
 def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
                                  snr_cutoff=0, t_obs=4 * u.yr,
                                  fig=None, ax=None, show=True, **kwargs):
-    """overlay circular/stationary sources on the LISA sensitivity curve.
+    """Overlay circular/stationary sources on the LISA sensitivity curve.
+
     Each source is plotted at its gravitational wave frequency (n = 2) such
     that its height above the curve is equal to it signal-to-noise ratio.
 
     Parameters
     ----------
     f_orb : `float/array`
-        orbital frequency
+        Orbital frequency
 
     h_0_2 : `float/array`
-        strain amplitude of the n = 2 harmonic
+        Strain amplitude of the n = 2 harmonic
 
     snr : `float/array`
-        signal-to-noise ratio
+        Signal-to-noise ratio
 
     snr_cutoff : `float`
         SNR above which to plot binaries (default is 0 such that all
@@ -398,29 +396,30 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
         LISA observation time
 
     fig: `matplotlib Figure`
-        a figure on which to plot the distribution. Both `ax` and `fig`
+        A figure on which to plot the distribution. Both `ax` and `fig`
         must be supplied for either to be used
 
     ax: `matplotlib Axis`
-        an axis on which to plot the distribution. Both `ax` and `fig`
+        An axis on which to plot the distribution. Both `ax` and `fig`
         must be supplied for either to be used
 
     show : `boolean`
-        whether to immediately show the plot or only return the Figure
+        Whether to immediately show the plot or only return the Figure
         and Axis
 
     **kwargs : `various`
-        This function is a wrapper on `visualisation.plot_2D_dist` and each
-        kwarg is passed directly to this function. For example, you can write
+        This function is a wrapper on
+        :func:`legwork.visualisation.plot_2D_dist` and each kwarg is passed
+        directly to this function. For example, you can write
         `disttype="kde"` for a kde density plot instead of a scatter plot.
 
     Returns
     -------
     fig : `matplotlib Figure`
-        the figure on which the distribution is plotted
+        The figure on which the distribution is plotted
 
     ax : `matplotlib Axis`
-        the axis on which the distribution is plotted
+        The axis on which the distribution is plotted
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
@@ -449,47 +448,49 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
 
 def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
                                 fig=None, ax=None, show=True, **kwargs):
-    """overlay eccentric/stationary sources on the LISA sensitivity curve.
+    """Overlay eccentric/stationary sources on the LISA sensitivity curve.
+    
     Each source is plotted at its dominant harmonic frequency such that
     that its height above the curve is equal to it signal-to-noise ratio.
 
     Parameters
     ----------
     f_dom : `float/array`
-        dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic
+        Dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic
         with the maximum strain)
 
     snr : `float/array`
-        signal-to-noise ratio
+        Signal-to-noise ratio
 
     snr_cutoff : `float`
         SNR above which to plot binaries (default is 0 such that all
         sources are plotted)
 
     fig: `matplotlib Figure`
-        a figure on which to plot the distribution. Both `ax` and `fig`
+        A figure on which to plot the distribution. Both `ax` and `fig`
         must be supplied for either to be used
 
     ax: `matplotlib Axis`
-        an axis on which to plot the distribution. Both `ax` and `fig`
+        An axis on which to plot the distribution. Both `ax` and `fig`
         must be supplied for either to be used
 
     show : `boolean`
-        whether to immediately show the plot or only return the Figure
+        Whether to immediately show the plot or only return the Figure
         and Axis
 
     **kwargs : `various`
-        This function is a wrapper on `visualisation.plot_2D_dist` and each
-        kwarg is passed directly to this function. For example, you can write
+        This function is a wrapper on
+        :func:`legwork.visualisation.plot_2D_dist` and each kwarg is passed
+        directly to this function. For example, you can write
         `disttype="kde"` for a kde density plot instead of a scatter plot.
 
     Returns
     -------
     fig : `matplotlib Figure`
-        the figure on which the distribution is plotted
+        The figure on which the distribution is plotted
 
     ax : `matplotlib Axis`
-        the axis on which the distribution is plotted
+        The axis on which the distribution is plotted
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
