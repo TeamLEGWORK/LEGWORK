@@ -147,7 +147,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     """Evolve an array of circular binaries for ``t_evol`` time
 
     Note that all of {``beta``, ``m_1``, ``m_2``, ``a_i``, ``f_orb_i``} must
-    have the same dimenions.
+    have the same dimensions.
 
     Parameters
     ----------
@@ -284,7 +284,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     Note that all of {``beta``, ``m_1``, ``m_2``, ``ecc_i``m ``a_i``,
-    ``f_orb_i``} must have the same dimenions.
+    ``f_orb_i``} must have the same dimensions.
 
     Parameters
     ----------
@@ -327,7 +327,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     output_vars : `array`
         list of **ordered** output vars, choose from any of ``timesteps``,
         ``ecc``, ``a``, ``f_orb`` and ``f_GW`` for which of timesteps,
-        eccentricty, semi-major axis and orbital/GW frequency that you want.
+        eccentricity, semi-major axis and orbital/GW frequency that you want.
         Default is [``ecc``, ``f_orb``]
 
     n_proc : `int`
@@ -337,7 +337,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     Returns
     -------
     evolution : `tuple`
-        tuple possibly containing eccentricty, semi-major axis and frequency
+        tuple possibly containing eccentricity, semi-major axis and frequency
         at each timestep. Content determined by ``output_vars``
     """
     # transform input if only a single source

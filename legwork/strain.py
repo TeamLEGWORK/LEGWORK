@@ -95,7 +95,7 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
 
 
 def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
-    """Computes charactistic strain
+    """Computes characteristic strain
 
     Computes the dimensionless characteristic power of a general
     binary radiating gravitational waves in the quadrupole approximation

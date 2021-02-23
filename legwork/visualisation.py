@@ -62,7 +62,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
     color : `string or tuple`
         colour to use for the plot, see
         https://matplotlib.org/tutorials/colors/colors.html for details on how
-        to specifiy a colour
+        to specify a colour
 
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
@@ -201,7 +201,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
     color : `string or tuple`
         colour to use for the plot, see
         https://matplotlib.org/tutorials/colors/colors.html for details on how
-        to specifiy a colour
+        to specify a colour
 
     show : `boolean`
         whether to immediately show the plot or only return the Figure and Axis
@@ -311,7 +311,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
     color : `string or tuple`
         colour to use for the curve, see
         https://matplotlib.org/tutorials/colors/colors.html for details on how
-        to specifiy a colour
+        to specify a colour
 
     fill : `boolean`
         whether to fill the area below the sensitivity curve
@@ -375,7 +375,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
 def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
                                  snr_cutoff=0, t_obs=4 * u.yr,
                                  fig=None, ax=None, show=True, **kwargs):
-    """overlay circular/stationary sources on the LISA sensitivty curve.
+    """overlay circular/stationary sources on the LISA sensitivity curve.
     Each source is plotted at its gravitational wave frequency (n = 2) such
     that its height above the curve is equal to it signal-to-noise ratio.
 
@@ -449,7 +449,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
 
 def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
                                 fig=None, ax=None, show=True, **kwargs):
-    """overlay eccentric/stationary sources on the LISA sensitivty curve.
+    """overlay eccentric/stationary sources on the LISA sensitivity curve.
     Each source is plotted at its dominant harmonic frequency such that
     that its height above the curve is equal to it signal-to-noise ratio.
 
