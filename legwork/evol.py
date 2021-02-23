@@ -251,18 +251,23 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
 
 def integrate_de_dt(args):                                 # pragma: no cover
     """Function that integrates de_dt with odeint
+    
     Parameters
     ----------
     ecc_i : `float`
         Initial eccentricity
+    
     timesteps : `array`
         Array of exact timesteps to take when evolving each binary. Must be
         monotonically increasing and start with t=0.
+    
     beta : `float`
         beta(m_1, m_2) from Peters 1964 Eq. 5.9
+    
     c_0 : `float`
         factor defined in Peters 1964
-    Outputs
+    
+    Returns
     -------
     e : `array`
        eccentricity evolution
