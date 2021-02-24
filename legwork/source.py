@@ -409,8 +409,11 @@ class Source():
         SNR : `array`
             The signal-to-noise ratio
         """
-        if "t_obs" in self._sc_params.keys():   # pragma: no cover
-            if t_obs != self._sc_params["t_obs"]:
+        if self._sc_params is not None:     # pragma: no cover
+            sc_t_obs = t_obs
+            if "t_obs" in self._sc_params.keys():
+                sc_t_obs = self._sc_params["t_obs"]
+            if t_obs != sc_t_obs:
                 print("Warning: Current `sc_params` uses t_obs =",
                       "{} but this function".format(self._sc_params["t_obs"]),
                       "was passed t_obs = {}. Update your".format(t_obs),
