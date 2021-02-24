@@ -188,12 +188,12 @@ class Test(unittest.TestCase):
         timesteps = evol.create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc,
                                                 t_evol=t_evol, n_step=n_step,
                                                 )
-    
+
         # get rid of the units for faster integration
         c_0 = c_0.to(u.m).value
         beta = beta.to(u.m**4 / u.s).value
         timesteps = timesteps.to(u.s).value
-    
+
         # integrate by hand:
         ecc_evol = np.array([odeint(evol.de_dt, ecc[i], timesteps[i],
                                     args=(beta[i], c_0[i])).flatten()

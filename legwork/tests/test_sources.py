@@ -59,8 +59,8 @@ class Test(unittest.TestCase):
                                 ecc=ecc, dist=dist, n_proc=n_proc)
 
         sources_1 = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
-                                  ecc=ecc, dist=dist, n_proc=1) 
-        
+                                  ecc=ecc, dist=dist, n_proc=1)
+
         # compare using 1 or 2 processors
         snr_2 = sources.get_snr(verbose=True)
         snr_1 = sources_1.get_snr(verbose=True)

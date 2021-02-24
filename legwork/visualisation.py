@@ -25,7 +25,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
                  xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
     """plot a 1D distribution of ``x``.
-    
+
     This function is a wrapper for :func:`matplotlib.pyplot.hist`,
     :func:`seaborn.kdeplot` and :func:`seaborn.ecdfplot`.
 
@@ -160,8 +160,8 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
                  xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
     """Plot a 2D distribution of `x` and `y`
-    
-    This function is a wrapper for :func:`matplotlib.pyplot.scatter` and 
+
+    This function is a wrapper for :func:`matplotlib.pyplot.scatter` and
     :func:`seaborn.kdeplot`.
 
     Parameters
@@ -449,7 +449,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr,
 def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
                                 fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
-    
+
     Each source is plotted at its dominant harmonic frequency such that
     that its height above the curve is equal to it signal-to-noise ratio.
 

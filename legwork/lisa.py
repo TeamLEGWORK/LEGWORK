@@ -11,8 +11,8 @@ __all__ = ['load_transfer_function', 'approximate_transfer_function',
 
 def load_transfer_function(f, fstar=19.09e-3):
     """Load in transfer function from file
-    
-    Load transfer function and interpolate values for a range of frequencies. 
+
+    Load transfer function and interpolate values for a range of frequencies.
     Adapted from https://github.com/eXtremeGravityInstitute/LISA_Sensitivity
     to use binary files instead of text. See Robson+19 for more details.
 
@@ -72,7 +72,7 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
                            include_confusion_noise=True):
     """Calculates the effective LISA power spectral density sensitivity
     curve
-    
+
     Using equations from Robson+19, calculate the effective LISA power spectral
     density sensitivity curve
 

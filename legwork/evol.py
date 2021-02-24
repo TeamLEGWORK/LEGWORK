@@ -50,24 +50,24 @@ def de_dt(e, times, beta, c_0):                             # pragma: no cover
 
 def integrate_de_dt(args):                                 # pragma: no cover
     """Wrapper that integrates :func:`legwork.evol.de_dt` with odeint
-    
+
     Parameters
     ----------
     ecc_i : `float`
         Initial eccentricity
-    
+
     timesteps : `array`
         Array of exact timesteps to take when evolving each binary. Must be
         monotonically increasing and start with t=0.
-    
+
     beta : `float`
         Constant defined in Peters and Mathews (1964) Eq. 5.9.
         See :meth:`legwork.utils.beta`
-    
+
     c_0 : `float`
         Constant defined in Peters and Mathews (1964) Eq. 5.11.
         See :meth:`legwork.utils.c_0`
-    
+
     Returns
     -------
     ecc_evol : `array`
@@ -296,6 +296,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
             evolution.append(2 * f_orb_evol.to(u.Hz))
     return evolution if len(evolution) > 1 else evolution[0]
 
+
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
              output_vars=['ecc', 'f_orb'], n_proc=1):
@@ -441,7 +442,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
 def get_t_merge_circ(beta=None, m_1=None, m_2=None,
                      a_i=None, f_orb_i=None):
     """Computes the merger time for circular binaries
-    
+
     This function implements Peters & Mathews (1964) Eq. 5.10
 
     Parameters
@@ -481,7 +482,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
                     beta=None, m_1=None, m_2=None,
                     small_e_tol=1e-2, large_e_tol=1 - 1e-2):
     """Computes the merger time for binaries
-    
+
     This function implements Peters (1964) Eq. 5.10, 5.14 and the two
     unlabelled equations after 5.14 (using a different one depending on the
     eccentricity of each binary)
@@ -587,7 +588,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
 
 def evolve_f_orb_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
     """Evolve orbital frequency for ``t_evol`` time.
-    
+
     This gives the exact final frequency for circular binaries. However, it
     will overestimate the final frequency for an eccentric binary and if an
     exact value is required then :func:`legwork.evol.evol_ecc()` should be

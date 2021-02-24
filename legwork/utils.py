@@ -70,7 +70,7 @@ def peters_g(n, e):
 
 def peters_f(e):
     """f(e) from Peters and Mathews (1963) Eq.17
-    
+
     This function gives the integrated enhancement factor of gravitational
     radiation from an eccentric source compared to an equivalent circular
     source.
@@ -88,7 +88,7 @@ def peters_f(e):
     Notes
     -----
     Note that this function represents an infinite sum of g(n, e)
-    
+
     .. math::
 
         f(e) = \sum_{n=1}^\infty g(n, e)
@@ -104,7 +104,7 @@ def peters_f(e):
 
 def get_a_from_f_orb(f_orb, m_1, m_2):
     """Converts orbital frequency to semi-major axis
-    
+
     Using Kepler's third law, convert orbital frequency to semi-major axis.
     Inverse of :func:`legwork.utils.get_f_orb_from_a`.
 
@@ -134,8 +134,8 @@ def get_a_from_f_orb(f_orb, m_1, m_2):
 
 
 def get_f_orb_from_a(a, m_1, m_2):
-    """Converts semi-major axis to orbital frequency 
-    
+    """Converts semi-major axis to orbital frequency
+
     Using Kepler's third law, convert semi-major axis to orbital frequency.
     Inverse of :func:`legwork.utils.get_a_from_f_orb`.
 
@@ -248,7 +248,7 @@ def get_a_from_ecc(ecc, c_0):
 def determine_stationarity(f_orb_i, t_evol, ecc_i,
                            m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
     """Determine whether a binary is stationary
-    
+
     Check how much a binary's orbital frequency changes over ``t_evol`` time.
     This function provides a conservative estimate in that some
     binaries that are stationary may be marked as evolving. This

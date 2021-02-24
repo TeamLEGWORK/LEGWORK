@@ -291,7 +291,7 @@ class Source():
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
         """Produce a mask of the sources.
-        
+
         Create a mask based on whether binaries are circular or eccentric and
         stationary or evolving. Tolerance levels are defined in the class.
 

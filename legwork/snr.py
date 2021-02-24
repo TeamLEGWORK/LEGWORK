@@ -37,10 +37,10 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that computes the
-        LISA sensitivity curve. Default is None and uses exact values. Note:
-        take care to ensure that your interpolated function has the same LISA
-        observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     Returns
     -------
@@ -95,10 +95,10 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that computes
-        the LISA sensitivity curve. Default is None and uses exact values.
-        Note: take care to ensure that your interpolated function has the same
-        LISA observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     Returns
     -------
@@ -162,10 +162,10 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that computes
-        the LISA sensitivity curve. Default is None and uses exact values.
-        Note: take care to ensure that your interpolated function has the same
-        LISA observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     Returns
     -------
@@ -250,10 +250,10 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that computes
-        the LISA sensitivity curve. Default is None and uses exact values.
-        Note: take care to ensure that your interpolated function has the same
-        LISA observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     n_proc : `int`
         Number of processors to split eccentricity evolution over, where
@@ -272,7 +272,8 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
 
     # get eccentricity and f_orb evolutions
     e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step,
-                                       m_1=m_1, m_2=m_2, f_orb_i=f_orb_i, n_proc=n_proc)
+                                       m_1=m_1, m_2=m_2, f_orb_i=f_orb_i,
+                                       n_proc=n_proc)
 
     # create harmonics list and multiply for nth frequency evolution
     harms = np.arange(1, max_harmonic + 1).astype(int)
