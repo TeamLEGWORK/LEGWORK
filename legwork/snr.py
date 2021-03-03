@@ -58,7 +58,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
         h_f_lisa_2 = interpolated_sc(2 * f_orb)
     else:
         h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_orb, t_obs=t_obs)
-    snr = (h_f_src_circ_2 / (4 * h_f_lisa_2))**0.5
+    snr = (h_f_src_circ_2 / h_f_lisa_2)**0.5
 
     return snr.decompose()
 
@@ -126,7 +126,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
         h_f_lisa_n_2 = lisa.power_spectral_density(f=f_n, t_obs=t_obs)
 
     # calculate the signal-to-noise ratio
-    snr = (np.sum(h_f_src_ecc_2 / (4 * h_f_lisa_n_2), axis=1))**0.5
+    snr = (np.sum(h_f_src_ecc_2 / h_f_lisa_n_2, axis=1))**0.5
     return snr.decompose()
 
 
@@ -202,7 +202,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
         h_f_lisa_2 = h_f_lisa_2.reshape(f_orb_evol.shape)
     else:
         h_f_lisa_2 = lisa.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs)
-    h_c_lisa_2 = 4 * (2 * f_orb_evol)**2 * h_f_lisa_2
+    h_c_lisa_2 = (2 * f_orb_evol)**2 * h_f_lisa_2
 
     snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1)**0.5
 
@@ -289,7 +289,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
         h_f_lisa = lisa.power_spectral_density(f=f_n_evol.flatten(),
                                                t_obs=t_obs)
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
-    h_c_lisa_2 = 4 * f_n_evol**2 * h_f_lisa
+    h_c_lisa_2 = f_n_evol**2 * h_f_lisa
 
     # integrate, sum and square root to get SNR
     snr_n_2 = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=f_n_evol, axis=1)
