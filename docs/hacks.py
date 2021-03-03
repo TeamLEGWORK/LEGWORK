@@ -26,3 +26,4 @@ nbsphinx.RST_TEMPLATE = re.sub(
     nbsphinx.RST_TEMPLATE,
     flags=re.DOTALL,
 )
+
