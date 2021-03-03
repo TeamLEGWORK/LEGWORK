@@ -43,7 +43,13 @@ extensions = [
     'numpydoc',
     'sphinx_rtd_theme',
     'sphinxcontrib.bibtex',
+    'sphinx.ext.intersphinx',
 ]
+
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       'matplotlib': ('https://matplotlib.org/stable', None),
+                       'seaborn': ('https://seaborn.pydata.org', None),
+                       'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}
 
 bibtex_bibfiles = ['notebooks/refs.bib']
 

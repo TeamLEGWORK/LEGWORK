@@ -10,15 +10,16 @@ __all__ = ['load_transfer_function', 'approximate_transfer_function',
 
 
 def load_transfer_function(f, fstar=19.09e-3):
-    """Load in transfer function from file and interpolate values
-    for a range of frequencies. Adapted from
-    https://github.com/eXtremeGravityInstitute/LISA_Sensitivity to use binary
-    files instead of text. See Robson+19 for more details
+    """Load in transfer function from file
+
+    Load transfer function and interpolate values for a range of frequencies.
+    Adapted from https://github.com/eXtremeGravityInstitute/LISA_Sensitivity
+    to use binary files instead of text. See Robson+19 for more details.
 
     Parameters
     ----------
     f : `float/array`
-        frequencies at which to evaluate the sensitivity curve
+        Frequencies at which to evaluate the sensitivity curve
 
     fstar : `float`
         f* from Robson+19 (default = 19.09 mHz)
@@ -26,7 +27,7 @@ def load_transfer_function(f, fstar=19.09e-3):
     Returns
     -------
     R : `float/array`
-        transfer function at each frequency
+        Transfer function at each frequency
     """
     # try to load the values for interpolating R
     try:
@@ -46,13 +47,14 @@ def load_transfer_function(f, fstar=19.09e-3):
 
 
 def approximate_transfer_function(f, fstar):
-    """Calculate the the LISA transfer function using
-    approximation from Eq. 9 of Robson+19
+    """Approximate LISA transfer function
+
+    Use Eq.9 of Robson+19 to approximate the LISA transfer function.
 
     Parameters
     ----------
     f : `float/array`
-        frequencies at which to evaluate the sensitivity curve
+        Frequencies at which to evaluate the sensitivity curve
 
     fstar : `float`
         f* from Robson+19 (default = 19.09 mHz)
@@ -60,7 +62,7 @@ def approximate_transfer_function(f, fstar):
     Returns
     -------
     R : `float/array`
-        transfer function at each frequency
+        Transfer function at each frequency
     """
     return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
 
@@ -69,15 +71,18 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
                            approximate_R=False,
                            include_confusion_noise=True):
     """Calculates the effective LISA power spectral density sensitivity
-    curve using equations from Robson+19
+    curve
+
+    Using equations from Robson+19, calculate the effective LISA power spectral
+    density sensitivity curve
 
     Parameters
     ----------
     f : `float/array`
-        frequencies at which to evaluate the sensitivity curve
+        Frequencies at which to evaluate the sensitivity curve
 
     t_obs : `float`
-        observation time (default 4 years)
+        Observation time (default 4 years)
 
     L : `float`
         LISA arm length in metres (default = 2.5Gm)
@@ -86,10 +91,10 @@ def power_spectral_density(f, t_obs=4*u.yr, L=2.5e9, fstar=19.09e-3,
         f* from Robson+19 (default = 19.09 mHz)
 
     approximate_R : `boolean`
-        whether to approximate the transfer function (default: no)
+        Whether to approximate the transfer function (default: no)
 
     include_confusion_noise  : `boolean`
-        whether to include the Galactic confusion noise (default: yes)
+        Whether to include the Galactic confusion noise (default: yes)
 
     Returns
     -------

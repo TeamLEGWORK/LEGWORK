@@ -59,8 +59,8 @@ class Test(unittest.TestCase):
                                 ecc=ecc, dist=dist, n_proc=n_proc)
 
         sources_1 = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
-                                  ecc=ecc, dist=dist, n_proc=1) 
-        
+                                  ecc=ecc, dist=dist, n_proc=1)
+
         # compare using 1 or 2 processors
         snr_2 = sources.get_snr(verbose=True)
         snr_1 = sources_1.get_snr(verbose=True)
@@ -82,13 +82,13 @@ class Test(unittest.TestCase):
 
         source_strain = sources.get_h_0_n([1, 2, 3])
         true_strain = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
-                                   n=[1, 2, 3], dist=dist)
+                                   n=[1, 2, 3], dist=dist)[:, 0, :]
 
         self.assertTrue(np.all(source_strain == true_strain))
 
         source_char_strain = sources.get_h_c_n([1, 2, 3])
         true_char_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
-                                        n=[1, 2, 3], dist=dist)
+                                        n=[1, 2, 3], dist=dist)[:, 0, :]
 
         self.assertTrue(np.all(source_char_strain == true_char_strain))
 

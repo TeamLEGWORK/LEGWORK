@@ -24,27 +24,27 @@ class Source():
         Primary mass. Must have astropy units of mass.
 
     m_2 : `float/array`
-        secondary mass. Must have astropy units of mass.
+        Secondary mass. Must have astropy units of mass.
 
     ecc : `float/array`
-        initial eccentricity
+        Initial eccentricity
 
     dist : `float/array`
-        luminosity distance to source. Must have astropy units of distance.
+        Luminosity distance to source. Must have astropy units of distance.
 
     n_proc : `int`
-        number of processors to split eccentric evolution over if needed
+        Number of processors to split eccentric evolution over if needed
 
     f_orb : `float/array`
-        orbital frequency (either `a` or `f_orb` must be supplied)
+        Orbital frequency (either `a` or `f_orb` must be supplied)
         This takes precedence over `a`. Must have astropy units of frequency.
 
     a : `float/array`
-        semi-major axis (either `a` or `f_orb` must be supplied). Must have
+        Semi-major axis (either `a` or `f_orb` must be supplied). Must have
         astropy units of length.
 
     gw_lum_tol : `float`
-        allowed error on the GW luminosity when calculating snrs.
+        Allowed error on the GW luminosity when calculating snrs.
         This is used to calculate maximum harmonics needed and
         transition between 'eccentric' and 'circular'.
         This variable should be updated using the function
@@ -53,17 +53,17 @@ class Source():
         current tolerance.
 
     stat_tol : `float`
-        fractional change in frequency above which a
+        Fractional change in frequency above which a
         binary should be considered to be stationary
 
     interpolate_g : `boolean`
-        whether to interpolate the g(n,e) function from Peters (1964)
+        Whether to interpolate the g(n,e) function from Peters (1964)
 
     interpolate_sc : `boolean`
-        whether to interpolate the LISA sensitivity curve
+        Whether to interpolate the LISA sensitivity curve
 
     sc_params : `dict`
-        parameters for interpolated sensitivity curve. Include any of ``t_obs``
+        Parameters for interpolated sensitivity curve. Include any of ``t_obs``
         , ``L``, ``fstar``, ``approximate_R`` and ``include_confusion_noise``.
         Default values are: 4 years, 2.5e9, 19.09e-3, False and True. This is
         ignored if ``interpolate_sc`` is False.
@@ -71,17 +71,17 @@ class Source():
     Attributes
     ----------
     m_c : array_like
-        chirp mass. Set using `m_1` and `m_2` in
+        Chirp mass. Set using ``m_1`` and ``m_2`` in
         :meth:`legwork.utils.chirp_mass`
 
     ecc_tol : float
-        eccentricity above which a binary is considered eccentric. Set by
+        Eccentricity above which a binary is considered eccentric. Set by
         :meth:`legwork.source.Source.find_eccentric_transition`
 
     Raises
     ------
     ValueError
-        If both `f_orb` and `a` are missing.
+        If both ``f_orb`` and ``a`` are missing.
         If array-like parameters don't have the same length.
 
     AssertionError
@@ -138,10 +138,14 @@ class Source():
     def create_harmonics_functions(self):
         """Create two harmonics related functions
 
-        1. to calculate the maximum harmonics required to calculate the SNRs
-        assuming provided tolerance `gw_lum_tol`
+        Each function works as follows
 
-        2. to calculate the dominant harmonic frequency (max strain)"""
+            - Calculate the maximum harmonics required to calculate the SNRs
+              assuming provided tolerance `gw_lum_tol`
+            - Calculate the dominant harmonic frequency (max strain)
+
+        These are stored at ``self.max_harmonic`` and
+        ``self.dominant_harmonic`` respectively."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="legwork",
@@ -199,7 +203,8 @@ class Source():
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
         We define this as the maximum eccentricity at which the n=2 harmonic
-        is the total GW luminosity given the tolerance `self._gw_lum_tol`"""
+        is the total GW luminosity given the tolerance ``self._gw_lum_tol``.
+        Store the result in ``self.ecc_tol``"""
         # only need to check lower eccentricities
         e_range = np.linspace(0.0, 0.2, 10000)
 
@@ -228,7 +233,7 @@ class Source():
         Parameters
         ----------
         interpolate_g : `boolean`
-            whether to interpolate the g(n,e) function from Peters (1964)
+            Whether to interpolate the g(n,e) function from Peters (1964)
         """
         if interpolate_g:
             # open file containing pre-calculated fine g(n,e) grid
@@ -274,7 +279,7 @@ class Source():
             self.sc = None
 
     def update_sc_params(self, sc_params):
-        """update sensitivity curve parameters
+        """Update sensitivity curve parameters
 
         Update the parameters used to interpolate sensitivity curve and perform
         interpolation again to match new params"""
@@ -285,27 +290,28 @@ class Source():
             self.set_sc()
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
-        """Produce a mask of the sources based on whether binaries
-        are circular or eccentric and stationary or evolving.
-        Tolerance levels are defined in the class.
+        """Produce a mask of the sources.
+
+        Create a mask based on whether binaries are circular or eccentric and
+        stationary or evolving. Tolerance levels are defined in the class.
 
         Parameters
         ----------
         circular : `bool`
-            `None` means either, `True` means only circular
-            binaries and `False` means only eccentric
+            ``None`` means either, ``True`` means only circular
+            binaries and ``False`` means only eccentric
 
         stationary : `bool`
-            `None` means either, `True` means only stationary
-            binaries and `False` means only evolving
+            ``None`` means either, ``True`` means only stationary
+            binaries and ``False`` means only evolving
 
         t_obs : `float`
-            observation time
+            Observation time
 
         Returns
         -------
         mask : `bool/array`
-            mask for the sources
+            Mask for the sources
         """
         if circular is None:
             circular_mask = np.repeat(True, self.n_sources)
@@ -332,21 +338,21 @@ class Source():
         return np.logical_and(circular_mask, stat_mask)
 
     def get_h_0_n(self, harmonics, which_sources=None):
-        """Computes the strain for all binaries for the given `harmonics`
+        """Computes the strain for all binaries for the given ``harmonics``
 
         Parameters
         ----------
         harmonics : `int/array`
-            harmonic(s) at which to calculate the strain
+            Harmonic(s) at which to calculate the strain
 
         which_sources : `boolean/array`
-            mask on which sources to compute values for (default is all)
+            Mask on which sources to compute values for (default is all)
 
         Returns
         -------
         h_0_n : `float/array`
-            dimensionless strain in the quadrupole approximation (unitless)
-            shape of array is `(number of sources, number of harmonics)`
+            Dimensionless strain in the quadrupole approximation (unitless)
+            shape of array is ``(number of sources, number of harmonics)``
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
@@ -355,25 +361,25 @@ class Source():
                             ecc=self.ecc[which_sources],
                             n=harmonics,
                             dist=self.dist[which_sources],
-                            interpolated_g=self.g)
+                            interpolated_g=self.g)[:, 0, :]
 
     def get_h_c_n(self, harmonics, which_sources=None):
         """Computes the characteristic strain for all binaries
-        for the given `harmonics`
+        for the given ``harmonics``
 
         Parameters
         ----------
         harmonics : `int/array`
-            harmonic(s) at which to calculate the strain
+            Harmonic(s) at which to calculate the strain
 
         which_sources `boolean/array`
-            mask on which sources to compute values for (default is all)
+            Mask on which sources to compute values for (default is all)
 
         Returns
         -------
         h_c_n : `float/array`
-            dimensionless characteristic strain in the quadrupole approximation
-            shape of array is `(number of sources, number of harmonics)`
+            Dimensionless characteristic strain in the quadrupole approximation
+            shape of array is ``(number of sources, number of harmonics)``
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
@@ -382,7 +388,7 @@ class Source():
                             ecc=self.ecc[which_sources],
                             n=harmonics,
                             dist=self.dist[which_sources],
-                            interpolated_g=self.g)
+                            interpolated_g=self.g)[:, 0, :]
 
     def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
         """Computes the SNR for a generic binary
@@ -390,19 +396,29 @@ class Source():
         Parameters
         ----------
         t_obs : `array`
-            observation duration (default: 4 years)
+            Observation duration (default: 4 years)
 
         n_step : `int`
-            number of time steps during observation duration
+            Number of time steps during observation duration
 
         verbose : `boolean`
-            whether to print additional information to user
+            Whether to print additional information to user
 
         Returns
         -------
         SNR : `array`
-            the signal to noise ratio
+            The signal-to-noise ratio
         """
+        if self._sc_params is not None:     # pragma: no cover
+            sc_t_obs = t_obs
+            if "t_obs" in self._sc_params.keys():
+                sc_t_obs = self._sc_params["t_obs"]
+            if t_obs != sc_t_obs:
+                print("Warning: Current `sc_params` uses t_obs =",
+                      "{} but this function".format(self._sc_params["t_obs"]),
+                      "was passed t_obs = {}. Update your".format(t_obs),
+                      "sc_params to match with Source.update_sc_params()!")
+
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
         snr = np.zeros(self.n_sources)
@@ -435,19 +451,19 @@ class Source():
         Parameters
         ----------
         t_obs : `array`
-            observation duration in units of yr
+            Observation duration (default: 4 years)
 
         which_sources : `bool/array`
-            mask on which sources to consider stationary and calculate
+            Mask on which sources to consider stationary and calculate
             (default is all sources in Class)
 
         verbose : `boolean`
-            whether to print additional information to user
+            Whether to print additional information to user
 
         Returns
         -------
         SNR : `array`
-            the signal to noise ratio
+            The signal-to-noise ratio
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
@@ -495,22 +511,22 @@ class Source():
         Parameters
         ----------
         t_obs : `array`
-            observation duration (default: 4 years)
+            Observation duration (default: 4 years)
 
         n_step : `int`
-            number of time steps during observation duration
+            Number of time steps during observation duration
 
         which_sources : `bool/array`
-            mask on which sources to consider evolving and calculate
+            Mask on which sources to consider evolving and calculate
             (default is all sources in Class)
 
         verbose : `boolean`
-            whether to print additional information to user
+            Whether to print additional information to user
 
         Returns
         -------
         SNR : `array`
-            the signal to noise ratio
+            The signal-to-noise ratio
         """
         snr = np.zeros(self.n_sources)
 
@@ -558,7 +574,7 @@ class Source():
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
                               **kwargs):  # pragma: no cover
-        """plot distributions of Source variables. If two variables are
+        """Plot distributions of Source variables. If two variables are
         specified then produce a 2D distribution, otherwise a 1D distribution.
 
         Parameters
@@ -566,32 +582,32 @@ class Source():
 
         xstr : `{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',\
                 'snr' }`
-            which variable to plot on the x axis
+            Which variable to plot on the x axis
 
         ystr : `{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a',\
                 snr' }`
-            which variable to plot on the y axis
+            Which variable to plot on the y axis
             (if None then a 1D distribution is made using `xstr`)
 
         which_sources : `boolean array`
-            mask for which sources should be plotted (default is all sources)
+            Mask for which sources should be plotted (default is all sources)
 
         **kwargs : `various`
-            When only `xstr` is provided, the kwargs are the same as
-            :meth:`legwork.visualisation.plot_1D_dist`. When both `xstr` and
-            `ystr` are provided, the kwargs are the same as
-            :meth:`legwork.visualisation.plot_2D_dist`. Note that if `xlabel`
-            or `ylabel` is not passed then this function automatically creates
-            one using a default string and (if applicable) the Astropy units
-            of the variable.
+            When only ``xstr`` is provided, the kwargs are the same as
+            :meth:`legwork.visualisation.plot_1D_dist`. When both ``xstr`` and
+            ``ystr`` are provided, the kwargs are the same as
+            :meth:`legwork.visualisation.plot_2D_dist`. Note that if ``xlabel``
+            or ``ylabel`` is not passed then this function automatically
+            creates one using a default string and (if applicable) the Astropy
+            units of the variable.
 
         Returns
         -------
         fig : `matplotlib Figure`
-            the figure on which the distribution is plotted
+            The figure on which the distribution is plotted
 
         ax : `matplotlib Axis`
-            the axis on which the distribution is plotted
+            The axis on which the distribution is plotted
         """
         convert = {"m_1": self.m_1, "m_2": self.m_2,
                    "m_c": self.m_c,
@@ -654,7 +670,7 @@ class Source():
 
     def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr, fig=None,
                            ax=None, show=True, **kwargs):  # pragma: no cover
-        """plot all sources in the class on the sensitivity curve
+        """Plot all sources in the class on the sensitivity curve
 
         Parameters
         ----------
@@ -666,15 +682,24 @@ class Source():
             LISA observation time
 
         show : `boolean`
-            whether to immediately show the plot
+            Whether to immediately show the plot
 
         Returns
         -------
         fig : `matplotlib Figure`
-            the figure on which the sources are plotted
+            The figure on which the sources are plotted
 
         ax : `matplotlib Axis`
-            the axis on which the sources are plotted
+            The axis on which the sources are plotted
+
+        Notes
+        -----
+
+        .. warning::
+
+            Note that this function is not yet implemented for evolving
+            sources. Evolving sources will not be plotted and a warning will be
+            shown instead. We are working on implementing soon!
         """
         # plot circular and stationary sources
         circ_stat = self.get_source_mask(circular=True, stationary=True)

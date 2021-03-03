@@ -18,34 +18,34 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
     Parameters
     ----------
     m_c : `float/array`
-        chirp mass
+        Chirp mass
 
     f_orb : `float/array`
-        orbital frequency
+        Orbital frequency
 
     dist : `float/array`
-        distance to the source
+        Distance to the source
 
     t_obs : `float`
-        total duration of the observation
+        Total duration of the observation
 
     interpolated_g : `function`
-        A function returned by scipy.interpolate.interp2d that
+        A function returned by :class:`scipy.interpolate.interp2d` that
         computes g(n,e) from Peters (1964). The code assumes
         that the function returns the output sorted as with the
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by scipy.interpolate.interp1d that computes the
-        LISA sensitivity curve. Default is None and uses exact values. Note:
-        take care to ensure that your interpolated function has the same LISA
-        observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     Returns
     -------
     snr : `float/array`
-        snr for each binary
+        SNR for each binary
     """
 
     # only need to compute n=2 harmonic for circular
@@ -70,40 +70,40 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
     Parameters
     ----------
     m_c : `float/array`
-        chirp mass
+        Chirp mass
 
     f_orb : `float/array`
-        orbital frequency
+        Orbital frequency
 
     ecc : `float/array`
-        eccentricity
+        Eccentricity
 
     dist : `float/array`
-        distance to the source
+        Distance to the source
 
     t_obs : `float`
-        total duration of the observation
+        Total duration of the observation
 
     max_harmonic : `integer`
-        maximum integer harmonic to compute
+        Maximum integer harmonic to compute
 
     interpolated_g : `function`
-        A function returned by scipy.interpolate.interp2d that
+        A function returned by :class:`scipy.interpolate.interp2d` that
         computes g(n,e) from Peters (1964). The code assumes
         that the function returns the output sorted as with the
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by scipy.interpolate.interp1d that computes the
-        LISA sensitivity curve. Default is None and uses exact values. Note:
-        take care to ensure that your interpolated function has the same LISA
-        observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     Returns
     -------
     snr : `float/array`
-        snr for each binary
+        SNR for each binary
     """
     # define range of harmonics
     n_range = np.arange(1, max_harmonic + 1).astype(int)
@@ -137,40 +137,40 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     Parameters
     ----------
     m_1 : `float/array`
-        primary mass
+        Primary mass
 
     m_2 : `float/array`
-        secondary mass
+        Secondary mass
 
     f_orb_i : `float/array`
-        initial orbital frequency
+        Initial orbital frequency
 
     dist : `float/array`
-        distance to the source
+        Distance to the source
 
     t_obs : `float`
-        total duration of the observation
+        Total duration of the observation
 
     n_step : `int`
-        number of time steps during observation duration
+        Number of time steps during observation duration
 
     interpolated_g : `function`
-        A function returned by scipy.interpolate.interp2d that
+        A function returned by :class:`scipy.interpolate.interp2d` that
         computes g(n,e) from Peters (1964). The code assumes
         that the function returns the output sorted as with the
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by scipy.interpolate.interp1d that computes the
-        LISA sensitivity curve. Default is None and uses exact values. Note:
-        take care to ensure that your interpolated function has the same LISA
-        observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     Returns
     -------
     sn : `float/array`
-        snr for each binary
+        SNR for each binary
     """
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
@@ -219,41 +219,41 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     Parameters
     ----------
     m_1 : `float/array`
-        primary mass
+        Primary mass
 
     m_2 : `float/array`
-        secondary mass
+        Secondary mass
 
     f_orb_i : `float/array`
-        initial orbital frequency
+        Initial orbital frequency
 
     dist : `float/array`
-        distance to the source
+        Distance to the source
 
     ecc : `float/array`
-        eccentricity
+        Eccentricity
 
     max_harmonic : `int`
-        maximum integer harmonic to compute
+        Maximum integer harmonic to compute
 
     t_obs : `float`
-        total duration of the observation
+        Total duration of the observation
 
     n_step : `int`
-        number of time steps during observation duration
+        Number of time steps during observation duration
 
     interpolated_g : `function`
-        A function returned by scipy.interpolate.interp2d that
+        A function returned by :class:`scipy.interpolate.interp2d` that
         computes g(n,e) from Peters (1964). The code assumes
         that the function returns the output sorted as with the
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
     interpolated_sn : `function`
-        A function returned by scipy.interpolate.interp1d that computes the
-        LISA sensitivity curve. Default is None and uses exact values. Note:
-        take care to ensure that your interpolated function has the same LISA
-        observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that
+        computes the LISA sensitivity curve. Default is None and uses exact
+        values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs``.
 
     n_proc : `int`
         Number of processors to split eccentricity evolution over, where
@@ -262,7 +262,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     Returns
     -------
     snr : `array`
-        snr for each binary
+        SNR for each binary
     """
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
     # calculate minimum of observation time and merger time
@@ -272,7 +272,8 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
 
     # get eccentricity and f_orb evolutions
     e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step,
-                                       m_1=m_1, m_2=m_2, f_orb_i=f_orb_i, n_proc=n_proc)
+                                       m_1=m_1, m_2=m_2, f_orb_i=f_orb_i,
+                                       n_proc=n_proc)
 
     # create harmonics list and multiply for nth frequency evolution
     harms = np.arange(1, max_harmonic + 1).astype(int)
