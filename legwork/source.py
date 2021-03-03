@@ -70,13 +70,23 @@ class Source():
 
     Attributes
     ----------
-    m_c : array_like
+    m_c : `float/array`
         Chirp mass. Set using ``m_1`` and ``m_2`` in
         :meth:`legwork.utils.chirp_mass`
 
-    ecc_tol : float
+    ecc_tol : `float`
         Eccentricity above which a binary is considered eccentric. Set by
         :meth:`legwork.source.Source.find_eccentric_transition`
+
+    snr : `float/array`
+        Signal-to-noise ratio. Set by :meth:`legwork.source.Source.get_snr`
+
+    max_snr_harmonic : `int/array`
+        Harmonic with the maximum snr. Set by
+        :meth:`legwork.source.Source.get_snr`
+
+    n_sources : `int`
+        Number of sources in class
 
     Raises
     ------
