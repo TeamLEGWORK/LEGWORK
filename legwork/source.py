@@ -127,6 +127,7 @@ class Source():
         self.a = a
         self.n_proc = n_proc
         self.snr = None
+        self.max_snr_harmonic = None
         self.n_sources = len(m_1)
         self.interpolate_sc = interpolate_sc
         self._sc_params = sc_params
@@ -142,7 +143,7 @@ class Source():
 
             - Calculate the maximum harmonics required to calculate the SNRs
               assuming provided tolerance `gw_lum_tol`
-            - Calculate the harmonic with the maximum strain 
+            - Calculate the harmonic with the maximum strain
 
         These are stored at ``self.harmonics_required`` and
         ``self.max_strain_harmonic`` respectively."""
@@ -391,7 +392,8 @@ class Source():
                             interpolated_g=self.g)[:, 0, :]
 
     def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
-        """Computes the SNR for a generic binary
+        """Computes the SNR for a generic binary. Also records the harmonic
+        with maximum SNR for each binary in ``self.max_snr_harmonic``.
 
         Parameters
         ----------
@@ -441,7 +443,6 @@ class Source():
                                                    which_sources=evol_mask,
                                                    n_step=n_step,
                                                    verbose=verbose)
-        self.snr = snr
         return snr
 
     def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None,
@@ -471,6 +472,9 @@ class Source():
         ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
         ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
 
+        # default to n = 2 for max snr harmonic
+        msh = np.repeat(2, self.n_sources)
+
         # only compute snr if there is at least one binary in mask
         if ind_circ.any():
             if verbose:
@@ -494,14 +498,25 @@ class Source():
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
                     hr = upper - 1
-                    snr[match] = sn.snr_ecc_stationary(m_c=self.m_c[match],
-                                                       f_orb=self.f_orb[match],
-                                                       ecc=self.ecc[match],
-                                                       dist=self.dist[match],
-                                                       t_obs=t_obs,
-                                                       harmonics_required=hr,
-                                                       interpolated_g=self.g,
-                                                       interpolated_sc=self.sc)
+
+                    snr_msh = sn.snr_ecc_stationary(m_c=self.m_c[match],
+                                                    f_orb=self.f_orb[match],
+                                                    ecc=self.ecc[match],
+                                                    dist=self.dist[match],
+                                                    t_obs=t_obs,
+                                                    harmonics_required=hr,
+                                                    interpolated_g=self.g,
+                                                    interpolated_sc=self.sc,
+                                                    ret_max_snr_harmonic=True)
+                    snr[match], msh[match] = snr_msh
+
+        if self.max_snr_harmonic is None:
+            self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
+        self.max_snr_harmonic[which_sources] = msh[which_sources]
+
+        if self.snr is None:
+            self.snr = np.zeros(self.n_sources)
+        self.snr[which_sources] = snr[which_sources]
 
         return snr[which_sources]
 
@@ -536,6 +551,9 @@ class Source():
         ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
         ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
 
+        # default to n = 2 for max snr harmonic
+        msh = np.repeat(2, self.n_sources)
+
         if ind_circ.any():
             if verbose:
                 print("\t\t{} sources are evolving and circular".format(
@@ -560,17 +578,28 @@ class Source():
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
                     hr = upper - 1
-                    snr[match] = sn.snr_ecc_evolving(m_1=self.m_1[match],
-                                                     m_2=self.m_2[match],
-                                                     f_orb_i=self.f_orb[match],
-                                                     dist=self.dist[match],
-                                                     ecc=self.ecc[match],
-                                                     harmonics_required=hr,
-                                                     t_obs=t_obs,
-                                                     n_step=n_step,
-                                                     interpolated_g=self.g,
-                                                     interpolated_sc=self.sc,
-                                                     n_proc=self.n_proc)
+
+                    snr_msh = sn.snr_ecc_evolving(m_1=self.m_1[match],
+                                                  m_2=self.m_2[match],
+                                                  f_orb_i=self.f_orb[match],
+                                                  dist=self.dist[match],
+                                                  ecc=self.ecc[match],
+                                                  harmonics_required=hr,
+                                                  t_obs=t_obs,
+                                                  n_step=n_step,
+                                                  interpolated_g=self.g,
+                                                  interpolated_sc=self.sc,
+                                                  n_proc=self.n_proc,
+                                                  ret_max_snr_harmonic=True)
+                    snr[match], msh[match] = snr_msh
+
+        if self.max_snr_harmonic is None:
+            self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
+        self.max_snr_harmonic[which_sources] = msh[which_sources]
+
+        if self.snr is None:
+            self.snr = np.zeros(self.n_sources)
+        self.snr[which_sources] = snr[which_sources]
 
         return snr[which_sources]
 
