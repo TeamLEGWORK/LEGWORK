@@ -144,7 +144,7 @@ class Source():
               assuming provided tolerance `gw_lum_tol`
             - Calculate the dominant harmonic frequency (max strain)
 
-        These are stored at ``self.max_harmonic`` and
+        These are stored at ``self.harmonics_required`` and
         ``self.dominant_harmonic`` respectively."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
@@ -185,9 +185,9 @@ class Source():
                                    fill_value=(2, np.max(harmonics_needed)))
 
         # conservatively round up to nearest integer
-        def max_harmonic(e):
+        def harmonics_required(e):
             return np.ceil(interpolated_hn(e)).astype(int)
-        self.max_harmonic = max_harmonic
+        self.harmonics_required = harmonics_required
 
         # now calculate the dominant harmonics
         dominant_harmonics = n_range[g_vals.argmax(axis=1)]
@@ -215,7 +215,7 @@ class Source():
 
     def update_gw_lum_tol(self, gw_lum_tol):
         """Update GW luminosity tolerance and use updated value to
-        recalculate max_harmonics function and transition to eccentric
+        recalculate harmonics_required function and transition to eccentric
 
         Parameters
         ----------
@@ -486,19 +486,20 @@ class Source():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
                     len(snr[ind_ecc])))
-            max_harmonics = self.max_harmonic(self.ecc)
+            harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(max_harmonics >= lower,
-                                           max_harmonics < upper)
+                harm_mask = np.logical_and(harmonics_required >= lower,
+                                           harmonics_required < upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
+                    hr = upper - 1
                     snr[match] = sn.snr_ecc_stationary(m_c=self.m_c[match],
                                                        f_orb=self.f_orb[match],
                                                        ecc=self.ecc[match],
                                                        dist=self.dist[match],
                                                        t_obs=t_obs,
-                                                       max_harmonic=upper - 1,
+                                                       harmonics_required=hr,
                                                        interpolated_g=self.g,
                                                        interpolated_sc=self.sc)
 
@@ -551,19 +552,20 @@ class Source():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
                     len(snr[ind_ecc])))
-            max_harmonics = self.max_harmonic(self.ecc)
+            harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(max_harmonics >= lower,
-                                           max_harmonics < upper)
+                harm_mask = np.logical_and(harmonics_required >= lower,
+                                           harmonics_required < upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
+                    hr = upper - 1
                     snr[match] = sn.snr_ecc_evolving(m_1=self.m_1[match],
                                                      m_2=self.m_2[match],
                                                      f_orb_i=self.f_orb[match],
                                                      dist=self.dist[match],
                                                      ecc=self.ecc[match],
-                                                     max_harmonic=upper - 1,
+                                                     harmonics_required=hr,
                                                      t_obs=t_obs,
                                                      n_step=n_step,
                                                      interpolated_g=self.g,

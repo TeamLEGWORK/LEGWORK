@@ -63,7 +63,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
     return snr.decompose()
 
 
-def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
+def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
                        interpolated_g=None, interpolated_sc=None):
     """Computes SNR for eccentric and stationary sources
 
@@ -84,7 +84,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
     t_obs : `float`
         Total duration of the observation
 
-    max_harmonic : `integer`
+    harmonics_required : `integer`
         Maximum integer harmonic to compute
 
     interpolated_g : `function`
@@ -106,7 +106,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
         SNR for each binary
     """
     # define range of harmonics
-    n_range = np.arange(1, max_harmonic + 1).astype(int)
+    n_range = np.arange(1, harmonics_required + 1).astype(int)
 
     # calculate source signal
     h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
@@ -114,7 +114,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
                                interpolated_g=interpolated_g)**2
 
     # reshape the output since only one timestep
-    h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), max_harmonic)
+    h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), harmonics_required)
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
     # calculate harmonic frequencies and noise
@@ -209,8 +209,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     return snr.decompose()
 
 
-def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
-                     interpolated_g=None, interpolated_sc=None, n_proc=1):
+def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
+                     n_step, interpolated_g=None, interpolated_sc=None,
+                     n_proc=1):
     """Computes SNR for eccentric and evolving sources.
 
     Note that this function will not work for exactly circular (ecc = 0.0)
@@ -233,7 +234,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     ecc : `float/array`
         Eccentricity
 
-    max_harmonic : `int`
+    harmonics_required : `int`
         Maximum integer harmonic to compute
 
     t_obs : `float`
@@ -276,7 +277,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
                                        n_proc=n_proc)
 
     # create harmonics list and multiply for nth frequency evolution
-    harms = np.arange(1, max_harmonic + 1).astype(int)
+    harms = np.arange(1, harmonics_required + 1).astype(int)
     f_n_evol = harms[np.newaxis, np.newaxis, :] * f_orb_evol[..., np.newaxis]
 
     # calculate the characteristic strain
