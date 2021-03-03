@@ -450,14 +450,14 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
                                 fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
 
-    Each source is plotted at its dominant harmonic frequency such that
+    Each source is plotted at its max snr harmonic frequency such that
     that its height above the curve is equal to it signal-to-noise ratio.
 
     Parameters
     ----------
     f_dom : `float/array`
         Dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic
-        with the maximum strain)
+        with the maximum snr)
 
     snr : `float/array`
         Signal-to-noise ratio

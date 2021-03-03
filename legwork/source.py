@@ -190,7 +190,7 @@ class Source():
             return np.ceil(interpolated_hn(e)).astype(int)
         self.harmonics_required = harmonics_required
 
-        # now calculate the dominant harmonics
+        # now calculate the max strain harmonics
         max_strain_harmonics = n_range[g_vals.argmax(axis=1)]
         interpolated_dh = interp1d(e_range, max_strain_harmonics,
                                    bounds_error=False,
@@ -749,8 +749,7 @@ class Source():
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
         if ecc_stat.any():
-            n_dom = self.max_strain_harmonic(self.ecc[ecc_stat])
-            f_dom = self.f_orb[ecc_stat] * n_dom
+            f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
                                                       snr=self.snr[ecc_stat],
                                                       snr_cutoff=snr_cutoff,
