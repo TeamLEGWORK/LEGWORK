@@ -41,8 +41,17 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
     'numpydoc',
-    'sphinx_rtd_theme', 
+    'sphinx_rtd_theme',
+    'sphinxcontrib.bibtex',
+    'sphinx.ext.intersphinx',
 ]
+
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       'matplotlib': ('https://matplotlib.org/stable', None),
+                       'seaborn': ('https://seaborn.pydata.org', None),
+                       'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}
+
+bibtex_bibfiles = ['notebooks/refs.bib']
 
 # fix numpydoc autosummary
 numpydoc_show_class_members = False
@@ -79,6 +88,7 @@ html_show_sourcelink = False
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 html_css_files = ["custom.css"]
+html_js_files = ['custom.js']
 
 # autodocs
 autoclass_content = "both"
@@ -95,3 +105,12 @@ nbsphinx_prolog = """
           downloaded `here <https://github.com/katiebreivik/LEGWORK/tree/main/docs/{{ docname }}>`_.
 """
 nbsphinx_prompt_width = "0"
+
+nbsphinx_execute_arguments = [
+    "--InlineBackend.figure_formats={'svg', 'pdf'}",
+    "--InlineBackend.rc={'figure.dpi': 96}",
+]
+
+mathjax_config = {
+    'TeX': {'equationNumbers': {'autoNumber': 'AMS', 'useLabelIds': True}},
+}

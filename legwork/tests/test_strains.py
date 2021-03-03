@@ -11,7 +11,7 @@ class Test(unittest.TestCase):
 
     def test_strain_conversion(self):
         """This test checks whether the strain and characteristic strain are
-        related as hc^2 = (2 * fn^2 / fn_dot) h0^2"""
+        related as hc^2 = (fn^2 / fn_dot) h0^2"""
         n_values = 100000
 
         m_c = np.random.uniform(0, 10, n_values) * u.Msun

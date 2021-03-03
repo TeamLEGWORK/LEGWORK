@@ -8,46 +8,52 @@ import legwork.evol as evol
 
 __all__ = ['chirp_mass', 'peters_g', 'peters_f', 'get_a_from_f_orb',
            'get_f_orb_from_a', 'beta', 'c_0', 'determine_stationarity',
-           'fn_dot']
+           'fn_dot', 'ensure_array']
 
 
 def chirp_mass(m_1, m_2):
-    """Computes chirp mass of a binary system
+    """Computes chirp mass of binaries
 
     Parameters
     ----------
     m_1 : `float/array`
-        more massive binary component
+        Primary mass
 
     m_2 : `float/array`
-        less massive binary component
+        Secondary mass
 
     Returns
     -------
     m_c : `float/array`
-        chirp mass of the binary
+        Chirp mass
     """
-
     m_c = (m_1 * m_2)**(3/5) / (m_1 + m_2)**(1/5)
+
+    # simplify units if present
+    if isinstance(m_c, u.quantity.Quantity):
+        m_c = m_c.to(u.Msun)
+
     return m_c
 
 
 def peters_g(n, e):
-    """relative power of gravitational radiation at nth harmonic
-    from Peters and Mathews (1963)
+    """Compute g(n, e) from Peters and Mathews (1963) Eq.20
+
+    This function gives the relative power of gravitational radiation
+    at the nth harmonic
 
     Parameters
     ----------
-    n : `int`
-        harmonic of interest
+    n : `int/array`
+        Harmonic(s) of interest
 
-    e : `array`
-        eccentricity
+    e : `float/array`
+        Eccentricity
 
     Returns
     -------
     g : `array`
-        Fourier decomposition
+        g(n, e) from Peters and Mathews (1963) Eq. 20
     """
 
     bracket_1 = jv(n-2, n*e) - 2*e*jv(n-1, n*e) \
@@ -63,121 +69,150 @@ def peters_g(n, e):
 
 
 def peters_f(e):
-    """integrated enhancement factor of gravitational radiation
-    from an eccentric source from Peters and Mathews (1963)
+    """f(e) from Peters and Mathews (1963) Eq.17
+
+    This function gives the integrated enhancement factor of gravitational
+    radiation from an eccentric source compared to an equivalent circular
+    source.
 
     Parameters
     ----------
-    e : `array`
-        eccentricity
+    e : `float/array`
+        Eccentricity
 
     Returns
     -------
-    f : `array`
-        enhancement factor
+    f : `float/array`
+        Enhancement factor
+
+    Notes
+    -----
+    Note that this function represents an infinite sum of g(n, e)
+
+    .. math::
+
+        f(e) = \sum_{n=1}^\infty g(n, e)
     """
 
     numerator = 1 + (73/24)*e**2 + (37/96)*e**4
     denominator = (1 - e**2)**(7/2)
 
-    f = numerator/denominator
+    f = numerator / denominator
 
     return f
 
 
 def get_a_from_f_orb(f_orb, m_1, m_2):
-    """Converts orbital frequency to separation using Kepler's
-    third law all units are SI
+    """Converts orbital frequency to semi-major axis
+
+    Using Kepler's third law, convert orbital frequency to semi-major axis.
+    Inverse of :func:`legwork.utils.get_f_orb_from_a`.
 
     Parameters
     ----------
-    f_orb : `array`
-        orbital frequency
+    f_orb : `float/array`
+        Orbital frequency
 
-    m_1 : `array`
-        primary mass
+    m_1 : `float/array`
+        Primary mass
 
-    m_2 : `array`
-        secondary mass
+    m_2 : `float/array`
+        Secondary mass
 
     Returns
     -------
-    a : `array`
-        separation
+    a : `float/array`
+        Semi-major axis
     """
-
     a = (c.G * (m_1 + m_2) / (2 * np.pi * f_orb)**2)**(1/3)
-    return a.to(u.AU)
+
+    # simplify units if present
+    if isinstance(a, u.quantity.Quantity):
+        a = a.to(u.AU)
+
+    return a
 
 
 def get_f_orb_from_a(a, m_1, m_2):
-    """Converts orbital frequency to separation using Kepler's
-    third law where all units are SI
+    """Converts semi-major axis to orbital frequency
+
+    Using Kepler's third law, convert semi-major axis to orbital frequency.
+    Inverse of :func:`legwork.utils.get_a_from_f_orb`.
 
     Parameters
     ----------
-    a : `array`
-        separation
+    a : `float/array`
+        Semi-major axis
 
-    m_1 : `array`
-        primary mass
+    m_1 : `float/array`
+        Primary mass
 
-    m_2 : `array`
-        secondary mass
+    m_2 : `float/array`
+        Secondary mass
 
     Returns
     -------
-    f_orb : `array`
-        orbital frequency
+    f_orb : `float/array`
+        Orbital frequency
     """
-
     f_orb = ((c.G * (m_1 + m_2) / a**3))**(0.5) / (2 * np.pi)
+
+    # simplify units if present
+    if isinstance(f_orb, u.quantity.Quantity):
+        f_orb = f_orb.to(u.Hz)
 
     return f_orb
 
 
 def beta(m_1, m_2):
-    """Computes the beta factor in Peters & Mathews calculations
-    with all units in SI
+    """Compute beta defined in Peters and Mathews (1964) Eq.5.9
 
     Parameters
     ----------
-    m_1 : `array`
-        primary mass
+    m_1 : `float/array`
+        Primary mass
 
-    m_2 : `array`
-        secondary mass
+    m_2 : `float/array`
+        Secondary mass
 
     Returns
     -------
-    b : `array`
-        beta factor in SI units
+    beta : `float/array`
+        Constant defined in Peters and Mathews (1964) Eq.5.9.
     """
+    beta = 64 / 5 * c.G**3 / c.c**5 * m_1 * m_2 * (m_1 + m_2)
 
-    b = 64/5 * c.G**3/c.c**5 * m_1 * m_2 * (m_1 + m_2)
-    return b
+    # simplify units if present
+    if isinstance(beta, u.quantity.Quantity):
+        beta = beta.to(u.m**4 / u.s)
+
+    return beta
 
 
 def c_0(a_i, ecc_i):
-    """Computes the c_0 factor in Peters and Mathews calculations
+    """Computes the c_0 factor in Peters and Mathews (1964) Eq.5.11
 
     Parameters
     ----------
-    a_i : `array`
-        initial separation with astropy units
+    a_i : `float/array`
+        Initial semi-major axis
 
-    ecc_i : `array`
-        initial eccentricity
+    ecc_i : `float/array`
+        Initial eccentricity
 
     Returns
     -------
-    c0 : `array`
-        c factor in SI units
+    c_0 : `float`
+        Constant defined in Peters and Mathews (1964) Eq.5.11
     """
-
-    c0 = a_i * (1 - ecc_i**2) * ecc_i**(-12/19) \
+    c_0 = a_i * (1 - ecc_i**2) * ecc_i**(-12/19) \
         * (1 + (121/304)*ecc_i**2)**(-870/2299)
-    return c0
+
+    # simplify units if present
+    if isinstance(c_0, u.quantity.Quantity):
+        c_0 = c_0.to(u.AU)
+
+    return c_0
 
 
 def get_a_from_ecc(ecc, c_0):
@@ -189,27 +224,32 @@ def get_a_from_ecc(ecc, c_0):
     Parameters
     ----------
     ecc : `float/array`
-        eccentricity
+        Eccentricity
 
-    c_0 : `float/array`
-        peters c_0 constant, must have units of length
-        (see :meth:`legwork.utils.c_0`)
+    c_0 : `float`
+        Constant defined in Peters and Mathews (1964) Eq. 5.11
+        See :meth:`legwork.utils.c_0`
 
     Returns
     -------
     a : `float/array`
-        semi-major axis"""
+        Semi-major axis"""
 
     a = c_0 * ecc**(12/19) / (1 - ecc**2) \
         * (1 + (121/304) * ecc**2)**(870/2299)
+
+    # simplify units if present
+    if isinstance(a, u.quantity.Quantity):
+        a = a.to(u.AU)
+
     return a
 
 
 def determine_stationarity(f_orb_i, t_evol, ecc_i,
                            m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
-    """Determine whether a binary is stationary by checking how
-    much its orbital frequency changes over t_evol time
+    """Determine whether a binary is stationary
 
+    Check how much a binary's orbital frequency changes over ``t_evol`` time.
     This function provides a conservative estimate in that some
     binaries that are stationary may be marked as evolving. This
     is because the eccentricity also evolves but only use the
@@ -219,31 +259,31 @@ def determine_stationarity(f_orb_i, t_evol, ecc_i,
     Parameters
     ----------
     forb_i : `float/array`
-        initial orbital frequency
+        Initial orbital frequency
 
     t_evol : `float`
-        time over which the frequency evolves
+        Time over which the frequency evolves
 
     ecc : `float/array`
-        initial eccentricity
+        Initial eccentricity
 
     m_1 : `float/array`
-        primary mass (required if `m_c` is None)
+        Primary mass (required if ``m_c`` is None)
 
     m_2 : `float/array`
-        secondary mass (required if `m_c` is None)
+        Secondary mass (required if ``m_c`` is None)
 
     m_c : `float/array`
-        chirp mass (overrides `m_1` and `m_2`)
+        Chirp mass (overrides `m_1` and `m_2`)
 
     stat_tol : `float`
-        fractional change in frequency above which we do not
-        consider a binary to be stationary
+        Fractional change in frequency above which we do not consider a binary
+        to be stationary
 
     Returns
     -------
     stationary : `bool/array`
-        mask of whether each binary is stationary
+        Mask of whether each binary is stationary
     """
     # calculate chirp mass if necessary
     if m_c is None:
@@ -266,22 +306,74 @@ def fn_dot(m_c, f_orb, e, n):
     Parameters
     ----------
     m_c : `float/array`
-        chirp mass
+        Chirp mass
 
     f_orb : `float/array`
-        orbital frequency
+        Orbital frequency
 
     e : `float/array`
-        eccentricity
+        Eccentricity
 
     n : `int`
-        harmonic of interest
+        Harmonic of interest
 
     Returns
     -------
     fn_dot : `float/array`
-        rate of change of nth frequency
+        Rate of change of nth frequency
     """
     fn_dot = (48 * n) / (5 * np.pi) * (c.G * m_c)**(5/3) / c.c**5 \
         * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
-    return fn_dot.to(u.Hz / u.yr)
+
+    # simplify units if present
+    if isinstance(fn_dot, u.quantity.Quantity):
+        fn_dot = fn_dot.to(u.Hz / u.yr)
+
+    return fn_dot
+
+
+def ensure_array(*args):
+    """Convert arguments to numpy arrays
+
+    Convert arguments based on the following rules
+
+        - Ignore any None values
+        - Convert any lists to numpy arrays
+        - Wrap any other types in lists and convert to numpy arrays
+
+    Parameters
+    ----------
+    args : `any`
+        Supply any number of arguments of any type
+
+    Returns
+    -------
+    array_args : `any`
+        Args converted to numpy arrays
+
+    any_not_arrays : `bool`
+        Whether any arg is not a list or None or a numpy array
+    """
+    array_args = [None for i in range(len(args))]
+    any_not_arrays = False
+    for i in range(len(array_args)):
+        exists = args[i] is not None
+        has_units = isinstance(args[i], u.quantity.Quantity)
+        if exists and has_units:
+            if not isinstance(args[i].value, np.ndarray):
+                any_not_arrays = True
+                array_args[i] = np.asarray([args[i].value]) * args[i].unit
+            else:
+                array_args[i] = args[i]
+        elif exists and not has_units:
+            if not isinstance(args[i], np.ndarray):
+                if not isinstance(args[i], list):
+                    any_not_arrays = True
+                    array_args[i] = np.asarray([args[i]])
+                else:
+                    array_args[i] = np.asarray(args[i])
+            else:
+                array_args[i] = args[i]
+        else:
+            array_args[i] = args[i]
+    return array_args, any_not_arrays

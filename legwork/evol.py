@@ -1,5 +1,5 @@
-"""Functions using equations from Peters (1964) to calculate inspiral times and
-evolve parameters."""
+"""Functions using equations from Peters and Mathews (1964) to calculate
+inspiral times and evolve binary parameters."""
 
 import legwork.utils as utils
 from numba import jit
@@ -9,71 +9,100 @@ import astropy.units as u
 import astropy.constants as c
 from schwimmbad import MultiPool
 
-__all__ = ['de_dt', 'evol_circ', 'integrate_de_dt', 'evol_ecc',
+__all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc',
            'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ',
-           'check_mass_freq_input', 'create_timesteps_array', ]
+           'check_mass_freq_input', 'create_timesteps_array']
 
 
 @jit
 def de_dt(e, times, beta, c_0):                             # pragma: no cover
-    """Computes the evolution of the eccentricity from the emission
-    of gravitational waves following Peters & Mathews 1964
+    """Compute eccentricity time derivative
+
+    Computes the evolution of the eccentricity from the emission
+    of gravitational waves following Peters & Mathews (1964) Eq. 5.13
 
     Parameters
     ----------
     e : `float`
-        initial eccentricity
+        Initial eccentricity
 
-    times : `array`
-        evolution times in SI units
+    times : `float/array`
+        Evolution timestep. Not actually used in function but required for use
+        with scipy's :func:`scipy.integrate.odeint`
 
     beta : `float`
-        factor defined in Peters and Mathews 1964 in SI
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta`
 
     c_0 : `float`
-        factor defined in Peters and Mathews 1964 in SI
-
+        Constant defined in Peters and Mathews (1964) Eq. 5.11.
+        See :meth:`legwork.utils.c_0`
 
     Returns
     -------
-    dedt : `array`
-        eccentricity evolution
+    dedt : `float/array`
+        Eccentricity time derivative
     """
     dedt = -19 / 12 * beta / c_0**4 * (e**(-29 / 19) * (1 - e**2)**(3/2)) \
         / (1 + (121/304) * e**2)**(1181/2299)
     return dedt
 
 
+def integrate_de_dt(args):                         # pragma: no cover
+    """Wrapper that integrates :func:`legwork.evol.de_dt` with odeint
+
+    Parameters
+    ----------
+    args : `list`
+        List of arguments for :func:`legwork.evol.de_dt` including
+        [e, times, beta, c_0]
+
+    Returns
+    -------
+    ecc_evol : `array`
+       eccentricity evolution
+    """
+    ecc_i, timesteps, beta, c_0 = args
+    ecc_evol = odeint(de_dt, ecc_i, timesteps, args=(beta, c_0)).flatten()
+    return ecc_evol
+
+
 def check_mass_freq_input(beta=None, m_1=None, m_2=None,
                           a_i=None, f_orb_i=None):
-    """check that mass and frequency input is valid
+    """Check that mass and frequency input is valid
+
+    Helper function to check that either ``beta`` or (``m_1`` and ``m_2``) is
+    provided and that ``a_i`` or ``f_orb_i`` is provided as well as calculate
+    quantities that are not passed as arguments.
 
     Parameters
     ----------
 
     beta : `float/array`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied ``m_1`` and
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta` (if supplied ``m_1`` and
         `m_2` are ignored)
 
     m_1 : `float/array`
-        primary mass (required if ``beta`` is None)
+        Primary mass (required if ``beta`` is None)
 
     m_2 : `float/array`
-        secondary mass (required if ``beta`` is None)
+        Pecondary mass (required if ``beta`` is None)
 
     a_i : `float/array`
-        initial semi major axis (if supplied ``f_orb_i`` is ignored)
+        Initial semi-major axis (if supplied ``f_orb_i`` is ignored)
 
     f_orb_i : `float/array`
-        initial orbital frequency (required if ``a_i`` is None)
+        Initial orbital frequency (required if ``a_i`` is None)
 
     Returns
     -------
     beta : `float/array`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta`
 
     a_i : `float/array`
-        initial semi major axis
+        Initial semi-major axis
     """
     # ensure that beta is supplied or calculated
     if beta is None and (m_1 is None or m_2 is None):
@@ -98,9 +127,19 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
 
     Parameters
     ----------
+    a_i : `float/array`
+        Initial semi-major axis
+
+    beta : `float/array`
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta`
+
+    ecc_i : `float/array`
+        Initial eccentricity
+
     t_evol : `float/array`
-        amount of time for which to evolve each binaries. Required if
-        ``timesteps`` is None. Defaults to merger times.
+        Amount of time for which to evolve each binaries. Required if
+        ``timesteps`` is None. If None, then defaults to merger times.
 
     n_steps : `int`
         Number of timesteps to take between t=0 and t=``t_evol``. Required if
@@ -113,26 +152,27 @@ def create_timesteps_array(a_i, beta, ecc_i=None,
         timesteps for each binary. ``timesteps`` is used in place of
         ``t_evol`` and ``n_steps`` and takes precedence over them.
 
-    beta : `float/array`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9
-
-    a_i : `float/array`
-        initial semi major axis
-
     Returns
     -------
     timesteps : `float/array`
-        array of timesteps for each binary
+        Array of timesteps for each binary
     """
     # create timesteps array if not provided
     if timesteps is None:
-        # if not evolution times given use merger times
+        # if no evolution times given, use merger times
         if t_evol is None:
             t_evol = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i, beta=beta)
+        # if only one time, repeat for every binary
+        elif not isinstance(t_evol.value, np.ndarray):
+            t_evol = np.repeat(t_evol.value, len(a_i)) * t_evol.unit
         timesteps = np.linspace(0 * u.s, t_evol, n_step).T
     # broadcast the times to every source if only one array provided
     elif np.ndim(timesteps) == 1:
-        timesteps = timesteps[:, np.newaxis]
+        timesteps = timesteps[np.newaxis, :]
+        if isinstance(a_i.value, np.ndarray):
+            timesteps = np.broadcast_to(timesteps.value,
+                                        (len(a_i), len(timesteps[0])))\
+                                            * timesteps.unit
     return timesteps
 
 
@@ -140,11 +180,16 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
               m_2=None, a_i=None, f_orb_i=None, output_vars='f_orb'):
     """Evolve an array of circular binaries for ``t_evol`` time
 
+    This function implements Peters & Mathews (1964) Eq. 5.9.
+
+    Note that all of {``beta``, ``m_1``, ``m_2``, ``a_i``, ``f_orb_i``} must
+    have the same dimensions.
+
     Parameters
     ----------
 
     t_evol : `float/array`
-        amount of time for which to evolve each binaries. Required if
+        Amount of time for which to evolve each binaries. Required if
         ``timesteps`` is None. Defaults to merger times.
 
     n_steps : `int`
@@ -159,43 +204,48 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
         ``t_evol`` and ``n_steps`` and takes precedence over them.
 
     beta : `float/array`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied ``m_1`` and
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta` (if supplied ``m_1`` and
         `m_2` are ignored)
 
     m_1 : `float/array`
-        primary mass (required if ``beta`` is None or if ``output_vars``
+        Primary mass (required if ``beta`` is None or if ``output_vars``
         contains a frequency)
 
     m_2 : `float/array`
-        secondary mass (required if ``beta`` is None or if ``output_vars``
+        Secondary mass (required if ``beta`` is None or if ``output_vars``
         contains a frequency)
 
     a_i : `float/array`
-        initial semi major axis (if supplied ``f_orb_i`` is ignored)
+        Initial semi-major axis (if supplied ``f_orb_i`` is ignored)
 
     f_orb_i : `float/array`
-        initial orbital frequency (required if ``a_i`` is None)
+        Initial orbital frequency (required if ``a_i`` is None)
 
     output_vars : `str/array`
-        list of **ordered** output vars, or a single var. Choose from any of
-        ``a``, ``f_orb`` and ``f_GW`` for which of semi-major axis and
-        orbital/GW frequency that you want. Default is ``f_orb``.
+        List of **ordered** output vars, or a single var. Choose from any of
+        ``timesteps``, ``a``, ``f_orb`` and ``f_GW`` for which of timesteps,
+        semi-major axis and orbital/GW frequency that you want.
+        Default is ``f_orb``.
 
     Returns
     -------
     evolution : `array`
-        array possibly containing semi-major axis and frequency
-        at each timestep. Content determined by ``output_vars``.
+        Array containing any of semi-major axis, timesteps and frequency
+        evolution. Content determined by ``output_vars``.
     """
+    # transform input if only a single source
+    arrayed_args, single_source = utils.ensure_array(m_1, m_2, beta, a_i,
+                                                     f_orb_i)
+    m_1, m_2, beta, a_i, f_orb_i = arrayed_args
+    output_vars = np.array([output_vars]) if isinstance(output_vars, str)\
+        else output_vars
+
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
 
-    # convert output_vars to array if only str provided
-    if isinstance(output_vars, str):
-        output_vars = [output_vars]
-
-    if len(set(["f_orb", "f_GW"])
-           & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
+    if np.isin(output_vars, ["f_orb", "f_GW"]).any() and (m_1 is None
+                                                          or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
                          "contains a frequency")
     timesteps = create_timesteps_array(a_i=a_i, beta=beta,
@@ -208,7 +258,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     a_evol = difference**(1/4)
 
     # calculate f_orb_evol if any frequency requested
-    if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
+    if np.isin(output_vars, ["f_orb", "f_GW"]).any():
         # change merged binaries to extremely small separations
         a_not0 = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
         f_orb_evol = utils.get_f_orb_from_a(a=a_not0,
@@ -221,37 +271,19 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
     # construct evolution output
     evolution = []
     for var in output_vars:
-        if var == "a":
+        if var == "timesteps":
+            timesteps = timesteps.flatten() if single_source else timesteps
+            evolution.append(timesteps.to(u.yr))
+        elif var == "a":
+            a_evol = a_evol.flatten() if single_source else a_evol
             evolution.append(a_evol.to(u.AU))
         elif var == "f_orb":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(f_orb_evol.to(u.Hz))
         elif var == "f_GW":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(2 * f_orb_evol.to(u.Hz))
     return evolution if len(evolution) > 1 else evolution[0]
-
-
-def integrate_de_dt(args):                                 # pragma: no cover
-    """Function that integrates de_dt with odeint
-    Parameters
-    ----------
-    ecc_i : `float`
-        Initial eccentricity
-    timesteps : `array`
-        Array of exact timesteps to take when evolving each binary. Must be
-        monotonically increasing and start with t=0.
-    beta : `float`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9
-    c_0 : `float`
-        factor defined in Peters 1964
-    Outputs
-    -------
-    e : `array`
-       eccentricity evolution
-    """
-    ecc_i, timesteps, beta, c_0 = args
-    e = odeint(de_dt, ecc_i, timesteps,
-               args=(beta, c_0)).flatten()
-    return e
 
 
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
@@ -259,13 +291,18 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              output_vars=['ecc', 'f_orb'], n_proc=1):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
+    This function use Peters & Mathews (1964) Eq. 5.11 and 5.13.
+
+    Note that all of {``beta``, ``m_1``, ``m_2``, ``ecc_i``, ``a_i``,
+    ``f_orb_i``} must have the same dimensions.
+
     Parameters
     ----------
     ecc_i : `float/array`
-        initial eccentricity
+        Initial eccentricity
 
     t_evol : `float/array`
-        amount of time for which to evolve each binaries. Required if
+        Amount of time for which to evolve each binaries. Required if
         ``timesteps`` is None. Defaults to merger times.
 
     n_steps : `int`
@@ -280,27 +317,29 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         ``t_evol`` and ``n_steps`` and takes precedence over them.
 
     beta : `float/array`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied ``m_1`` and
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta` (if supplied ``m_1`` and
         `m_2` are ignored)
 
     m_1 : `float/array`
-        primary mass (required if ``beta`` is None or if ``output_vars``
+        Primary mass (required if ``beta`` is None or if ``output_vars``
         contains a frequency)
 
     m_2 : `float/array`
-        secondary mass (required if ``beta`` is None or if ``output_vars``
+        Secondary mass (required if ``beta`` is None or if ``output_vars``
         contains a frequency)
 
     a_i : `float/array`
-        initial semi major axis (if supplied ``f_orb_i`` is ignored)
+        Initial semi-major axis (if supplied ``f_orb_i`` is ignored)
 
     f_orb_i : `float/array`
-        initial orbital frequency (required if ``a_i`` is None)
+        Initial orbital frequency (required if ``a_i`` is None)
 
     output_vars : `array`
-        list of **ordered** output vars, choose from any of ``ecc``, ``a``,
-        ``f_orb`` and ``f_GW`` for which of eccentricty, semi-major axis and
-        orbital/GW frequency that you want. Default is [``ecc``, ``f_orb``]
+        List of **ordered** output vars, choose from any of ``timesteps``,
+        ``ecc``, ``a``, ``f_orb`` and ``f_GW`` for which of timesteps,
+        eccentricity, semi-major axis and orbital/GW frequency that you want.
+        Default is [``ecc``, ``f_orb``]
 
     n_proc : `int`
         Number of processors to split eccentricity evolution over, where
@@ -308,21 +347,25 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
 
     Returns
     -------
-    evolution : `tuple`
-        tuple possibly containing eccentricty, semi-major axis and frequency
-        at each timestep. Content determined by ``output_vars``
+    evolution : `array`
+        Array possibly containing eccentricity, semi-major axis, timesteps and
+        frequency evolution. Content determined by ``output_vars``
     """
+    # transform input if only a single source
+    arrayed_args, single_source = utils.ensure_array(m_1, m_2, beta, a_i,
+                                                     f_orb_i, ecc_i)
+    m_1, m_2, beta, a_i, f_orb_i, ecc_i = arrayed_args
+    output_vars = np.array([output_vars]) if isinstance(output_vars, str)\
+        else output_vars
+
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
 
-    # convert output_vars to array if only str provided
-    if isinstance(output_vars, str):
-        output_vars = [output_vars]
-
-    if len(set(["f_orb", "f_GW"])
-           & set(output_vars)) > 0 and (m_1 is None or m_2 is None):
+    if np.isin(output_vars, ["f_orb", "f_GW"]).any() and (m_1 is None
+                                                          or m_2 is None):
         raise ValueError("`m_1`` and `m_2` required if `output_vars` " +
                          "contains a frequency")
+
     c_0 = utils.c_0(a_i=a_i, ecc_i=ecc_i)
     timesteps = create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc_i,
                                        t_evol=t_evol, n_step=n_step,
@@ -350,11 +393,11 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
 
     # calculate a_evol if any frequency or separation requested
-    if len(set(["a", "f_orb", "f_GW"]) & set(output_vars)) > 0:
+    if np.isin(output_vars, ["a", "f_orb", "f_GW"]).any():
         a_evol = utils.get_a_from_ecc(ecc_evol, c_0)
 
         # calculate f_orb_evol if any frequency requested
-        if len(set(["f_orb", "f_GW"]) & set(output_vars)) > 0:
+        if np.isin(output_vars, ["f_orb", "f_GW"]).any():
             # change merged binaries to extremely small separations
             a_not0 = np.where(a_evol.value == 0.0, 1e-30 * a_evol.unit, a_evol)
             f_orb_evol = utils.get_f_orb_from_a(a=a_not0,
@@ -367,43 +410,53 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     # construct evolution output
     evolution = []
     for var in output_vars:
-        if var == "ecc":
+        if var == "timesteps":
+            timesteps = timesteps.flatten() if single_source else timesteps
+            evolution.append((timesteps * u.s).to(u.yr))
+        elif var == "ecc":
+            ecc_evol = ecc_evol.flatten() if single_source else ecc_evol
             evolution.append(ecc_evol)
         elif var == "a":
+            a_evol = a_evol.flatten() if single_source else a_evol
             evolution.append(a_evol.to(u.AU))
         elif var == "f_orb":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(f_orb_evol.to(u.Hz))
         elif var == "f_GW":
+            f_orb_evol = f_orb_evol.flatten() if single_source else f_orb_evol
             evolution.append(2 * f_orb_evol.to(u.Hz))
     return evolution if len(evolution) > 1 else evolution[0]
 
 
 def get_t_merge_circ(beta=None, m_1=None, m_2=None,
                      a_i=None, f_orb_i=None):
-    """Computes the merger time for a circular binary using Peters 1964
+    """Computes the merger time for circular binaries
+
+    This function implements Peters & Mathews (1964) Eq. 5.10
 
     Parameters
     ----------
     beta : `float/array`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied `m_1` and
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta` (if supplied `m_1` and
         `m_2` are ignored)
 
     m_1 : `float/array`
-        primary mass (required if `beta` is None)
+        Primary mass (required if `beta` is None)
 
     m_2 : `float/array`
-        secondary mass (required if `beta` is None)
+        Secondary mass (required if `beta` is None)
 
     a_i : `float/array`
-        initial semi major axis (if supplied `f_orb_i` is ignored)
+        Initial semi-major axis (if supplied `f_orb_i` is ignored)
 
     f_orb_i : `float/array`
-        initial orbital frequency (required if `a_i` is None)
+        Initial orbital frequency (required if `a_i` is None)
 
     Returns
     -------
     t_merge : `float/array`
-        merger time
+        Merger time
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
@@ -417,45 +470,47 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
 def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
                     beta=None, m_1=None, m_2=None,
                     small_e_tol=1e-2, large_e_tol=1 - 1e-2):
-    """Computes the merger time for a binary using Peters 1964.
-    We use one of Eq. 5.10, 5.14 or the two unlabelled equations
-    after 5.14 in Peters 1964 depending on the eccentricity of
-    the binary.
+    """Computes the merger time for binaries
+
+    This function implements Peters (1964) Eq. 5.10, 5.14 and the two
+    unlabelled equations after 5.14 (using a different one depending on the
+    eccentricity of each binary)
 
     Parameters
     ----------
     ecc_i : `float/array`
-        initial eccentricity (if `ecc_i` is known to be 0.0 then use
+        Initial eccentricity (if `ecc_i` is known to be 0.0 then use
         `get_t_merge_circ` instead)
 
     a_i : `float/array`
-        initial semi major axis (if supplied `f_orb_i` is ignored)
+        Initial semi-major axis (if supplied `f_orb_i` is ignored)
 
     f_orb_i : `float/array`
-        initial orbital frequency (required if `a_i` is None)
+        Initial orbital frequency (required if `a_i` is None)
 
     beta : `float/array`
-        beta(m_1, m_2) from Peters 1964 Eq. 5.9 (if supplied `m_1` and
+        Constant defined in Peters and Mathews (1964) Eq. 5.9.
+        See :meth:`legwork.utils.beta` (if supplied `m_1` and
         `m_2` are ignored)
 
     m_1 : `float/array`
-        primary mass (required if `beta` is None)
+        Primary mass (required if `beta` is None)
 
     m_2 : `float/array`
-        secondary mass (required if `beta` is None)
+        Secondary mass (required if `beta` is None)
 
     small_e_tol : `float`
-        eccentricity below which to apply the small e approximation
+        Eccentricity below which to apply the small e approximation
         (first unlabelled equation following Eq. 5.14 of Peters 1964)
 
     large_e_tol : `float`
-        eccentricity above which to apply the large e approximation
+        Eccentricity above which to apply the large e approximation
         (second unlabelled equation following Eq. 5.14 of Peters 1964)
 
     Returns
     -------
     t_merge : `float/array`
-        merger time
+        Merger time
     """
     beta, a_i = check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
                                       a_i=a_i, f_orb_i=f_orb_i)
@@ -463,9 +518,6 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     # shortcut if all binaries are circular
     if np.all(ecc_i == 0.0):
         return get_t_merge_circ(beta=beta, a_i=a_i)
-
-    # calculate c0 from Peters Eq. 5.11
-    c0 = utils.c_0(a_i, ecc_i)
 
     @jit(nopython=True)
     def peters_5_14(e):                                 # pragma: no cover
@@ -480,6 +532,11 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
         small_e = np.logical_and(ecc_i > 0.0, ecc_i < small_e_tol)
         large_e = ecc_i > large_e_tol
         other_e = np.logical_and(ecc_i >= small_e_tol, ecc_i <= large_e_tol)
+
+        # calculate c0 from Peters Eq. 5.11 (avoid circular binaries)
+        c0 = np.zeros_like(a_i)
+        not_circ = np.logical_not(circular)
+        c0[not_circ] = utils.c_0(a_i[not_circ], ecc_i[not_circ])
 
         t_merge = np.zeros(len(ecc_i)) * u.Gyr
 
@@ -502,6 +559,9 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
                                      for i in range(len(ecc_i[other_e]))]
     # case with only one binary
     else:
+        # calculate c0 from Peters Eq. 5.11
+        c0 = utils.c_0(a_i, ecc_i)
+
         # conditions as above (no need for ecc=0.0 since it never reaches here)
         if ecc_i < small_e_tol:
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19)
@@ -516,32 +576,34 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
 
 
 def evolve_f_orb_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
-    """Evolve orbital frequency for `t_evol` time. This gives the exact final
-    frequency for circular binaries. However, it will overestimate the final
-    frequency for an eccentric binary and if an exact value is required then
-    `evol.get_f_and_e()` should be used instead.
+    """Evolve orbital frequency for ``t_evol`` time.
+
+    This gives the exact final frequency for circular binaries. However, it
+    will overestimate the final frequency for an eccentric binary and if an
+    exact value is required then :func:`legwork.evol.evol_ecc()` should be
+    used instead.
 
     Parameters
     ----------
     f_orb_i : `float/array`
-        initial orbital frequency
+        Initial orbital frequency
 
     m_c : `float/array`
-        chirp mass
+        Chirp mass
 
     t_evol : `float`
-        time over which the frequency evolves
+        Time over which the frequency evolves
 
     ecc_i : `float/array`
-        initial eccentricity
+        Initial eccentricity
 
     merge_f : `float`
-        frequency to assign if the binary has already merged after `t_evol`
+        Frequency to assign if the binary has already merged after ``t_evol``
 
     Returns
     -------
     f_orb_f : `bool/array`
-        final orbital frequency
+        Final orbital frequency
     """
     # fill the default value with the merged frequency
     f_orb_f = np.repeat(merge_f, len(f_orb_i))

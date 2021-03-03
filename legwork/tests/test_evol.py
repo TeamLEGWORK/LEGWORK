@@ -137,31 +137,39 @@ class Test(unittest.TestCase):
 
         self.assertTrue(np.allclose(real_times, created_times))
 
+        t_evol = np.repeat(4, len(a_i)) * u.yr
+        real_times = np.linspace(0 * u.s, t_evol, 100).T
+        created_times = evol.create_timesteps_array(a_i=a_i, beta=beta,
+                                                    ecc_i=ecc, t_evol=4 * u.yr,
+                                                    n_step=100)
+
+        self.assertTrue(np.allclose(real_times, created_times))
+
         timesteps = np.linspace(0, 100, 100) * u.s
         created_times = evol.create_timesteps_array(a_i=a_i, beta=beta,
                                                     ecc_i=ecc,
                                                     timesteps=timesteps)
-        real_times = np.array([timesteps.value for i in range(len(a_i))]).T \
-            * timesteps.unit
+        real_times = timesteps[np.newaxis, :]
+        real_times = np.broadcast_to(timesteps.value,
+                                     (n_values, 100)) * timesteps.unit
         self.assertTrue(np.allclose(real_times, created_times))
 
     def test_evol_output_vars(self):
-        n_values = 10
 
-        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
-        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
-        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
-        ecc = np.random.uniform(0.0, 0.9, n_values)
+        m_1 = np.random.uniform(0, 10) * u.Msun
+        m_2 = np.random.uniform(0, 10) * u.Msun
+        f_orb = 10**(np.random.uniform(-5, -1)) * u.Hz
+        ecc = np.random.uniform(0.0, 0.9)
 
         a_i = utils.get_a_from_f_orb(f_orb, m_1, m_2)
 
         evolution = evol.evol_circ(m_1=m_1, m_2=m_2, a_i=a_i,
-                                   output_vars=["a", "f_GW"])
-        self.assertTrue(len(evolution) == 2)
+                                   output_vars=["a", "f_GW", "timesteps"])
+        self.assertTrue(len(evolution) == 3)
 
         evolution = evol.evol_ecc(ecc_i=ecc, m_1=m_1, m_2=m_2, a_i=a_i,
-                                  output_vars=["a", "f_GW"])
-        self.assertTrue(len(evolution) == 2)
+                                  output_vars=["a", "f_GW", "timesteps"])
+        self.assertTrue(len(evolution) == 3)
 
     def test_de_dt_integrate(self):
         n_values = 10
@@ -180,12 +188,12 @@ class Test(unittest.TestCase):
         timesteps = evol.create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc,
                                                 t_evol=t_evol, n_step=n_step,
                                                 )
-    
+
         # get rid of the units for faster integration
         c_0 = c_0.to(u.m).value
         beta = beta.to(u.m**4 / u.s).value
         timesteps = timesteps.to(u.s).value
-    
+
         # integrate by hand:
         ecc_evol = np.array([odeint(evol.de_dt, ecc[i], timesteps[i],
                                     args=(beta[i], c_0[i])).flatten()
