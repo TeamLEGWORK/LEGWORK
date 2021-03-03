@@ -48,25 +48,14 @@ def de_dt(e, times, beta, c_0):                             # pragma: no cover
     return dedt
 
 
-def integrate_de_dt(args):                                 # pragma: no cover
+def integrate_de_dt(args):                         # pragma: no cover
     """Wrapper that integrates :func:`legwork.evol.de_dt` with odeint
 
     Parameters
     ----------
-    ecc_i : `float`
-        Initial eccentricity
-
-    timesteps : `array`
-        Array of exact timesteps to take when evolving each binary. Must be
-        monotonically increasing and start with t=0.
-
-    beta : `float`
-        Constant defined in Peters and Mathews (1964) Eq. 5.9.
-        See :meth:`legwork.utils.beta`
-
-    c_0 : `float`
-        Constant defined in Peters and Mathews (1964) Eq. 5.11.
-        See :meth:`legwork.utils.c_0`
+    args : `list`
+        List of arguments for :func:`legwork.evol.de_dt` including
+        [e, times, beta, c_0]
 
     Returns
     -------
@@ -84,7 +73,7 @@ def check_mass_freq_input(beta=None, m_1=None, m_2=None,
 
     Helper function to check that either ``beta`` or (``m_1`` and ``m_2``) is
     provided and that ``a_i`` or ``f_orb_i`` is provided as well as calculate
-    quantites that are not passed as arguments.
+    quantities that are not passed as arguments.
 
     Parameters
     ----------
