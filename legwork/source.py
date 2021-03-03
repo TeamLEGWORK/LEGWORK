@@ -142,10 +142,10 @@ class Source():
 
             - Calculate the maximum harmonics required to calculate the SNRs
               assuming provided tolerance `gw_lum_tol`
-            - Calculate the dominant harmonic frequency (max strain)
+            - Calculate the harmonic with the maximum strain 
 
         These are stored at ``self.harmonics_required`` and
-        ``self.dominant_harmonic`` respectively."""
+        ``self.max_strain_harmonic`` respectively."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="legwork",
@@ -190,15 +190,15 @@ class Source():
         self.harmonics_required = harmonics_required
 
         # now calculate the dominant harmonics
-        dominant_harmonics = n_range[g_vals.argmax(axis=1)]
-        interpolated_dh = interp1d(e_range, dominant_harmonics,
+        max_strain_harmonics = n_range[g_vals.argmax(axis=1)]
+        interpolated_dh = interp1d(e_range, max_strain_harmonics,
                                    bounds_error=False,
                                    fill_value=(2, np.max(harmonics_needed)))
 
-        def dominant_harmonic(e):   # pragma: no cover
+        def max_strain_harmonic(e):   # pragma: no cover
             return np.round(interpolated_dh(e)).astype(int)
 
-        self.dominant_harmonic = dominant_harmonic
+        self.max_strain_harmonic = max_strain_harmonic
 
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
@@ -720,7 +720,7 @@ class Source():
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
         if ecc_stat.any():
-            n_dom = self.dominant_harmonic(self.ecc[ecc_stat])
+            n_dom = self.max_strain_harmonic(self.ecc[ecc_stat])
             f_dom = self.f_orb[ecc_stat] * n_dom
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
                                                       snr=self.snr[ecc_stat],
