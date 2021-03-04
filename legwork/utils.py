@@ -7,8 +7,8 @@ import numpy as np
 import legwork.evol as evol
 
 __all__ = ['chirp_mass', 'peters_g', 'peters_f', 'get_a_from_f_orb',
-           'get_f_orb_from_a', 'beta', 'c_0', 'determine_stationarity',
-           'fn_dot', 'ensure_array']
+           'get_f_orb_from_a', 'get_a_from_ecc', 'beta', 'c_0',
+           'determine_stationarity', 'fn_dot', 'ensure_array']
 
 
 def chirp_mass(m_1, m_2):
