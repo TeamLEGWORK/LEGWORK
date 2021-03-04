@@ -22,6 +22,8 @@ Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK d
         <div class="box" data-href="notebooks/derivations.html">Delve into the derivations</div>
     </div>
 
+We are thankful to Lieke van Son for suggesting the name LEGWORK and Stas Babak, Floor Broekgaarden, and Tom Callister, for helpful discussions about the derivation of the signal to noise ratios.
+
 .. toctree::
     :maxdepth: 1
     :hidden:
