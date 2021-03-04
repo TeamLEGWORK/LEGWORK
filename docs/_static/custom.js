@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // fix no-title issues
     if (document.querySelector("title").innerText == "<no title> — LEGWORK  documentation") {
-        document.querySelector("title").innerText == "Home — LEGWORK  documentation"
-        document.title = "Home — LEGWORK  documentation";
+        document.querySelector("title").innerText == "LEGWORK"
+        document.title = "LEGWORK";
 
         breadcrumbs = document.querySelectorAll(".wy-breadcrumbs li");
         breadcrumbs.forEach(el => {
