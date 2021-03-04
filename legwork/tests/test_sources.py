@@ -39,7 +39,7 @@ class Test(unittest.TestCase):
 
         snr_direct = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb, ecc=ecc,
                                             dist=dist, t_obs=t_obs,
-                                            max_harmonic=10)
+                                            harmonics_required=10)
         snr_source = sources.get_snr(verbose=True)
 
         self.assertTrue(np.allclose(snr_direct, snr_source))

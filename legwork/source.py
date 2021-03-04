@@ -70,13 +70,23 @@ class Source():
 
     Attributes
     ----------
-    m_c : array_like
+    m_c : `float/array`
         Chirp mass. Set using ``m_1`` and ``m_2`` in
         :meth:`legwork.utils.chirp_mass`
 
-    ecc_tol : float
+    ecc_tol : `float`
         Eccentricity above which a binary is considered eccentric. Set by
         :meth:`legwork.source.Source.find_eccentric_transition`
+
+    snr : `float/array`
+        Signal-to-noise ratio. Set by :meth:`legwork.source.Source.get_snr`
+
+    max_snr_harmonic : `int/array`
+        Harmonic with the maximum snr. Set by
+        :meth:`legwork.source.Source.get_snr`
+
+    n_sources : `int`
+        Number of sources in class
 
     Raises
     ------
@@ -127,6 +137,7 @@ class Source():
         self.a = a
         self.n_proc = n_proc
         self.snr = None
+        self.max_snr_harmonic = None
         self.n_sources = len(m_1)
         self.interpolate_sc = interpolate_sc
         self._sc_params = sc_params
@@ -142,10 +153,10 @@ class Source():
 
             - Calculate the maximum harmonics required to calculate the SNRs
               assuming provided tolerance `gw_lum_tol`
-            - Calculate the dominant harmonic frequency (max strain)
+            - Calculate the harmonic with the maximum strain
 
-        These are stored at ``self.max_harmonic`` and
-        ``self.dominant_harmonic`` respectively."""
+        These are stored at ``self.harmonics_required`` and
+        ``self.max_strain_harmonic`` respectively."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="legwork",
@@ -185,20 +196,20 @@ class Source():
                                    fill_value=(2, np.max(harmonics_needed)))
 
         # conservatively round up to nearest integer
-        def max_harmonic(e):
+        def harmonics_required(e):
             return np.ceil(interpolated_hn(e)).astype(int)
-        self.max_harmonic = max_harmonic
+        self.harmonics_required = harmonics_required
 
-        # now calculate the dominant harmonics
-        dominant_harmonics = n_range[g_vals.argmax(axis=1)]
-        interpolated_dh = interp1d(e_range, dominant_harmonics,
+        # now calculate the max strain harmonics
+        max_strain_harmonics = n_range[g_vals.argmax(axis=1)]
+        interpolated_dh = interp1d(e_range, max_strain_harmonics,
                                    bounds_error=False,
                                    fill_value=(2, np.max(harmonics_needed)))
 
-        def dominant_harmonic(e):   # pragma: no cover
+        def max_strain_harmonic(e):   # pragma: no cover
             return np.round(interpolated_dh(e)).astype(int)
 
-        self.dominant_harmonic = dominant_harmonic
+        self.max_strain_harmonic = max_strain_harmonic
 
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
@@ -215,7 +226,7 @@ class Source():
 
     def update_gw_lum_tol(self, gw_lum_tol):
         """Update GW luminosity tolerance and use updated value to
-        recalculate max_harmonics function and transition to eccentric
+        recalculate harmonics_required function and transition to eccentric
 
         Parameters
         ----------
@@ -391,7 +402,8 @@ class Source():
                             interpolated_g=self.g)[:, 0, :]
 
     def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
-        """Computes the SNR for a generic binary
+        """Computes the SNR for a generic binary. Also records the harmonic
+        with maximum SNR for each binary in ``self.max_snr_harmonic``.
 
         Parameters
         ----------
@@ -441,7 +453,6 @@ class Source():
                                                    which_sources=evol_mask,
                                                    n_step=n_step,
                                                    verbose=verbose)
-        self.snr = snr
         return snr
 
     def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None,
@@ -471,6 +482,9 @@ class Source():
         ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
         ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
 
+        # default to n = 2 for max snr harmonic
+        msh = np.repeat(2, self.n_sources)
+
         # only compute snr if there is at least one binary in mask
         if ind_circ.any():
             if verbose:
@@ -486,21 +500,33 @@ class Source():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
                     len(snr[ind_ecc])))
-            max_harmonics = self.max_harmonic(self.ecc)
+            harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(max_harmonics >= lower,
-                                           max_harmonics < upper)
+                harm_mask = np.logical_and(harmonics_required >= lower,
+                                           harmonics_required < upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
-                    snr[match] = sn.snr_ecc_stationary(m_c=self.m_c[match],
-                                                       f_orb=self.f_orb[match],
-                                                       ecc=self.ecc[match],
-                                                       dist=self.dist[match],
-                                                       t_obs=t_obs,
-                                                       max_harmonic=upper - 1,
-                                                       interpolated_g=self.g,
-                                                       interpolated_sc=self.sc)
+                    hr = upper - 1
+
+                    snr_msh = sn.snr_ecc_stationary(m_c=self.m_c[match],
+                                                    f_orb=self.f_orb[match],
+                                                    ecc=self.ecc[match],
+                                                    dist=self.dist[match],
+                                                    t_obs=t_obs,
+                                                    harmonics_required=hr,
+                                                    interpolated_g=self.g,
+                                                    interpolated_sc=self.sc,
+                                                    ret_max_snr_harmonic=True)
+                    snr[match], msh[match] = snr_msh
+
+        if self.max_snr_harmonic is None:
+            self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
+        self.max_snr_harmonic[which_sources] = msh[which_sources]
+
+        if self.snr is None:
+            self.snr = np.zeros(self.n_sources)
+        self.snr[which_sources] = snr[which_sources]
 
         return snr[which_sources]
 
@@ -535,6 +561,9 @@ class Source():
         ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
         ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
 
+        # default to n = 2 for max snr harmonic
+        msh = np.repeat(2, self.n_sources)
+
         if ind_circ.any():
             if verbose:
                 print("\t\t{} sources are evolving and circular".format(
@@ -551,24 +580,36 @@ class Source():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
                     len(snr[ind_ecc])))
-            max_harmonics = self.max_harmonic(self.ecc)
+            harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(max_harmonics >= lower,
-                                           max_harmonics < upper)
+                harm_mask = np.logical_and(harmonics_required >= lower,
+                                           harmonics_required < upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
-                    snr[match] = sn.snr_ecc_evolving(m_1=self.m_1[match],
-                                                     m_2=self.m_2[match],
-                                                     f_orb_i=self.f_orb[match],
-                                                     dist=self.dist[match],
-                                                     ecc=self.ecc[match],
-                                                     max_harmonic=upper - 1,
-                                                     t_obs=t_obs,
-                                                     n_step=n_step,
-                                                     interpolated_g=self.g,
-                                                     interpolated_sc=self.sc,
-                                                     n_proc=self.n_proc)
+                    hr = upper - 1
+
+                    snr_msh = sn.snr_ecc_evolving(m_1=self.m_1[match],
+                                                  m_2=self.m_2[match],
+                                                  f_orb_i=self.f_orb[match],
+                                                  dist=self.dist[match],
+                                                  ecc=self.ecc[match],
+                                                  harmonics_required=hr,
+                                                  t_obs=t_obs,
+                                                  n_step=n_step,
+                                                  interpolated_g=self.g,
+                                                  interpolated_sc=self.sc,
+                                                  n_proc=self.n_proc,
+                                                  ret_max_snr_harmonic=True)
+                    snr[match], msh[match] = snr_msh
+
+        if self.max_snr_harmonic is None:
+            self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
+        self.max_snr_harmonic[which_sources] = msh[which_sources]
+
+        if self.snr is None:
+            self.snr = np.zeros(self.n_sources)
+        self.snr[which_sources] = snr[which_sources]
 
         return snr[which_sources]
 
@@ -718,8 +759,7 @@ class Source():
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
         if ecc_stat.any():
-            n_dom = self.dominant_harmonic(self.ecc[ecc_stat])
-            f_dom = self.f_orb[ecc_stat] * n_dom
+            f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
                                                       snr=self.snr[ecc_stat],
                                                       snr_cutoff=snr_cutoff,

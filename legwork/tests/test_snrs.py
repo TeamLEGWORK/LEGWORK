@@ -23,7 +23,7 @@ class Test(unittest.TestCase):
         snr_ecc = snr.snr_ecc_stationary(m_c=m_c, f_orb=f_orb,
                                          ecc=np.zeros_like(f_orb).value,
                                          dist=dist, t_obs=t_obs,
-                                         max_harmonic=3)
+                                         harmonics_required=3)
         self.assertTrue(np.allclose(snr_circ, snr_ecc))
 
     def test_stat_vs_evol_eccentric(self):
@@ -40,9 +40,9 @@ class Test(unittest.TestCase):
 
         snr_circ = snr.snr_ecc_stationary(m_c=m_c, ecc=ecc,
                                           f_orb=f_orb, dist=dist,
-                                          t_obs=t_obs, max_harmonic=10)
+                                          t_obs=t_obs, harmonics_required=10)
         snr_ecc = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
                                        f_orb_i=f_orb, dist=dist, n_step=100,
-                                       t_obs=t_obs, max_harmonic=10)
+                                       t_obs=t_obs, harmonics_required=10)
 
         self.assertTrue(np.allclose(snr_circ, snr_ecc, atol=1e-1, rtol=1e-2))
