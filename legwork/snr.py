@@ -63,8 +63,9 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
     return snr.decompose()
 
 
-def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
-                       interpolated_g=None, interpolated_sc=None):
+def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
+                       interpolated_g=None, interpolated_sc=None,
+                       ret_max_snr_harmonic=False):
     """Computes SNR for eccentric and stationary sources
 
     Parameters
@@ -84,7 +85,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
     t_obs : `float`
         Total duration of the observation
 
-    max_harmonic : `integer`
+    harmonics_required : `integer`
         Maximum integer harmonic to compute
 
     interpolated_g : `function`
@@ -100,13 +101,21 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
         values. Note: take care to ensure that your interpolated function has
         the same LISA observation time as ``t_obs``.
 
+    ret_max_snr_harmonic : `boolean`
+        Whether to return (in addition to the snr), the harmonic with the
+        maximum SNR
+
     Returns
     -------
     snr : `float/array`
         SNR for each binary
+
+    max_snr_harmonic : `int/array`
+        harmonic with maximum SNR for each binary (only returned if
+        ``ret_max_snr_harmonic=True``)
     """
     # define range of harmonics
-    n_range = np.arange(1, max_harmonic + 1).astype(int)
+    n_range = np.arange(1, harmonics_required + 1).astype(int)
 
     # calculate source signal
     h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
@@ -114,7 +123,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
                                interpolated_g=interpolated_g)**2
 
     # reshape the output since only one timestep
-    h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), max_harmonic)
+    h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), harmonics_required)
     h_f_src_ecc_2 = h_0_ecc_n_2 * t_obs
 
     # calculate harmonic frequencies and noise
@@ -125,9 +134,15 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, max_harmonic,
     else:
         h_f_lisa_n_2 = lisa.power_spectral_density(f=f_n, t_obs=t_obs)
 
+    snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
+
+    if ret_max_snr_harmonic:
+        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
+
     # calculate the signal-to-noise ratio
-    snr = (np.sum(h_f_src_ecc_2 / h_f_lisa_n_2, axis=1))**0.5
-    return snr.decompose()
+    snr = (np.sum(snr_n_2, axis=1))**0.5
+
+    return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
 
 
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
@@ -209,8 +224,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     return snr.decompose()
 
 
-def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
-                     interpolated_g=None, interpolated_sc=None, n_proc=1):
+def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
+                     n_step, interpolated_g=None, interpolated_sc=None,
+                     n_proc=1, ret_max_snr_harmonic=False):
     """Computes SNR for eccentric and evolving sources.
 
     Note that this function will not work for exactly circular (ecc = 0.0)
@@ -233,7 +249,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
     ecc : `float/array`
         Eccentricity
 
-    max_harmonic : `int`
+    harmonics_required : `int`
         Maximum integer harmonic to compute
 
     t_obs : `float`
@@ -259,10 +275,18 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
         Number of processors to split eccentricity evolution over, where
         the default is n_proc=1
 
+    ret_max_snr_harmonic : `boolean`
+        Whether to return (in addition to the snr), the harmonic with the
+        maximum SNR
+
     Returns
     -------
-    snr : `array`
+    snr : `float/array`
         SNR for each binary
+
+    max_snr_harmonic : `int/array`
+        harmonic with maximum SNR for each binary (only returned if
+        ``ret_max_snr_harmonic=True``)
     """
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
     # calculate minimum of observation time and merger time
@@ -276,7 +300,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
                                        n_proc=n_proc)
 
     # create harmonics list and multiply for nth frequency evolution
-    harms = np.arange(1, max_harmonic + 1).astype(int)
+    harms = np.arange(1, harmonics_required + 1).astype(int)
     f_n_evol = harms[np.newaxis, np.newaxis, :] * f_orb_evol[..., np.newaxis]
 
     # calculate the characteristic strain
@@ -294,7 +318,11 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, max_harmonic, t_obs, n_step,
 
     # integrate, sum and square root to get SNR
     snr_n_2 = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=f_n_evol, axis=1)
+
+    if ret_max_snr_harmonic:
+        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
+
     snr_2 = snr_n_2.sum(axis=1)
     snr = np.sqrt(snr_2)
 
-    return snr
+    return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
