@@ -8,6 +8,9 @@
     <a href="https://codecov.io/gh/katiebreivik/LEGWORK">
       <img src="https://codecov.io/gh/katiebreivik/LEGWORK/branch/main/graph/badge.svg?token=FUG4RFYCWX)">
     </a>
+    <a href='https://legwork.readthedocs.io/en/latest/?badge=latest'>
+    <img src='https://readthedocs.org/projects/legwork/badge/?version=latest' alt='Documentation Status' />
+    </a>
 </h2>
 
 <p align="center">
