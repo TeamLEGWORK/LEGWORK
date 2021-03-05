@@ -19,7 +19,7 @@ Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK d
         <div class="box" data-href="install.html">Install LEGWORK</div>
         <div class="box" data-href="tutorials.html">Learn from tutorials</div>
         <div class="box" data-href="modules.html">Explore the modules</div>
-        <div class="box" data-href="notebooks/derivations.html">Delve into the derivations</div>
+        <div class="box" data-href="notebooks/Derivations.html">Delve into the derivations</div>
     </div>
 
 We are thankful to Lieke van Son for suggesting the name LEGWORK and Stas Babak, Floor Broekgaarden, and Tom Callister, for helpful discussions about the derivation of the signal to noise ratios.
