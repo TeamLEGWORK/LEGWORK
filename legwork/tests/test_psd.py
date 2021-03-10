@@ -68,3 +68,10 @@ class Test(unittest.TestCase):
                                             L=np.sqrt(3) * 1e5 * u.km)
 
         self.assertTrue(np.all(custom <= tq))
+
+        all_good = True
+        try:
+            psd.power_spectral_density(frequencies, instrument="nonsense")
+        except ValueError:
+            all_good = False
+        self.assertFalse(all_good)
