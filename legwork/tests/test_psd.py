@@ -1,5 +1,5 @@
 import numpy as np
-import legwork.lisa as lisa
+import legwork.psd as psd
 import unittest
 from astropy import units as u
 
@@ -11,8 +11,8 @@ class Test(unittest.TestCase):
         """check that the R approximation works for low frequencies"""
         frequencies = np.logspace(-6, -2, 10000) * u.Hz
 
-        exact = lisa.power_spectral_density(frequencies, approximate_R=True)
-        approx = lisa.power_spectral_density(frequencies, approximate_R=False)
+        exact = psd.power_spectral_density(frequencies, approximate_R=True)
+        approx = psd.power_spectral_density(frequencies, approximate_R=False)
 
         self.assertTrue(np.allclose(exact, approx))
 
@@ -20,10 +20,10 @@ class Test(unittest.TestCase):
         """check that confusion noise is doing logical things"""
         frequencies = np.logspace(-6, 0, 10000) * u.Hz
 
-        confused = lisa.power_spectral_density(frequencies,
-                                               include_confusion_noise=True)
-        lucid = lisa.power_spectral_density(frequencies,
-                                            include_confusion_noise=False)
+        confused = psd.power_spectral_density(frequencies,
+                                              include_confusion_noise=True)
+        lucid = psd.power_spectral_density(frequencies,
+                                           include_confusion_noise=False)
 
         # ensure confusion noise only adds to noise
         self.assertTrue(np.all(confused >= lucid))
@@ -39,11 +39,11 @@ class Test(unittest.TestCase):
         frequencies = np.logspace(-6, 0, 100) * u.Hz
 
         # compute same curve with various mission length
-        smol = lisa.power_spectral_density(frequencies, t_obs=0.5 * u.yr)
-        teeny = lisa.power_spectral_density(frequencies, t_obs=1.0 * u.yr)
-        little = lisa.power_spectral_density(frequencies, t_obs=2.0 * u.yr)
-        regular = lisa.power_spectral_density(frequencies, t_obs=4.5 * u.yr)
-        looonngg = lisa.power_spectral_density(frequencies, t_obs=10.0 * u.yr)
+        smol = psd.power_spectral_density(frequencies, t_obs=0.5 * u.yr)
+        teeny = psd.power_spectral_density(frequencies, t_obs=1.0 * u.yr)
+        little = psd.power_spectral_density(frequencies, t_obs=2.0 * u.yr)
+        regular = psd.power_spectral_density(frequencies, t_obs=4.5 * u.yr)
+        looonngg = psd.power_spectral_density(frequencies, t_obs=10.0 * u.yr)
         noises = [smol, teeny, little, regular, looonngg]
 
         # ensure that a shorter mission length never decreases the noise

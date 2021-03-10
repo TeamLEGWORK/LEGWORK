@@ -1,1 +1,1 @@
-from . import evol, lisa, snr, source, strain, utils, visualisation
+from . import evol, psd, snr, source, strain, utils, visualisation

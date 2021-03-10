@@ -4,7 +4,7 @@ import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
-from legwork import utils, strain, lisa
+from legwork import utils, strain, psd
 import legwork.snr as sn
 import legwork.visualisation as vis
 
@@ -64,7 +64,7 @@ class Source():
 
     sc_params : `dict`
         Parameters for interpolated sensitivity curve. Include any of ``t_obs``
-        , ``L``, ``fstar``, ``approximate_R`` and ``include_confusion_noise``.
+        , ``L``, ``approximate_R`` and ``include_confusion_noise``.
         Default values are: 4 years, 2.5e9, 19.09e-3, False and True. This is
         ignored if ``interpolate_sc`` is False.
 
@@ -268,9 +268,9 @@ class Source():
         if self.interpolate_sc:
             # update the default settings with current params
             default_params = {
+                "instrument": "LISA",
                 "t_obs": 4 * u.yr,
                 "L": 2.5e9,
-                "fstar": 19.09e-3,
                 "approximate_R": False,
                 "include_confusion_noise": True
             }
@@ -278,7 +278,7 @@ class Source():
 
             # get values
             frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
-            sc = lisa.power_spectral_density(frequency_range, **default_params)
+            sc = psd.power_spectral_density(frequency_range, **default_params)
 
             # interpolate
             interp_sc = interp1d(frequency_range, sc, bounds_error=False,

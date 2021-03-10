@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import astropy.units as u
-import legwork.lisa as lisa
+import legwork.psd as psd
 
 # set the default font and fontsize
 plt.rc('font', family='serif')
@@ -321,7 +321,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
         Label for the sensitivity curve in legends
 
     **kwargs : `various`
-        Keyword args are passed to :meth:`legwork.lisa.power_spectral_density`,
+        Keyword args are passed to :meth:`legwork.psd.power_spectral_density`,
         see those docs for details on possible arguments.
 
     Returns
@@ -339,11 +339,11 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
         fig, ax = plt.subplots()
 
     # work out what the noise amplitude should be
-    psd = lisa.power_spectral_density(f=frequency_range, **kwargs)
+    PSD = psd.power_spectral_density(f=frequency_range, **kwargs)
     if y_quantity == "ASD":
-        noise_amplitude = np.sqrt(psd)
+        noise_amplitude = np.sqrt(PSD)
     elif y_quantity == "h_c":
-        noise_amplitude = np.sqrt(frequency_range * psd)
+        noise_amplitude = np.sqrt(frequency_range * PSD)
     else:
         raise ValueError("y_quantity must be one of 'ASD' or 'h_c'")
 
@@ -504,7 +504,7 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
 
     # calculate asd that makes it so height above curve is snr
     asd = snr[detectable] \
-        * np.sqrt(lisa.power_spectral_density(f_dom[detectable]))
+        * np.sqrt(psd.power_spectral_density(f_dom[detectable]))
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
