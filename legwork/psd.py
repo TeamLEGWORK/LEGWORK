@@ -1,4 +1,5 @@
-"""Functions to compute LISA sensitivity curve"""
+"""Functions to compute various power spectral densities for sensitivity
+curves"""
 
 import numpy as np
 import astropy.units as u
@@ -7,7 +8,7 @@ from scipy.interpolate import splev, splrep
 from importlib import resources
 
 __all__ = ['load_response_function', 'approximate_response_function',
-           'power_spectral_density']
+           'power_spectral_density', 'lisa_psd', 'tianqin_psd']
 
 
 def load_response_function(f, fstar=19.09e-3):
@@ -157,7 +158,7 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
     return psd / u.Hz
 
 
-def TianQin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
+def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
                 include_confusion_noise=None):
     """Calculates the effective TianQin power spectral density sensitivity
     curve
@@ -239,7 +240,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
     elif instrument == "TianQin":
         if L is None:
             L = np.sqrt(3) * 1e5 * u.km
-        return TianQin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
+        return tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                            include_confusion_noise=include_confusion_noise)
     else:
         return custom_function(f=f, L=L, t_obs=t_obs,

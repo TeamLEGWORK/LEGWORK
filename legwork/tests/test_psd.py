@@ -60,7 +60,7 @@ class Test(unittest.TestCase):
 
         def custom_instrument(f, t_obs, L, approximate_R,
                               include_confusion_noise):
-            return psd.TianQin_psd(f, L * 2, t_obs, approximate_R,
+            return psd.tianqin_psd(f, L * 2, t_obs, approximate_R,
                                    include_confusion_noise)
 
         custom = psd.power_spectral_density(frequencies, instrument="custom",
