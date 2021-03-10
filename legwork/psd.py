@@ -235,14 +235,18 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
     if instrument == "LISA":
         if L is None:
             L = 2.5e9
-        return lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
-                        include_confusion_noise=include_confusion_noise)
+        psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
+                       include_confusion_noise=include_confusion_noise)
     elif instrument == "TianQin":
         if L is None:
             L = np.sqrt(3) * 1e5 * u.km
-        return tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
-                           include_confusion_noise=include_confusion_noise)
+        psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
+                          include_confusion_noise=include_confusion_noise)
+    elif instrument == "custom":
+        psd = custom_function(f=f, L=L, t_obs=t_obs,
+                              approximate_R=approximate_R,
+                              include_confusion_noise=include_confusion_noise)
     else:
-        return custom_function(f=f, L=L, t_obs=t_obs,
-                               approximate_R=approximate_R,
-                               include_confusion_noise=include_confusion_noise)
+        raise ValueError("instrument: `{}` not recognised".format(instrument))
+
+    return psd
