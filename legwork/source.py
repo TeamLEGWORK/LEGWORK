@@ -822,15 +822,21 @@ class Source():
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs=4*u.yr, verbose=False):
-        self.snr = self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
+    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+                verbose=False):
+        self.snr = self.get_snr_stationary(t_obs=t_obs, instrument=instrument,
+                                           custom_psd=custom_psd,
+                                           verbose=verbose)
         return self.snr
 
 
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
-    def get_snr(self, t_obs=4*u.yr, n_step=100, verbose=False):
+    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+                n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
+                                         instrument=instrument,
+                                         custom_psd=custom_psd,
                                          verbose=verbose)
         return self.snr
