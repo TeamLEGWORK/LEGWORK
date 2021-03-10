@@ -157,7 +157,7 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
     return psd / u.Hz
 
 
-def TianQin_psd(f, L=np.sqrt(3)*1e5 * u.km, t_obs=None, approximate_R=None,
+def TianQin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
                 include_confusion_noise=None):
     """Calculates the effective TianQin power spectral density sensitivity
     curve
@@ -171,7 +171,7 @@ def TianQin_psd(f, L=np.sqrt(3)*1e5 * u.km, t_obs=None, approximate_R=None,
         Frequencies at which to evaluate the sensitivity curve
 
     L : `float`
-        LISA arm length in metres (default = 2.5Gm)
+        Arm length
 
     t_obs : `float`
         Observation time (ignored)
@@ -197,7 +197,7 @@ def TianQin_psd(f, L=np.sqrt(3)*1e5 * u.km, t_obs=None, approximate_R=None,
 
 
 def power_spectral_density(f, instrument="LISA", custom_function=None,
-                           t_obs=4*u.yr, L=2.5e9, approximate_R=False,
+                           t_obs=4*u.yr, L=None, approximate_R=False,
                            include_confusion_noise=True):
     """Calculates the effective power spectral density for all instruments.
 
@@ -218,7 +218,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
         Observation time (default 4 years)
 
     L : `float`
-        LISA arm length in metres (default = 2.5Gm)
+        LISA arm length in metres
 
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
@@ -232,9 +232,13 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
         Effective power strain spectral density
     """
     if instrument == "LISA":
+        if L is None:
+            L = 2.5e9
         return lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                         include_confusion_noise=include_confusion_noise)
     elif instrument == "TianQin":
+        if L is None:
+            L = np.sqrt(3) * 1e5 * u.km
         return TianQin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                            include_confusion_noise=include_confusion_noise)
     else:
