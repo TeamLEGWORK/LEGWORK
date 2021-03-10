@@ -51,3 +51,20 @@ class Test(unittest.TestCase):
             above = noise > regular
             close = np.isclose(noise, regular, atol=1e-39)
             self.assertTrue(np.logical_or(above, close).all())
+
+    def test_alternate_instruments(self):
+        """check that changing instruments doesn't break things"""
+        frequencies = np.logspace(-6, 0, 100) * u.Hz
+
+        tq = psd.power_spectral_density(frequencies, instrument="TianQin")
+
+        def custom_instrument(f, t_obs, L, approximate_R,
+                              include_confusion_noise):
+            return psd.TianQin_psd(f, L * 2, t_obs, approximate_R,
+                                   include_confusion_noise)
+
+        custom = psd.power_spectral_density(frequencies, instrument="custom",
+                                            custom_function=custom_instrument,
+                                            L=np.sqrt(3) * 1e5 * u.km)
+
+        self.assertTrue(np.all(custom <= tq))
