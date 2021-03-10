@@ -75,7 +75,7 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
     curve
 
     Using equations from Robson+19, calculate the effective LISA power spectral
-    density sensitivity curve
+    density for the sensitivity curve
 
     Parameters
     ----------
@@ -163,8 +163,8 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
     """Calculates the effective TianQin power spectral density sensitivity
     curve
 
-    Using equations from Robson+19, calculate the effective LISA power spectral
-    density sensitivity curve
+    Using equations from Huang+20, calculate the effective TianQin power
+    spectral density for the sensitivity curve
 
     Parameters
     ----------
