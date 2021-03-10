@@ -12,7 +12,7 @@ LEGWORK
     Feeling a bit spun around by all this binary evolution? Check out our
     tutorial on using functions in the ``evol`` module `here! <notebooks/Evolution.ipynb>`__
 
-.. automodapi:: legwork.lisa
+.. automodapi:: legwork.psd
 
 .. automodapi:: legwork.snr
 
