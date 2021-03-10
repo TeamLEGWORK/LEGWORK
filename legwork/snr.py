@@ -12,7 +12,8 @@ __all__ = ['snr_circ_stationary', 'snr_ecc_stationary', 'snr_circ_evolving',
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
-                        interpolated_sc=None):
+                        interpolated_sc=None, instrument="LISA",
+                        custom_psd=None):
     """Computes SNR for circular and stationary sources
 
     Parameters
@@ -42,6 +43,14 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
         values. Note: take care to ensure that your interpolated function has
         the same LISA observation time as ``t_obs``.
 
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be
+        supplied.
+
+    custom_psd : `function`
+        Custom function for computing the PSD. Must take the same arguments
+        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+
     Returns
     -------
     snr : `float/array`
@@ -57,7 +66,9 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
     if interpolated_sc is not None:
         h_f_lisa_2 = interpolated_sc(2 * f_orb)
     else:
-        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs)
+        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs,
+                                                instrument=instrument,
+                                                custom_function=custom_psd)
     snr = (h_f_src_circ_2 / h_f_lisa_2)**0.5
 
     return snr.decompose()
@@ -65,7 +76,8 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
 
 def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
                        interpolated_g=None, interpolated_sc=None,
-                       ret_max_snr_harmonic=False):
+                       ret_max_snr_harmonic=False, instrument="LISA",
+                       custom_psd=None):
     """Computes SNR for eccentric and stationary sources
 
     Parameters
@@ -105,6 +117,14 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         Whether to return (in addition to the snr), the harmonic with the
         maximum SNR
 
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be
+        supplied.
+
+    custom_psd : `function`
+        Custom function for computing the PSD. Must take the same arguments
+        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+
     Returns
     -------
     snr : `float/array`
@@ -132,7 +152,9 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         h_f_lisa_n_2 = interpolated_sc(f_n.flatten())
         h_f_lisa_n_2 = h_f_lisa_n_2.reshape(f_n.shape)
     else:
-        h_f_lisa_n_2 = psd.power_spectral_density(f=f_n, t_obs=t_obs)
+        h_f_lisa_n_2 = psd.power_spectral_density(f=f_n, t_obs=t_obs,
+                                                  instrument=instrument,
+                                                  custom_function=custom_psd)
 
     snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
 
@@ -146,7 +168,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
 
 
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
-                      interpolated_g=None, interpolated_sc=None):
+                      interpolated_g=None, interpolated_sc=None,
+                      instrument="LISA", custom_psd=None):
     """Computes SNR for circular and stationary sources
 
     Parameters
@@ -182,6 +205,14 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
         values. Note: take care to ensure that your interpolated function has
         the same LISA observation time as ``t_obs``.
 
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be
+        supplied.
+
+    custom_psd : `function`
+        Custom function for computing the PSD. Must take the same arguments
+        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+
     Returns
     -------
     sn : `float/array`
@@ -216,7 +247,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
         h_f_lisa_2 = interpolated_sc(2 * f_orb_evol.flatten())
         h_f_lisa_2 = h_f_lisa_2.reshape(f_orb_evol.shape)
     else:
-        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs)
+        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs,
+                                                instrument=instrument,
+                                                custom_function=custom_psd)
     h_c_lisa_2 = (2 * f_orb_evol)**2 * h_f_lisa_2
 
     snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1)**0.5
@@ -226,7 +259,8 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
 
 def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
                      n_step, interpolated_g=None, interpolated_sc=None,
-                     n_proc=1, ret_max_snr_harmonic=False):
+                     n_proc=1, ret_max_snr_harmonic=False, instrument="LISA",
+                     custom_psd=None):
     """Computes SNR for eccentric and evolving sources.
 
     Note that this function will not work for exactly circular (ecc = 0.0)
@@ -279,6 +313,14 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         Whether to return (in addition to the snr), the harmonic with the
         maximum SNR
 
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be
+        supplied.
+
+    custom_psd : `function`
+        Custom function for computing the PSD. Must take the same arguments
+        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+
     Returns
     -------
     snr : `float/array`
@@ -312,7 +354,9 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         h_f_lisa = interpolated_sc(f_n_evol.flatten())
     else:
         h_f_lisa = psd.power_spectral_density(f=f_n_evol.flatten(),
-                                              t_obs=t_obs)
+                                              t_obs=t_obs,
+                                              instrument=instrument,
+                                              custom_function=custom_psd)
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
     h_c_lisa_2 = f_n_evol**2 * h_f_lisa
 
