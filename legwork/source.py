@@ -4,7 +4,7 @@ import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
-from legwork import utils, strain, lisa
+from legwork import utils, strain, psd
 import legwork.snr as sn
 import legwork.visualisation as vis
 
@@ -64,7 +64,7 @@ class Source():
 
     sc_params : `dict`
         Parameters for interpolated sensitivity curve. Include any of ``t_obs``
-        , ``L``, ``fstar``, ``approximate_R`` and ``include_confusion_noise``.
+        , ``L``, ``approximate_R`` and ``include_confusion_noise``.
         Default values are: 4 years, 2.5e9, 19.09e-3, False and True. This is
         ignored if ``interpolate_sc`` is False.
 
@@ -268,9 +268,9 @@ class Source():
         if self.interpolate_sc:
             # update the default settings with current params
             default_params = {
+                "instrument": "LISA",
                 "t_obs": 4 * u.yr,
                 "L": 2.5e9,
-                "fstar": 19.09e-3,
                 "approximate_R": False,
                 "include_confusion_noise": True
             }
@@ -278,7 +278,7 @@ class Source():
 
             # get values
             frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
-            sc = lisa.power_spectral_density(frequency_range, **default_params)
+            sc = psd.power_spectral_density(frequency_range, **default_params)
 
             # interpolate
             interp_sc = interp1d(frequency_range, sc, bounds_error=False,
@@ -401,7 +401,8 @@ class Source():
                             dist=self.dist[which_sources],
                             interpolated_g=self.g)[:, 0, :]
 
-    def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
+    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None,
+                n_step=100, verbose=False):
         """Computes the SNR for a generic binary. Also records the harmonic
         with maximum SNR for each binary in ``self.max_snr_harmonic``.
 
@@ -409,6 +410,14 @@ class Source():
         ----------
         t_obs : `array`
             Observation duration (default: 4 years)
+
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be
+            supplied.
+
+        custom_psd : `function`
+            Custom function for computing the PSD. Must take the same arguments
+            as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
         n_step : `int`
             Number of time steps during observation duration
@@ -443,6 +452,8 @@ class Source():
                 n_stat = len(snr[stat_mask])
                 print("\t{} sources are stationary".format(n_stat))
             snr[stat_mask] = self.get_snr_stationary(t_obs=t_obs,
+                                                     instrument=instrument,
+                                                     custom_psd=custom_psd,
                                                      which_sources=stat_mask,
                                                      verbose=verbose)
         if evol_mask.any():
@@ -450,19 +461,29 @@ class Source():
                 n_evol = len(snr[evol_mask])
                 print("\t{} sources are evolving".format(n_evol))
             snr[evol_mask] = self.get_snr_evolving(t_obs=t_obs,
+                                                   instrument=instrument,
+                                                   custom_psd=custom_psd,
                                                    which_sources=evol_mask,
                                                    n_step=n_step,
                                                    verbose=verbose)
         return snr
 
-    def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None,
-                           verbose=False):
+    def get_snr_stationary(self, t_obs=4 * u.yr, instrument="LISA",
+                           custom_psd=None, which_sources=None, verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Parameters
         ----------
         t_obs : `array`
             Observation duration (default: 4 years)
+
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be
+            supplied.
+
+        custom_psd : `function`
+            Custom function for computing the PSD. Must take the same arguments
+            as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
         which_sources : `bool/array`
             Mask on which sources to consider stationary and calculate
@@ -495,7 +516,9 @@ class Source():
                                                    dist=self.dist[ind_circ],
                                                    t_obs=t_obs,
                                                    interpolated_g=self.g,
-                                                   interpolated_sc=self.sc)
+                                                   interpolated_sc=self.sc,
+                                                   instrument=instrument,
+                                                   custom_psd=custom_psd,)
         if ind_ecc.any():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
@@ -517,7 +540,9 @@ class Source():
                                                     harmonics_required=hr,
                                                     interpolated_g=self.g,
                                                     interpolated_sc=self.sc,
-                                                    ret_max_snr_harmonic=True)
+                                                    ret_max_snr_harmonic=True,
+                                                    instrument=instrument,
+                                                    custom_psd=custom_psd,)
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
@@ -530,14 +555,22 @@ class Source():
 
         return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs, n_step=100, which_sources=None,
-                         verbose=False):
+    def get_snr_evolving(self, t_obs, instrument="LISA", custom_psd=None,
+                         n_step=100, which_sources=None, verbose=False):
         """Computes the SNR assuming an evolving binary
 
         Parameters
         ----------
         t_obs : `array`
             Observation duration (default: 4 years)
+
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be
+            supplied.
+
+        custom_psd : `function`
+            Custom function for computing the PSD. Must take the same arguments
+            as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
         n_step : `int`
             Number of time steps during observation duration
@@ -575,7 +608,9 @@ class Source():
                                                  t_obs=t_obs,
                                                  n_step=n_step,
                                                  interpolated_g=self.g,
-                                                 interpolated_sc=self.sc)
+                                                 interpolated_sc=self.sc,
+                                                 instrument=instrument,
+                                                 custom_psd=custom_psd)
         if ind_ecc.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
@@ -600,7 +635,9 @@ class Source():
                                                   interpolated_g=self.g,
                                                   interpolated_sc=self.sc,
                                                   n_proc=self.n_proc,
-                                                  ret_max_snr_harmonic=True)
+                                                  ret_max_snr_harmonic=True,
+                                                  instrument=instrument,
+                                                  custom_psd=custom_psd)
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
@@ -785,15 +822,21 @@ class Source():
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs=4*u.yr, verbose=False):
-        self.snr = self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
+    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+                verbose=False):
+        self.snr = self.get_snr_stationary(t_obs=t_obs, instrument=instrument,
+                                           custom_psd=custom_psd,
+                                           verbose=verbose)
         return self.snr
 
 
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
-    def get_snr(self, t_obs=4*u.yr, n_step=100, verbose=False):
+    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+                n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
+                                         instrument=instrument,
+                                         custom_psd=custom_psd,
                                          verbose=verbose)
         return self.snr
