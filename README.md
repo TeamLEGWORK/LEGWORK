@@ -26,7 +26,6 @@ You can install the latest stable version using ``pip`` as
 
     pip install legwork
 
-For now, you can download the development version on GitHub!
 
 ## Development Version
 The latest development version is available directly from our
