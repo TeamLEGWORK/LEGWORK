@@ -1,6 +1,5 @@
-<p align="center">
-    <img width="500", src="docs/images/legwork.png">
-</p>
+![]("docs/images/legwork.png")
+
 
 <h2 align="center">
     The <b>L</b>ISA <b>E</b>volution and <b>G</b>ravitational <b>W</b>ave <b>OR</b>bit <b>K</b>it
