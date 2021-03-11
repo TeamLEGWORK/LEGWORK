@@ -1,5 +1,6 @@
-![]("docs/images/legwork.png")
-
+<p align="center">
+    <img width="500", src="https://raw.githubusercontent.com/katiebreivik/LEGWORK/main/docs/images/legwork.png">
+</p>
 
 <h2 align="center">
     The <b>L</b>ISA <b>E</b>volution and <b>G</b>ravitational <b>W</b>ave <b>OR</b>bit <b>K</b>it
