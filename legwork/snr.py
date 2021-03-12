@@ -43,7 +43,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
         values. Note: take care to ensure that your interpolated function has
         the same LISA observation time as ``t_obs``.
 
-    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
         Instrument to observe with. If 'custom' then ``custom_psd`` must be
         supplied.
 
@@ -117,7 +117,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         Whether to return (in addition to the snr), the harmonic with the
         maximum SNR
 
-    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
         Instrument to observe with. If 'custom' then ``custom_psd`` must be
         supplied.
 
@@ -205,7 +205,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
         values. Note: take care to ensure that your interpolated function has
         the same LISA observation time as ``t_obs``.
 
-    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
         Instrument to observe with. If 'custom' then ``custom_psd`` must be
         supplied.
 
@@ -313,7 +313,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         Whether to return (in addition to the snr), the harmonic with the
         maximum SNR
 
-    instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+    instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
         Instrument to observe with. If 'custom' then ``custom_psd`` must be
         supplied.
 

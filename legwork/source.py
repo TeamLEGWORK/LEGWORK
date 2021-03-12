@@ -411,7 +411,7 @@ class Source():
         t_obs : `array`
             Observation duration (default: 4 years)
 
-        instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
             Instrument to observe with. If 'custom' then ``custom_psd`` must be
             supplied.
 
@@ -477,7 +477,7 @@ class Source():
         t_obs : `array`
             Observation duration (default: 4 years)
 
-        instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
             Instrument to observe with. If 'custom' then ``custom_psd`` must be
             supplied.
 
@@ -564,7 +564,7 @@ class Source():
         t_obs : `array`
             Observation duration (default: 4 years)
 
-        instrument : `{{ 'LISA', 'TianQin', 'custom' }}
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
             Instrument to observe with. If 'custom' then ``custom_psd`` must be
             supplied.
 
