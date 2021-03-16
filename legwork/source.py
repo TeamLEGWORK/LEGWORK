@@ -526,18 +526,16 @@ class Source():
             harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(harmonics_required >= lower,
-                                           harmonics_required < upper)
+                harm_mask = np.logical_and(harmonics_required > lower,
+                                           harmonics_required <= upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
-                    hr = upper - 1
-
                     snr_msh = sn.snr_ecc_stationary(m_c=self.m_c[match],
                                                     f_orb=self.f_orb[match],
                                                     ecc=self.ecc[match],
                                                     dist=self.dist[match],
                                                     t_obs=t_obs,
-                                                    harmonics_required=hr,
+                                                    harmonics_required=upper,
                                                     interpolated_g=self.g,
                                                     interpolated_sc=self.sc,
                                                     ret_max_snr_harmonic=True,
@@ -618,18 +616,16 @@ class Source():
             harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(harmonics_required >= lower,
-                                           harmonics_required < upper)
+                harm_mask = np.logical_and(harmonics_required > lower,
+                                           harmonics_required <= upper)
                 match = np.logical_and(harm_mask, ind_ecc)
                 if match.any():
-                    hr = upper - 1
-
                     snr_msh = sn.snr_ecc_evolving(m_1=self.m_1[match],
                                                   m_2=self.m_2[match],
                                                   f_orb_i=self.f_orb[match],
                                                   dist=self.dist[match],
                                                   ecc=self.ecc[match],
-                                                  harmonics_required=hr,
+                                                  harmonics_required=upper,
                                                   t_obs=t_obs,
                                                   n_step=n_step,
                                                   interpolated_g=self.g,
