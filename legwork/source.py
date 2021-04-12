@@ -812,6 +812,12 @@ class Source():
             evolved_sources.interpolate_sc = True
             evolved_sources.sc = self.sc
 
+            if self.t_merge is not None:
+                evolved_sources.t_merge = np.maximum(0 * u.Gyr,
+                                                     self.t_merge - t_evol)
+            else:
+                evolved_sources.t_merge = None
+
             # record which sources have merged
             evolved_sources.merged = merged
 
@@ -822,6 +828,9 @@ class Source():
             self.ecc = ecc_evol
             self.f_orb = f_orb_evol
             self.merged = merged
+
+            if self.t_merge is not None:
+                self.t_merge = np.maximum(0 * u.Gyr, self.t_merge - t_evol)
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
                               **kwargs):  # pragma: no cover

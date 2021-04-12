@@ -1,10 +1,7 @@
 """Functions to calculate signal-to-noise ratio in four different cases"""
 
 import numpy as np
-import legwork.strain as strain
-import legwork.psd as psd
-import legwork.utils as utils
-import legwork.evol as evol
+from legwork import strain, psd, utils, evol
 import astropy.units as u
 
 __all__ = ['snr_circ_stationary', 'snr_ecc_stationary', 'snr_circ_evolving',
