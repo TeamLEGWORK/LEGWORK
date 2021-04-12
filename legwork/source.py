@@ -721,9 +721,9 @@ class Source():
         insp = np.logical_and(which_sources,
                               np.logical_not(self.merged))
         t_merge[insp] = evol.get_t_merge_ecc(ecc_i=self.ecc[insp],
-                                                  f_orb_i=self.f_orb[insp],
-                                                m_1=self.m_1[insp],
-                                                m_2=self.m_2[insp])
+                                             f_orb_i=self.f_orb[insp],
+                                             m_1=self.m_1[insp],
+                                             m_2=self.m_2[insp])
         if save_in_class:
             self.t_merge = t_merge
 
