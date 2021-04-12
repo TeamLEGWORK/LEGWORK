@@ -4,7 +4,7 @@ import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
-from legwork import utils, strain, psd
+from legwork import utils, strain, psd, evol
 import legwork.snr as sn
 import legwork.visualisation as vis
 
@@ -141,6 +141,8 @@ class Source():
         self.n_sources = len(m_1)
         self.interpolate_sc = interpolate_sc
         self._sc_params = sc_params
+
+        self.merged = np.repeat(False, self.n_sources)
 
         self.update_gw_lum_tol(gw_lum_tol)
         self.set_g(interpolate_g)
@@ -430,15 +432,22 @@ class Source():
         SNR : `array`
             The signal-to-noise ratio
         """
-        if self._sc_params is not None:     # pragma: no cover
-            sc_t_obs = t_obs
+        # if the user interpolated a sensitivity curve
+        if self.interpolate_sc and (self._sc_params
+                                    is not None):     # pragma: no cover
             if "t_obs" in self._sc_params.keys():
                 sc_t_obs = self._sc_params["t_obs"]
+            else:
+                # default is 4 years if none passed
+                sc_t_obs = 4 * u.yr
+
+            # make sure the observation time matches
             if t_obs != sc_t_obs:
                 print("Warning: Current `sc_params` uses t_obs =",
                       "{} but this function".format(self._sc_params["t_obs"]),
                       "was passed t_obs = {}. Update your".format(t_obs),
-                      "sc_params to match with Source.update_sc_params()!")
+                      "sc_params with Source.update_sc_params() to make sure",
+                      "your interpolated curve matches!")
 
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
@@ -645,6 +654,95 @@ class Source():
         self.snr[which_sources] = snr[which_sources]
 
         return snr[which_sources]
+
+    def evolve_sources(self, t_evol, create_new_class=False):
+        """Evolve sources forward in time for ``t_evol`` amount of time. If
+        ``create_new_class`` is ``True`` then save the updated sources in a new
+        Source class, otherwise, update the values in this class.
+
+        Parameters
+        ----------
+        t_evol : `float/array`
+            Amount of time to evolve sources. Either a single value for all
+            sources or an array of values corresponding to each source.
+        create_new_class : bool, optional
+            Whether to save the evolved binaries in a new class or not. If not
+            simply update the current class, by default False.
+
+        Returns
+        -------
+        evolved_sources : `Source`
+            The new class with evolved sources, only returned if
+            ``create_new_class`` is ``True``.
+        """
+        # separate out the exactly circular sources from eccentric ones
+        c_mask = self.ecc == 0.0
+        e_mask = np.logical_not(c_mask)
+
+        # split up the evolution times if need be
+        if isinstance(t_evol, u.quantity.Quantity):
+            t_evol_circ = t_evol
+            t_evol_ecc = t_evol
+        else:
+            t_evol_circ = t_evol[c_mask]
+            t_evol_ecc = t_evol[e_mask]
+
+        # set up the evolved eccentricity and frequency arrays
+        n_step = 2
+        ecc_evol = np.zeros(self.n_sources)
+        f_orb_evol = np.zeros(self.n_sources) * u.Hz
+
+        # calculate the evolved values for circular binaries
+        if c_mask.any():
+            f_orb_evol[c_mask] = evol.evol_circ(t_evol=t_evol_circ,
+                                                n_step=n_step,
+                                                m_1=self.m_1[c_mask],
+                                                m_2=self.m_2[c_mask],
+                                                f_orb_i=self.f_orb[c_mask],
+                                                output_vars="f_orb")[:, -1]
+
+        # calculate the evolved values for eccentric binaries
+        if e_mask.any():
+            evolution = evol.evol_ecc(t_evol=t_evol_ecc,
+                                      n_step=n_step,
+                                      m_1=self.m_1[e_mask],
+                                      m_2=self.m_2[e_mask],
+                                      f_orb_i=self.f_orb[e_mask],
+                                      ecc_i=self.ecc[e_mask],
+                                      output_vars=["ecc", "f_orb"])
+
+            # drop everything except the final evolved value
+            ecc_evol[e_mask] = evolution[0][:, -1]
+            f_orb_evol[e_mask] = evolution[1][:, -1]
+
+        # record which sources merged during evolution
+        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1 * u.Hz)
+
+        if create_new_class:
+            # create new source with same attributes (but evolved ecc/f_orb)
+            evolved_sources = Source(m_1=self.m_1, m_2=self.m_2, ecc=ecc_evol,
+                                     dist=self.dist, n_proc=self.n_proc,
+                                     f_orb=f_orb_evol,
+                                     gw_lum_tol=self._gw_lum_tol,
+                                     stat_tol=self.stat_tol,
+                                     interpolate_g=False, interpolate_sc=False,
+                                     sc_params=self._sc_params)
+
+            # copy over interpolated g and sc
+            evolved_sources.g = self.g
+            evolved_sources.interpolate_sc = True
+            evolved_sources.sc = self.sc
+
+            # record which sources have merged
+            evolved_sources.merged = merged
+
+            # return the new source class
+            return evolved_sources
+        else:
+            # otherwise just update the existing class with evolution
+            self.ecc = ecc_evol
+            self.f_orb = f_orb_evol
+            self.merged = merged
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
                               **kwargs):  # pragma: no cover
