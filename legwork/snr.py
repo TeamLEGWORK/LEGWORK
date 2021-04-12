@@ -73,8 +73,8 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
 
 def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
                        interpolated_g=None, interpolated_sc=None,
-                       ret_max_snr_harmonic=False, instrument="LISA",
-                       custom_psd=None):
+                       ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
+                       instrument="LISA", custom_psd=None):
     """Computes SNR for eccentric and stationary sources
 
     Parameters
@@ -113,6 +113,11 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     ret_max_snr_harmonic : `boolean`
         Whether to return (in addition to the snr), the harmonic with the
         maximum SNR
+
+    ret_snr2_by_harmonic : `boolean`
+        Whether to return the SNR^2 in each individual harmonic rather than
+        the total. The total can be retrieving by summing and then taking
+        the square root.
 
     instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
         Instrument to observe with. If 'custom' then ``custom_psd`` must be
@@ -154,6 +159,9 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
                                                   custom_function=custom_psd)
 
     snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
+
+    if ret_snr2_by_harmonic:
+        return snr_n_2
 
     if ret_max_snr_harmonic:
         max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
@@ -260,7 +268,8 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
 def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
                      n_step, t_merge=None, interpolated_g=None,
                      interpolated_sc=None, n_proc=1,
-                     ret_max_snr_harmonic=False, instrument="LISA",
+                     ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
+                     instrument="LISA",
                      custom_psd=None):
     """Computes SNR for eccentric and evolving sources.
 
@@ -317,6 +326,11 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         Whether to return (in addition to the snr), the harmonic with the
         maximum SNR
 
+    ret_snr2_by_harmonic : `boolean`
+        Whether to return the SNR^2 in each individual harmonic rather than
+        the total. The total can be retrieving by summing and then taking
+        the square root.
+
     instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
         Instrument to observe with. If 'custom' then ``custom_psd`` must be
         supplied.
@@ -368,6 +382,9 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
 
     # integrate, sum and square root to get SNR
     snr_n_2 = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=f_n_evol, axis=1)
+
+    if ret_snr2_by_harmonic:
+        return snr_n_2
 
     if ret_max_snr_harmonic:
         max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
