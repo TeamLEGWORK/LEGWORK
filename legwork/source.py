@@ -537,9 +537,12 @@ class Source():
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        insp_sources = np.logical_and(which_sources,
+                                      np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
-        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
-        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
+        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
+        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
 
         # default to n = 2 for max snr harmonic
         msh = np.repeat(2, self.n_sources)
@@ -583,11 +586,11 @@ class Source():
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
-        self.max_snr_harmonic[which_sources] = msh[which_sources]
+        self.max_snr_harmonic[insp_sources] = msh[insp_sources]
 
         if self.snr is None:
             self.snr = np.zeros(self.n_sources)
-        self.snr[which_sources] = snr[which_sources]
+        self.snr[insp_sources] = snr[insp_sources]
 
         return snr[which_sources]
 
