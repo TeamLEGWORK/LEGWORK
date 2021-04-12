@@ -167,7 +167,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
 
 
-def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
+def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
                       interpolated_g=None, interpolated_sc=None,
                       instrument="LISA", custom_psd=None):
     """Computes SNR for circular and stationary sources
@@ -191,6 +191,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
 
     n_step : `int`
         Number of time steps during observation duration
+
+    t_merge : `float/array`
+        Time until merger
 
     interpolated_g : `function`
         A function returned by :class:`scipy.interpolate.interp2d` that
@@ -258,8 +261,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
 
 
 def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
-                     n_step, interpolated_g=None, interpolated_sc=None,
-                     n_proc=1, ret_max_snr_harmonic=False, instrument="LISA",
+                     n_step, t_merge=None, interpolated_g=None,
+                     interpolated_sc=None, n_proc=1,
+                     ret_max_snr_harmonic=False, instrument="LISA",
                      custom_psd=None):
     """Computes SNR for eccentric and evolving sources.
 
@@ -291,6 +295,9 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
 
     n_step : `int`
         Number of time steps during observation duration
+
+    t_merge : `float/array`
+        Time until merger
 
     interpolated_g : `function`
         A function returned by :class:`scipy.interpolate.interp2d` that
@@ -331,9 +338,11 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         ``ret_max_snr_harmonic=True``)
     """
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
+
     # calculate minimum of observation time and merger time
-    t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
-                                   f_orb_i=f_orb_i, ecc_i=ecc)
+    if t_merge is None:
+        t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
+                                       f_orb_i=f_orb_i, ecc_i=ecc)
     t_evol = np.minimum(t_merge, t_obs).to(u.s)
 
     # get eccentricity and f_orb evolutions

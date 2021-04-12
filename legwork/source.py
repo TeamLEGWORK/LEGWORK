@@ -76,7 +76,7 @@ class Source():
 
     ecc_tol : `float`
         Eccentricity above which a binary is considered eccentric. Set by
-        :meth:`legwork.source.Source.find_eccentric_transition`
+        :meth:`legwork.source.Source.fe_maskentric_transition`
 
     snr : `float/array`
         Signal-to-noise ratio. Set by :meth:`legwork.source.Source.get_snr`
@@ -214,7 +214,7 @@ class Source():
 
         self.max_strain_harmonic = max_strain_harmonic
 
-    def find_eccentric_transition(self):
+    def fe_maskentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
         We define this as the maximum eccentricity at which the n=2 harmonic
         is the total GW luminosity given the tolerance ``self._gw_lum_tol``.
@@ -238,7 +238,7 @@ class Source():
         """
         self._gw_lum_tol = gw_lum_tol
         self.create_harmonics_functions()
-        self.find_eccentric_transition()
+        self.fe_maskentric_transition()
 
     def set_g(self, interpolate_g):
         """Set Source g function if user wants to interpolate g(n,e).
@@ -542,35 +542,35 @@ class Source():
         insp_sources = np.logical_and(which_sources,
                                       np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
-        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
-        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
+        e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
+        c_mask = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
 
         # default to n = 2 for max snr harmonic
         msh = np.repeat(2, self.n_sources)
 
         # only compute snr if there is at least one binary in mask
-        if ind_circ.any():
+        if c_mask.any():
             if verbose:
                 print("\t\t{} sources are stationary and circular".format(
-                    len(snr[ind_circ])))
-            snr[ind_circ] = sn.snr_circ_stationary(m_c=self.m_c[ind_circ],
-                                                   f_orb=self.f_orb[ind_circ],
-                                                   dist=self.dist[ind_circ],
-                                                   t_obs=t_obs,
-                                                   interpolated_g=self.g,
-                                                   interpolated_sc=self.sc,
-                                                   instrument=instrument,
-                                                   custom_psd=custom_psd,)
-        if ind_ecc.any():
+                    len(snr[c_mask])))
+            snr[c_mask] = sn.snr_circ_stationary(m_c=self.m_c[c_mask],
+                                                 f_orb=self.f_orb[c_mask],
+                                                 dist=self.dist[c_mask],
+                                                 t_obs=t_obs,
+                                                 interpolated_g=self.g,
+                                                 interpolated_sc=self.sc,
+                                                 instrument=instrument,
+                                                 custom_psd=custom_psd,)
+        if e_mask.any():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
-                    len(snr[ind_ecc])))
+                    len(snr[e_mask])))
             harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
                 harm_mask = np.logical_and(harmonics_required > lower,
                                            harmonics_required <= upper)
-                match = np.logical_and(harm_mask, ind_ecc)
+                match = np.logical_and(harm_mask, e_mask)
                 if match.any():
                     snr_msh = sn.snr_ecc_stationary(m_c=self.m_c[match],
                                                     f_orb=self.f_orb[match],
@@ -634,37 +634,41 @@ class Source():
 
         insp_sources = np.logical_and(which_sources,
                                       np.logical_not(self.merged))
-        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
-        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
+        e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
+        c_mask = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
 
         # default to n = 2 for max snr harmonic
         msh = np.repeat(2, self.n_sources)
 
-        if ind_circ.any():
+        if c_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and circular".format(
-                    len(snr[ind_circ])))
-            snr[ind_circ] = sn.snr_circ_evolving(m_1=self.m_1[ind_circ],
-                                                 m_2=self.m_2[ind_circ],
-                                                 f_orb_i=self.f_orb[ind_circ],
-                                                 dist=self.dist[ind_circ],
-                                                 t_obs=t_obs,
-                                                 n_step=n_step,
-                                                 interpolated_g=self.g,
-                                                 interpolated_sc=self.sc,
-                                                 instrument=instrument,
-                                                 custom_psd=custom_psd)
-        if ind_ecc.any():
+                    len(snr[c_mask])))
+            t_merge = None if self.t_merge is None else self.t_merge[c_mask]
+            snr[c_mask] = sn.snr_circ_evolving(m_1=self.m_1[c_mask],
+                                               m_2=self.m_2[c_mask],
+                                               f_orb_i=self.f_orb[c_mask],
+                                               dist=self.dist[c_mask],
+                                               t_obs=t_obs,
+                                               n_step=n_step,
+                                               t_merge=t_merge,
+                                               interpolated_g=self.g,
+                                               interpolated_sc=self.sc,
+                                               instrument=instrument,
+                                               custom_psd=custom_psd)
+        if e_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
-                    len(snr[ind_ecc])))
+                    len(snr[e_mask])))
             harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
                 harm_mask = np.logical_and(harmonics_required > lower,
                                            harmonics_required <= upper)
-                match = np.logical_and(harm_mask, ind_ecc)
+                match = np.logical_and(harm_mask, e_mask)
                 if match.any():
+                    t_merge = None if self.t_merge is None\
+                        else self.t_merge[match]
                     snr_msh = sn.snr_ecc_evolving(m_1=self.m_1[match],
                                                   m_2=self.m_2[match],
                                                   f_orb_i=self.f_orb[match],
