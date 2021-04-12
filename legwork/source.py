@@ -712,17 +712,23 @@ class Source():
         t_merge : `float/array`
             Merger times
         """
+        # if no subset or saving times, select all sources
         if save_in_class or which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+        t_merge = np.zeros(len(which_sources)) * u.Gyr
 
-        t_merge = evol.get_t_merge_ecc(ecc_i=self.ecc[which_sources],
-                                       f_orb_i=self.f_orb[which_sources],
-                                       m_1=self.m_1[which_sources],
-                                       m_2=self.m_2[which_sources])
-
+        # only compute merger times for inspiralling binaries
+        insp = np.logical_and(which_sources,
+                              np.logical_not(self.merged))
+        t_merge[insp] = evol.get_t_merge_ecc(ecc_i=self.ecc[insp],
+                                                  f_orb_i=self.f_orb[insp],
+                                                m_1=self.m_1[insp],
+                                                m_2=self.m_2[insp])
         if save_in_class:
             self.t_merge = t_merge
-        return t_merge
+
+        # only return subset of sources
+        return t_merge[which_sources]
 
     def evolve_sources(self, t_evol, create_new_class=False):
         """Evolve sources forward in time for ``t_evol`` amount of time. If
