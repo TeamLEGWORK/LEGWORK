@@ -26,9 +26,10 @@ class Test(unittest.TestCase):
                                          harmonics_required=3)
         self.assertTrue(np.allclose(snr_circ, snr_ecc))
 
-    def test_stat_vs_evol_eccentric(self):
+    def test_stat_vs_evol_eccentric_and_harmonics(self):
         """check whether the evolving snr equation gives the same results
-        as the stationary one for eccentric stationary binaries"""
+        as the stationary one for eccentric stationary binaries. Also whether
+        the individual harmonics are done properly"""
         n_values = 100
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
@@ -44,5 +45,17 @@ class Test(unittest.TestCase):
         snr_ecc = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
                                        f_orb_i=f_orb, dist=dist, n_step=100,
                                        t_obs=t_obs, harmonics_required=10)
+
+        snr2_circ_n = snr.snr_ecc_stationary(m_c=m_c, ecc=ecc, f_orb=f_orb,
+                                             dist=dist, t_obs=t_obs,
+                                             harmonics_required=10,
+                                             ret_snr2_by_harmonic=True)
+        snr2_ecc_n = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
+                                          f_orb_i=f_orb, dist=dist, n_step=100,
+                                          t_obs=t_obs, harmonics_required=10,
+                                          ret_snr2_by_harmonic=True)
+
+        self.assertTrue(np.allclose(snr2_circ_n.sum(axis=1)**(0.5), snr_circ))
+        self.assertTrue(np.allclose(snr2_ecc_n.sum(axis=1)**(0.5), snr_ecc))
 
         self.assertTrue(np.allclose(snr_circ, snr_ecc, atol=1e-1, rtol=1e-2))
