@@ -759,7 +759,7 @@ class Source():
         e_mask = np.logical_not(c_mask)
 
         # split up the evolution times if need be
-        if isinstance(t_evol, u.quantity.Quantity):
+        if isinstance(t_evol.value, (int, float)):
             t_evol_circ = t_evol
             t_evol_ecc = t_evol
         else:
@@ -773,12 +773,13 @@ class Source():
 
         # calculate the evolved values for circular binaries
         if c_mask.any():
-            f_orb_evol[c_mask] = evol.evol_circ(t_evol=t_evol_circ,
-                                                n_step=n_step,
-                                                m_1=self.m_1[c_mask],
-                                                m_2=self.m_2[c_mask],
-                                                f_orb_i=self.f_orb[c_mask],
-                                                output_vars="f_orb")[:, -1]
+            evolution = evol.evol_circ(t_evol=t_evol_circ,
+                                       n_step=n_step,
+                                       m_1=self.m_1[c_mask],
+                                       m_2=self.m_2[c_mask],
+                                       f_orb_i=self.f_orb[c_mask],
+                                       output_vars="f_orb")
+            f_orb_evol[c_mask] = evolution[:, -1]
 
         # calculate the evolved values for eccentric binaries
         if e_mask.any():
@@ -811,12 +812,11 @@ class Source():
             evolved_sources.g = self.g
             evolved_sources.interpolate_sc = True
             evolved_sources.sc = self.sc
+            evolved_sources.t_merge = None
 
             if self.t_merge is not None:
                 evolved_sources.t_merge = np.maximum(0 * u.Gyr,
                                                      self.t_merge - t_evol)
-            else:
-                evolved_sources.t_merge = None
 
             # record which sources have merged
             evolved_sources.merged = merged
