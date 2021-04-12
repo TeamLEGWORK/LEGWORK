@@ -392,8 +392,9 @@ class Source():
         return h_0_n[which_sources, :]
 
     def get_h_c_n(self, harmonics, which_sources=None):
-        """Computes the characteristic strain for all binaries
-        for the given ``harmonics``
+        """Computes the characteristic strain for binaries for the given
+        ``harmonics``. Use ``which_sources`` to select a subset of the sources.
+        Merged sources are set to have 0.0 characteristic strain.
 
         Parameters
         ----------
@@ -411,12 +412,25 @@ class Source():
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
-        return strain.h_c_n(m_c=self.m_c[which_sources],
-                            f_orb=self.f_orb[which_sources],
-                            ecc=self.ecc[which_sources],
-                            n=harmonics,
-                            dist=self.dist[which_sources],
-                            interpolated_g=self.g)[:, 0, :]
+
+        # by default set all strains to zero
+        n_harmonics = len(harmonics) if not isinstance(harmonics, int) else 1
+        h_c_n = np.zeros((self.n_sources, n_harmonics))
+
+        # find a mask for the inspiralling sources (exclude merged)
+        insp_sources = np.logical_and(np.logical_not(self.merged),
+                                      which_sources)
+
+        # calculate strain for these values
+        h_c_n[insp_sources, :] = strain.h_c_n(m_c=self.m_c[insp_sources],
+                                              f_orb=self.f_orb[insp_sources],
+                                              ecc=self.ecc[insp_sources],
+                                              n=harmonics,
+                                              dist=self.dist[insp_sources],
+                                              interpolated_g=self.g)[:, 0, :]
+
+        # return all sources, not just inpsiralling ones
+        return h_c_n[which_sources, :]
 
     def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None,
                 n_step=100, verbose=False):
