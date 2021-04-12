@@ -136,6 +136,7 @@ class Source():
         self.f_orb = f_orb
         self.a = a
         self.n_proc = n_proc
+        self.t_merge = None
         self.snr = None
         self.max_snr_harmonic = None
         self.n_sources = len(m_1)
@@ -689,6 +690,39 @@ class Source():
         self.snr[insp_sources] = snr[insp_sources]
 
         return snr[which_sources]
+
+    def get_merger_time(self, save_in_class=True, which_sources=None):
+        """Get the merger time for each source. Set ``save_in_class`` to true
+        to save the values as an instance variable in the class. Use
+        ``which_sources`` to select a subset of the sources in the class. Note
+        that if ``save_in_class`` is set to ``True``, ``which_sources`` will be
+        ignored.
+
+        Parameters
+        ----------
+        save_in_class : `bool`, optional
+            Whether the save the result into the class as an instance variable,
+            by default True
+        which_sources : `bool/array`, optional
+            A mask for the subset of sources for which to calculate the merger
+            time, by default all sources (None)
+
+        Returns
+        -------
+        t_merge : `float/array`
+            Merger times
+        """
+        if save_in_class or which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
+
+        t_merge = evol.get_t_merge_ecc(ecc_i=self.ecc[which_sources],
+                                       f_orb_i=self.f_orb[which_sources],
+                                       m_1=self.m_1[which_sources],
+                                       m_2=self.m_2[which_sources])
+
+        if save_in_class:
+            self.t_merge = t_merge
+        return t_merge
 
     def evolve_sources(self, t_evol, create_new_class=False):
         """Evolve sources forward in time for ``t_evol`` amount of time. If
