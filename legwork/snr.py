@@ -229,10 +229,11 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
     # calculate minimum of observation time and merger time
-    t_merge = evol.get_t_merge_circ(m_1=m_1,
-                                    m_2=m_2,
-                                    f_orb_i=f_orb_i)
-    t_evol = np.minimum(t_merge, t_obs)
+    if t_merge is None:
+        t_merge = evol.get_t_merge_circ(m_1=m_1,
+                                        m_2=m_2,
+                                        f_orb_i=f_orb_i)
+    t_evol = np.minimum(t_merge - (1 * u.s), t_obs)
 
     # get f_orb evolution
     f_orb_evol = evol.evol_circ(t_evol=t_evol,
