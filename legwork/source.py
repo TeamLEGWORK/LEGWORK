@@ -796,7 +796,7 @@ class Source():
             f_orb_evol[e_mask] = evolution[1][:, -1]
 
         # record which sources merged during evolution
-        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1 * u.Hz)
+        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1e2* u.Hz)
 
         if create_new_class:
             # create new source with same attributes (but evolved ecc/f_orb)

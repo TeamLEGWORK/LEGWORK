@@ -15,3 +15,4 @@ This log keeps track of the changes implemented in each version of LEGWORK.
 - Add ``evolve_sources`` function that evolves sources through time, updates merger times and if necessary marks them as merged
     - Merged sources are ignored in other computations (e.g. strain and SNR)
 - Add ``ret_snr2_by_harmonic`` to eccentric snr functions to allow the user to get the SNR at each harmonic separately instead of the total
+- Add minor fixes to snr for evolving sources for when sources are closes to merging

@@ -242,6 +242,11 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
                                 m_2=m_2,
                                 f_orb_i=f_orb_i)
 
+    maxes = np.where(f_orb_evol == 1e2 * u.Hz,
+                     -1 * u.Hz, f_orb_evol).max(axis=1)
+    for source in range(len(f_orb_evol)):
+        f_orb_evol[source][f_orb_evol[source] == 1e2 * u.Hz] = maxes[source]
+
     # calculate the characteristic power
     h_c_n_2 = strain.h_c_n(m_c=m_c,
                            f_orb=f_orb_evol,
@@ -352,15 +357,20 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
     # calculate minimum of observation time and merger time
-    if t_merge is None:
-        t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
-                                       f_orb_i=f_orb_i, ecc_i=ecc)
+    # if t_merge is None:
+    t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
+                                    f_orb_i=f_orb_i, ecc_i=ecc)
     t_evol = np.minimum(t_merge, t_obs).to(u.s)
 
     # get eccentricity and f_orb evolutions
     e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step,
                                        m_1=m_1, m_2=m_2, f_orb_i=f_orb_i,
                                        n_proc=n_proc)
+
+    maxes = np.where(np.logical_and(e_evol == 0.0, f_orb_evol == 1e2 * u.Hz),
+                      -1 * u.Hz, f_orb_evol).max(axis=1)
+    for source in range(len(f_orb_evol)):
+        f_orb_evol[source][f_orb_evol[source] == 1e2 * u.Hz] = maxes[source]
 
     # create harmonics list and multiply for nth frequency evolution
     harms = np.arange(1, harmonics_required + 1).astype(int)
@@ -381,8 +391,12 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
     h_c_lisa_2 = f_n_evol**2 * h_f_lisa
 
+    snr_evol = h_c_n_2 / h_c_lisa_2
+
     # integrate, sum and square root to get SNR
-    snr_n_2 = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=f_n_evol, axis=1)
+    # print(f_n_evol.diff(axis=1).shape)
+    # print(f_n_evol.diff(axis=1))
+    snr_n_2 = np.trapz(y=snr_evol, x=f_n_evol, axis=1)
 
     if ret_snr2_by_harmonic:
         return snr_n_2
