@@ -105,10 +105,9 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
     # minimum and maximum frequencies in Hz based on the R file from Robson+19
     MIN_F = 1e-7
     MAX_F = 2e0
-    HUGE_NOISE = 1e30
 
-    # overwrite frequencies that outside the range
-    f = np.where(np.logical_and(f > MIN_F, f < MAX_F), f, 1e-7)
+    # overwrite frequencies that outside the range to prevent error
+    f = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), f, 1e-8)
 
     # single link optical metrology noise (Robson+ Eq. 10)
     def Poms(f):
@@ -154,7 +153,7 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
     psd = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
 
     # replace values for bad frequencies (set to extremely high value)
-    psd = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), psd, HUGE_NOISE)
+    psd = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), psd, np.inf)
     return psd / u.Hz
 
 
