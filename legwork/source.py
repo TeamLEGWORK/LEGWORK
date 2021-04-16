@@ -76,7 +76,7 @@ class Source():
 
     ecc_tol : `float`
         Eccentricity above which a binary is considered eccentric. Set by
-        :meth:`legwork.source.Source.fe_maskentric_transition`
+        :meth:`legwork.source.Source.find_eccentric_transition`
 
     snr : `float/array`
         Signal-to-noise ratio. Set by :meth:`legwork.source.Source.get_snr`
@@ -214,7 +214,7 @@ class Source():
 
         self.max_strain_harmonic = max_strain_harmonic
 
-    def fe_maskentric_transition(self):
+    def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric.
         We define this as the maximum eccentricity at which the n=2 harmonic
         is the total GW luminosity given the tolerance ``self._gw_lum_tol``.
@@ -238,7 +238,7 @@ class Source():
         """
         self._gw_lum_tol = gw_lum_tol
         self.create_harmonics_functions()
-        self.fe_maskentric_transition()
+        self.find_eccentric_transition()
 
     def set_g(self, interpolate_g):
         """Set Source g function if user wants to interpolate g(n,e).
