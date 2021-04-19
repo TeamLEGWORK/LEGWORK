@@ -17,11 +17,15 @@ For more in-depth details and examples, check out our other tutorials:
 
 .. raw:: html
 
-    <div class="toms-nav-container" style="margin-bottom:50px;">
+    <div class="toms-nav-container" style="margin-bottom:30px;">
         <div class="box" data-href="notebooks/Source.html">Using the Source Class</div>
         <div class="box" data-href="notebooks/Strains.html">Computing Gravitational Wave Strains</div>
         <div class="box" data-href="notebooks/Evolution.html">Binary Evolution</div>
         <div class="box" data-href="notebooks/Visualisation.html">Visualisation</div>
+    </div>
+
+    <div style="max-width: 300px; margin: 40px auto 50px auto;">
+        <div class="toms-nav-box" data-href="notebooks/Units.html">Units in LEGWORK</div>
     </div>
 
 .. toctree::
@@ -34,3 +38,4 @@ For more in-depth details and examples, check out our other tutorials:
     Computing Gravitational Wave Strains <notebooks/Strains.ipynb>
     Binary Evolution <notebooks/Evolution.ipynb>
     Visualisation <notebooks/Visualisation.ipynb>
+    Understanding units in LEGWORK <notebooks/Units.ipynb>
