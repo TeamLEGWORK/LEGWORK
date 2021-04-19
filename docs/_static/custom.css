@@ -49,3 +49,27 @@ div.highlight-python.notranslate pre {
 .wy-nav-content {
     max-width: 1000px;
 }
+
+/* Customise the copy buttons */
+/* increase size, less transparent, faster transition */
+a.copybtn {
+    width: 25px;
+    height: 25px;
+	opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+/* make sure image fills width */
+a.copybtn > img {
+    width: 100%;
+}
+
+/* hide buttons in output */
+.nboutput a.copybtn {
+    display:none;
+}
+
+/* don't wait too long */
+.o-tooltip--left:hover:after {
+    transition-delay: 0.2s;
+}
