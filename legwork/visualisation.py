@@ -282,7 +282,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 
 def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
                            ax=None, show=True, color="#18068b", fill=True,
-                           alpha=0.2, label=None, **kwargs):
+                           alpha=0.2, linewidth=1, label=None, **kwargs):
     """Plot the LISA sensitivity curve
 
     Parameters
@@ -317,6 +317,9 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
         Opacity of the filled area below the sensitivity curve (ignored if fill
         is `False`)
 
+    linewidth : `float`
+        Width of the sensitivity curve
+
     label : `string`
         Label for the sensitivity curve in legends
 
@@ -348,7 +351,8 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None,
         raise ValueError("y_quantity must be one of 'ASD' or 'h_c'")
 
     # plot the curve and fill if needed
-    ax.loglog(frequency_range, noise_amplitude, color=color, label=label)
+    ax.loglog(frequency_range, noise_amplitude, color=color, label=label,
+              linewidth=linewidth)
     if fill:
         ax.fill_between(frequency_range, 0, noise_amplitude, alpha=alpha,
                         color=color)
