@@ -30,6 +30,7 @@ We are thankful to Lieke van Son for suggesting the name LEGWORK and Stas Babak,
 
     Installation <install>
     Tutorials <tutorials>
+    Demos <demos>
     Modules <modules>
     Derivations <notebooks/Derivations.ipynb>
     GitHub <https://github.com/katiebreivik/LEGWORK>

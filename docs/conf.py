@@ -44,12 +44,14 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinxcontrib.bibtex',
     'sphinx.ext.intersphinx',
+    'sphinx_copybutton'
 ]
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'matplotlib': ('https://matplotlib.org/stable', None),
                        'seaborn': ('https://seaborn.pydata.org', None),
-                       'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}
+                       'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+                       'astropy': ('https://docs.astropy.org/en/stable', None)}
 
 bibtex_bibfiles = ['notebooks/refs.bib']
 
