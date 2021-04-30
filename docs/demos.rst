@@ -9,9 +9,9 @@ pull request <https://www.github.com/katiebreivik/LEGWORK/pulls>`_ and show off 
 .. raw:: html
 
     <div class="toms-nav-container" style="margin-bottom:30px;">
+        <div class="box" data-href="demos/The Role of Eccentricity.html">The Role of Eccentricity</div>
         <div class="box" data-href="demos/Compare Sensitivity Curves.html">Compare Sensitivity Curves</div>
         <div class="box" data-href="demos/Horizon Distance.html">Horizon Distance</div>
-        <div class="box" data-href="demos/The Role of Eccentricity.html">The Role of Eccentricity</div>
     </div>
 
 .. toctree::
@@ -19,6 +19,6 @@ pull request <https://www.github.com/katiebreivik/LEGWORK/pulls>`_ and show off 
     :maxdepth: 1
     :hidden:
 
+    The Role of Eccentricity <demos/The Role of Eccentricity.ipynb>
     Compare Sensitivity Curves <demos/Compare Sensitivity Curves.ipynb>
     Horizon Distance <demos/Horizon Distance.ipynb>
-    The Role of Eccentricity <demos/The Role of Eccentricity.ipynb>
