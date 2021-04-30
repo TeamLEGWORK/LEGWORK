@@ -16,3 +16,7 @@ This log keeps track of the changes implemented in each version of LEGWORK.
     - Merged sources are ignored in other computations (e.g. strain and SNR)
 - Add ``ret_snr2_by_harmonic`` to eccentric snr functions to allow the user to get the SNR at each harmonic separately instead of the total
 - Add minor fixes to snr for evolving sources for when sources are closes to merging
+
+## 0.0.4
+*TW, 30/04/21 (so far)*
+- Change visualisation module to be more flexible with **kwargs (allow any for dist plot and add linewidth to sensitivity curve function)
