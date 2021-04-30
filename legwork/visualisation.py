@@ -118,13 +118,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None,
 
     # update the values with those supplied
     for key, value in kwargs.items():
-        if key in plot_args:
-            plot_args[key] = value
-        else:
-            # warn user if they give an invalid kwarg
-            print("Warning: keyword argument `{}`".format(key),
-                  "not recognised for disttype `{}`".format(disttype),
-                  "and will be ignored")
+        plot_args[key] = value
 
     # create whichever plot was requested
     if disttype == "hist":
@@ -246,13 +240,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 
     # update the values with those supplied
     for key, value in kwargs.items():
-        if key in plot_args:
-            plot_args[key] = value
-        else:
-            # warn user if they give an invalid kwarg
-            print("Warning: keyword argument `{}`".format(key),
-                  "not recognised for disttype `{}`".format(disttype),
-                  "and will be ignored")
+        plot_args[key] = value
 
     # create whichever plot was requested
     if disttype == "scatter":
