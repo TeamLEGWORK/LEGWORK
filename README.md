@@ -1,5 +1,5 @@
 <p align="center">
-    <img width="500", src="docs/images/legwork.png">
+    <img width="500", src="https://raw.githubusercontent.com/katiebreivik/LEGWORK/main/docs/images/legwork.png">
 </p>
 
 <h2 align="center">
@@ -21,12 +21,24 @@
 
 # Installation
 ## Stable Version
-LEGWORK is *almost* available for installation on PyPI.
-Soon you will be able to install the latest stable version using ``pip`` as
+We recommend that you create a Conda environment for working with LEGWORK.
+You can do this by running
+
+    conda create --name legwork numpy scipy astropy numba matplotlib seaborn jupyter ipython
+
+And then activate the environment by running
+
+    conda activate legwork
+
+LEGWORK is available for installation on PyPI and you can install the latest
+stable version using ``pip`` (we recommend doing this within a conda environment
+as described above) with
 
     pip install legwork
 
-For now, you can download the development version on GitHub!
+If you see an error about llvmlite of the form "*ERROR: Cannot uninstall 'llvmlite'. It is a distutils installed project and thus we cannot accurately determine which files belong to it which would lead to only a partial uninstall.*" this is due to the nature of the llvmlite and numba packages and can be avoided by instead running
+
+    pip install legwork --ignore-installed llvmlite
 
 ## Development Version
 The latest development version is available directly from our
@@ -37,7 +49,7 @@ The latest development version is available directly from our
     pip install .
 
 # Documentation
-You can find our documention [here](https://legwork.readthedocs.io/en/latest/)
+You can find our documentation [here](https://legwork.readthedocs.io/en/latest/)
 and explore various tutorials as well details on every module and function.
 
 # Development

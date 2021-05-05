@@ -1,3 +1,4 @@
+from legwork import evol
 import numpy as np
 import legwork.snr as snr
 import legwork.source as source
@@ -10,6 +11,39 @@ from astropy import units as u
 
 class Test(unittest.TestCase):
     """Tests that the code is functioning properly"""
+
+    def test_evolution_functions(self):
+        """Test that evolving sources works as expected"""
+        n_values = 50
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        ecc = np.linspace(0.0, 0.4, n_values)
+
+        # compare snr calculated directly with through Source
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist, interpolate_g=False,
+                                interpolate_sc=False)
+
+        # calculate the merger times
+        t_merge = sources.get_merger_time()
+
+        # create a new class after evolving every source for 10 years
+        evolved_sources = sources.evolve_sources(10 * u.yr,
+                                                 create_new_class=True)
+
+        # evolve one of the evolved sources for a little more time
+        t_evol = np.zeros(n_values) * u.yr
+        t_evol[0] = 1 * u.yr
+        evolved_sources.evolve_sources(t_evol)
+
+        # ensure that merger times have been updated correctly
+        final_merger_times = t_merge - (10 * u.yr)
+        final_merger_times[0] -= 1 * u.yr
+        final_merger_times[final_merger_times < 0 * u.yr] = 0 * u.yr
+        self.assertTrue(np.allclose(final_merger_times,
+                                    evolved_sources.t_merge))
 
     def test_source_snr(self):
         """check that source calculates snr in correct way"""

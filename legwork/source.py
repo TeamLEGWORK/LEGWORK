@@ -4,7 +4,7 @@ import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
 
-from legwork import utils, strain, lisa
+from legwork import utils, strain, psd, evol
 import legwork.snr as sn
 import legwork.visualisation as vis
 
@@ -64,7 +64,7 @@ class Source():
 
     sc_params : `dict`
         Parameters for interpolated sensitivity curve. Include any of ``t_obs``
-        , ``L``, ``fstar``, ``approximate_R`` and ``include_confusion_noise``.
+        , ``L``, ``approximate_R`` and ``include_confusion_noise``.
         Default values are: 4 years, 2.5e9, 19.09e-3, False and True. This is
         ignored if ``interpolate_sc`` is False.
 
@@ -136,11 +136,14 @@ class Source():
         self.f_orb = f_orb
         self.a = a
         self.n_proc = n_proc
+        self.t_merge = None
         self.snr = None
         self.max_snr_harmonic = None
         self.n_sources = len(m_1)
         self.interpolate_sc = interpolate_sc
         self._sc_params = sc_params
+
+        self.merged = np.repeat(False, self.n_sources)
 
         self.update_gw_lum_tol(gw_lum_tol)
         self.set_g(interpolate_g)
@@ -268,9 +271,9 @@ class Source():
         if self.interpolate_sc:
             # update the default settings with current params
             default_params = {
+                "instrument": "LISA",
                 "t_obs": 4 * u.yr,
                 "L": 2.5e9,
-                "fstar": 19.09e-3,
                 "approximate_R": False,
                 "include_confusion_noise": True
             }
@@ -278,7 +281,7 @@ class Source():
 
             # get values
             frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
-            sc = lisa.power_spectral_density(frequency_range, **default_params)
+            sc = psd.power_spectral_density(frequency_range, **default_params)
 
             # interpolate
             interp_sc = interp1d(frequency_range, sc, bounds_error=False,
@@ -349,7 +352,9 @@ class Source():
         return np.logical_and(circular_mask, stat_mask)
 
     def get_h_0_n(self, harmonics, which_sources=None):
-        """Computes the strain for all binaries for the given ``harmonics``
+        """Computes the strain for binaries for the given ``harmonics``. Use
+        ``which_sources`` to select a subset of the sources. Merged sources
+        are set to have 0.0 strain.
 
         Parameters
         ----------
@@ -367,16 +372,30 @@ class Source():
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
-        return strain.h_0_n(m_c=self.m_c[which_sources],
-                            f_orb=self.f_orb[which_sources],
-                            ecc=self.ecc[which_sources],
-                            n=harmonics,
-                            dist=self.dist[which_sources],
-                            interpolated_g=self.g)[:, 0, :]
+
+        # by default set all strains to zero
+        n_harmonics = len(harmonics) if not isinstance(harmonics, int) else 1
+        h_0_n = np.zeros((self.n_sources, n_harmonics))
+
+        # find a mask for the inspiralling sources (exclude merged)
+        insp_sources = np.logical_and(np.logical_not(self.merged),
+                                      which_sources)
+
+        # calculate strain for these values
+        h_0_n[insp_sources, :] = strain.h_0_n(m_c=self.m_c[insp_sources],
+                                              f_orb=self.f_orb[insp_sources],
+                                              ecc=self.ecc[insp_sources],
+                                              n=harmonics,
+                                              dist=self.dist[insp_sources],
+                                              interpolated_g=self.g)[:, 0, :]
+
+        # return all sources, not just inpsiralling ones
+        return h_0_n[which_sources, :]
 
     def get_h_c_n(self, harmonics, which_sources=None):
-        """Computes the characteristic strain for all binaries
-        for the given ``harmonics``
+        """Computes the characteristic strain for binaries for the given
+        ``harmonics``. Use ``which_sources`` to select a subset of the sources.
+        Merged sources are set to have 0.0 characteristic strain.
 
         Parameters
         ----------
@@ -394,14 +413,28 @@ class Source():
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
-        return strain.h_c_n(m_c=self.m_c[which_sources],
-                            f_orb=self.f_orb[which_sources],
-                            ecc=self.ecc[which_sources],
-                            n=harmonics,
-                            dist=self.dist[which_sources],
-                            interpolated_g=self.g)[:, 0, :]
 
-    def get_snr(self, t_obs=4 * u.yr, n_step=100, verbose=False):
+        # by default set all strains to zero
+        n_harmonics = len(harmonics) if not isinstance(harmonics, int) else 1
+        h_c_n = np.zeros((self.n_sources, n_harmonics))
+
+        # find a mask for the inspiralling sources (exclude merged)
+        insp_sources = np.logical_and(np.logical_not(self.merged),
+                                      which_sources)
+
+        # calculate strain for these values
+        h_c_n[insp_sources, :] = strain.h_c_n(m_c=self.m_c[insp_sources],
+                                              f_orb=self.f_orb[insp_sources],
+                                              ecc=self.ecc[insp_sources],
+                                              n=harmonics,
+                                              dist=self.dist[insp_sources],
+                                              interpolated_g=self.g)[:, 0, :]
+
+        # return all sources, not just inpsiralling ones
+        return h_c_n[which_sources, :]
+
+    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None,
+                n_step=100, verbose=False):
         """Computes the SNR for a generic binary. Also records the harmonic
         with maximum SNR for each binary in ``self.max_snr_harmonic``.
 
@@ -409,6 +442,14 @@ class Source():
         ----------
         t_obs : `array`
             Observation duration (default: 4 years)
+
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be
+            supplied.
+
+        custom_psd : `function`
+            Custom function for computing the PSD. Must take the same arguments
+            as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
         n_step : `int`
             Number of time steps during observation duration
@@ -421,15 +462,22 @@ class Source():
         SNR : `array`
             The signal-to-noise ratio
         """
-        if self._sc_params is not None:     # pragma: no cover
-            sc_t_obs = t_obs
+        # if the user interpolated a sensitivity curve
+        if self.interpolate_sc and (self._sc_params
+                                    is not None):     # pragma: no cover
             if "t_obs" in self._sc_params.keys():
                 sc_t_obs = self._sc_params["t_obs"]
+            else:
+                # default is 4 years if none passed
+                sc_t_obs = 4 * u.yr
+
+            # make sure the observation time matches
             if t_obs != sc_t_obs:
                 print("Warning: Current `sc_params` uses t_obs =",
                       "{} but this function".format(self._sc_params["t_obs"]),
                       "was passed t_obs = {}. Update your".format(t_obs),
-                      "sc_params to match with Source.update_sc_params()!")
+                      "sc_params with Source.update_sc_params() to make sure",
+                      "your interpolated curve matches!")
 
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
@@ -443,6 +491,8 @@ class Source():
                 n_stat = len(snr[stat_mask])
                 print("\t{} sources are stationary".format(n_stat))
             snr[stat_mask] = self.get_snr_stationary(t_obs=t_obs,
+                                                     instrument=instrument,
+                                                     custom_psd=custom_psd,
                                                      which_sources=stat_mask,
                                                      verbose=verbose)
         if evol_mask.any():
@@ -450,19 +500,29 @@ class Source():
                 n_evol = len(snr[evol_mask])
                 print("\t{} sources are evolving".format(n_evol))
             snr[evol_mask] = self.get_snr_evolving(t_obs=t_obs,
+                                                   instrument=instrument,
+                                                   custom_psd=custom_psd,
                                                    which_sources=evol_mask,
                                                    n_step=n_step,
                                                    verbose=verbose)
         return snr
 
-    def get_snr_stationary(self, t_obs=4 * u.yr, which_sources=None,
-                           verbose=False):
+    def get_snr_stationary(self, t_obs=4 * u.yr, instrument="LISA",
+                           custom_psd=None, which_sources=None, verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Parameters
         ----------
         t_obs : `array`
             Observation duration (default: 4 years)
+
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be
+            supplied.
+
+        custom_psd : `function`
+            Custom function for computing the PSD. Must take the same arguments
+            as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
         which_sources : `bool/array`
             Mask on which sources to consider stationary and calculate
@@ -478,66 +538,79 @@ class Source():
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        insp_sources = np.logical_and(which_sources,
+                                      np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
-        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
-        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
+        e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
+        c_mask = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
 
         # default to n = 2 for max snr harmonic
         msh = np.repeat(2, self.n_sources)
 
         # only compute snr if there is at least one binary in mask
-        if ind_circ.any():
+        if c_mask.any():
             if verbose:
                 print("\t\t{} sources are stationary and circular".format(
-                    len(snr[ind_circ])))
-            snr[ind_circ] = sn.snr_circ_stationary(m_c=self.m_c[ind_circ],
-                                                   f_orb=self.f_orb[ind_circ],
-                                                   dist=self.dist[ind_circ],
-                                                   t_obs=t_obs,
-                                                   interpolated_g=self.g,
-                                                   interpolated_sc=self.sc)
-        if ind_ecc.any():
+                    len(snr[c_mask])))
+            snr[c_mask] = sn.snr_circ_stationary(m_c=self.m_c[c_mask],
+                                                 f_orb=self.f_orb[c_mask],
+                                                 dist=self.dist[c_mask],
+                                                 t_obs=t_obs,
+                                                 interpolated_g=self.g,
+                                                 interpolated_sc=self.sc,
+                                                 instrument=instrument,
+                                                 custom_psd=custom_psd,)
+        if e_mask.any():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
-                    len(snr[ind_ecc])))
+                    len(snr[e_mask])))
             harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(harmonics_required >= lower,
-                                           harmonics_required < upper)
-                match = np.logical_and(harm_mask, ind_ecc)
+                harm_mask = np.logical_and(harmonics_required > lower,
+                                           harmonics_required <= upper)
+                match = np.logical_and(harm_mask, e_mask)
                 if match.any():
-                    hr = upper - 1
-
                     snr_msh = sn.snr_ecc_stationary(m_c=self.m_c[match],
                                                     f_orb=self.f_orb[match],
                                                     ecc=self.ecc[match],
                                                     dist=self.dist[match],
                                                     t_obs=t_obs,
-                                                    harmonics_required=hr,
+                                                    harmonics_required=upper,
                                                     interpolated_g=self.g,
                                                     interpolated_sc=self.sc,
-                                                    ret_max_snr_harmonic=True)
+                                                    ret_max_snr_harmonic=True,
+                                                    instrument=instrument,
+                                                    custom_psd=custom_psd,)
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
-        self.max_snr_harmonic[which_sources] = msh[which_sources]
+        self.max_snr_harmonic[insp_sources] = msh[insp_sources]
 
         if self.snr is None:
             self.snr = np.zeros(self.n_sources)
-        self.snr[which_sources] = snr[which_sources]
+        self.snr[insp_sources] = snr[insp_sources]
 
         return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs, n_step=100, which_sources=None,
-                         verbose=False):
+    def get_snr_evolving(self, t_obs, instrument="LISA", custom_psd=None,
+                         n_step=100, which_sources=None, verbose=False):
         """Computes the SNR assuming an evolving binary
 
         Parameters
         ----------
         t_obs : `array`
             Observation duration (default: 4 years)
+
+        instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be
+            supplied.
+
+        custom_psd : `function`
+            Custom function for computing the PSD. Must take the same arguments
+            as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
         n_step : `int`
             Number of time steps during observation duration
@@ -558,60 +631,206 @@ class Source():
 
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
-        ind_ecc = np.logical_and(self.ecc > self.ecc_tol, which_sources)
-        ind_circ = np.logical_and(self.ecc <= self.ecc_tol, which_sources)
+
+        insp_sources = np.logical_and(which_sources,
+                                      np.logical_not(self.merged))
+        e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
+        c_mask = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
 
         # default to n = 2 for max snr harmonic
         msh = np.repeat(2, self.n_sources)
 
-        if ind_circ.any():
+        if c_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and circular".format(
-                    len(snr[ind_circ])))
-            snr[ind_circ] = sn.snr_circ_evolving(m_1=self.m_1[ind_circ],
-                                                 m_2=self.m_2[ind_circ],
-                                                 f_orb_i=self.f_orb[ind_circ],
-                                                 dist=self.dist[ind_circ],
-                                                 t_obs=t_obs,
-                                                 n_step=n_step,
-                                                 interpolated_g=self.g,
-                                                 interpolated_sc=self.sc)
-        if ind_ecc.any():
+                    len(snr[c_mask])))
+            t_merge = None if self.t_merge is None else self.t_merge[c_mask]
+            snr[c_mask] = sn.snr_circ_evolving(m_1=self.m_1[c_mask],
+                                               m_2=self.m_2[c_mask],
+                                               f_orb_i=self.f_orb[c_mask],
+                                               dist=self.dist[c_mask],
+                                               t_obs=t_obs,
+                                               n_step=n_step,
+                                               t_merge=t_merge,
+                                               interpolated_g=self.g,
+                                               interpolated_sc=self.sc,
+                                               instrument=instrument,
+                                               custom_psd=custom_psd)
+        if e_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
-                    len(snr[ind_ecc])))
+                    len(snr[e_mask])))
             harmonics_required = self.harmonics_required(self.ecc)
             harmonic_groups = [(1, 10), (10, 100), (100, 1000), (1000, 10000)]
             for lower, upper in harmonic_groups:
-                harm_mask = np.logical_and(harmonics_required >= lower,
-                                           harmonics_required < upper)
-                match = np.logical_and(harm_mask, ind_ecc)
+                harm_mask = np.logical_and(harmonics_required > lower,
+                                           harmonics_required <= upper)
+                match = np.logical_and(harm_mask, e_mask)
                 if match.any():
-                    hr = upper - 1
-
+                    t_merge = None if self.t_merge is None\
+                        else self.t_merge[match]
                     snr_msh = sn.snr_ecc_evolving(m_1=self.m_1[match],
                                                   m_2=self.m_2[match],
                                                   f_orb_i=self.f_orb[match],
                                                   dist=self.dist[match],
                                                   ecc=self.ecc[match],
-                                                  harmonics_required=hr,
+                                                  harmonics_required=upper,
                                                   t_obs=t_obs,
                                                   n_step=n_step,
                                                   interpolated_g=self.g,
                                                   interpolated_sc=self.sc,
                                                   n_proc=self.n_proc,
-                                                  ret_max_snr_harmonic=True)
+                                                  ret_max_snr_harmonic=True,
+                                                  instrument=instrument,
+                                                  custom_psd=custom_psd)
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
-        self.max_snr_harmonic[which_sources] = msh[which_sources]
+        self.max_snr_harmonic[insp_sources] = msh[insp_sources]
 
         if self.snr is None:
             self.snr = np.zeros(self.n_sources)
-        self.snr[which_sources] = snr[which_sources]
+        self.snr[insp_sources] = snr[insp_sources]
 
         return snr[which_sources]
+
+    def get_merger_time(self, save_in_class=True, which_sources=None):
+        """Get the merger time for each source. Set ``save_in_class`` to true
+        to save the values as an instance variable in the class. Use
+        ``which_sources`` to select a subset of the sources in the class. Note
+        that if ``save_in_class`` is set to ``True``, ``which_sources`` will be
+        ignored.
+
+        Parameters
+        ----------
+        save_in_class : `bool`, optional
+            Whether the save the result into the class as an instance variable,
+            by default True
+        which_sources : `bool/array`, optional
+            A mask for the subset of sources for which to calculate the merger
+            time, by default all sources (None)
+
+        Returns
+        -------
+        t_merge : `float/array`
+            Merger times
+        """
+        # if no subset or saving times, select all sources
+        if save_in_class or which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
+        t_merge = np.zeros(len(which_sources)) * u.Gyr
+
+        # only compute merger times for inspiralling binaries
+        insp = np.logical_and(which_sources,
+                              np.logical_not(self.merged))
+        t_merge[insp] = evol.get_t_merge_ecc(ecc_i=self.ecc[insp],
+                                             f_orb_i=self.f_orb[insp],
+                                             m_1=self.m_1[insp],
+                                             m_2=self.m_2[insp])
+        if save_in_class:
+            self.t_merge = t_merge
+
+        # only return subset of sources
+        return t_merge[which_sources]
+
+    def evolve_sources(self, t_evol, create_new_class=False):
+        """Evolve sources forward in time for ``t_evol`` amount of time. If
+        ``create_new_class`` is ``True`` then save the updated sources in a new
+        Source class, otherwise, update the values in this class.
+
+        Parameters
+        ----------
+        t_evol : `float/array`
+            Amount of time to evolve sources. Either a single value for all
+            sources or an array of values corresponding to each source.
+        create_new_class : bool, optional
+            Whether to save the evolved binaries in a new class or not. If not
+            simply update the current class, by default False.
+
+        Returns
+        -------
+        evolved_sources : `Source`
+            The new class with evolved sources, only returned if
+            ``create_new_class`` is ``True``.
+        """
+        # separate out the exactly circular sources from eccentric ones
+        c_mask = self.ecc == 0.0
+        e_mask = np.logical_not(c_mask)
+
+        # split up the evolution times if need be
+        if isinstance(t_evol.value, (int, float)):
+            t_evol_circ = t_evol
+            t_evol_ecc = t_evol
+        else:
+            t_evol_circ = t_evol[c_mask]
+            t_evol_ecc = t_evol[e_mask]
+
+        # set up the evolved eccentricity and frequency arrays
+        n_step = 2
+        ecc_evol = np.zeros(self.n_sources)
+        f_orb_evol = np.zeros(self.n_sources) * u.Hz
+
+        # calculate the evolved values for circular binaries
+        if c_mask.any():
+            evolution = evol.evol_circ(t_evol=t_evol_circ,
+                                       n_step=n_step,
+                                       m_1=self.m_1[c_mask],
+                                       m_2=self.m_2[c_mask],
+                                       f_orb_i=self.f_orb[c_mask],
+                                       output_vars="f_orb")
+            f_orb_evol[c_mask] = evolution[:, -1]
+
+        # calculate the evolved values for eccentric binaries
+        if e_mask.any():
+            evolution = evol.evol_ecc(t_evol=t_evol_ecc,
+                                      n_step=n_step,
+                                      m_1=self.m_1[e_mask],
+                                      m_2=self.m_2[e_mask],
+                                      f_orb_i=self.f_orb[e_mask],
+                                      ecc_i=self.ecc[e_mask],
+                                      output_vars=["ecc", "f_orb"])
+
+            # drop everything except the final evolved value
+            ecc_evol[e_mask] = evolution[0][:, -1]
+            f_orb_evol[e_mask] = evolution[1][:, -1]
+
+        # record which sources merged during evolution
+        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1e2* u.Hz)
+
+        if create_new_class:
+            # create new source with same attributes (but evolved ecc/f_orb)
+            evolved_sources = Source(m_1=self.m_1, m_2=self.m_2, ecc=ecc_evol,
+                                     dist=self.dist, n_proc=self.n_proc,
+                                     f_orb=f_orb_evol,
+                                     gw_lum_tol=self._gw_lum_tol,
+                                     stat_tol=self.stat_tol,
+                                     interpolate_g=False, interpolate_sc=False,
+                                     sc_params=self._sc_params)
+
+            # copy over interpolated g and sc
+            evolved_sources.g = self.g
+            evolved_sources.interpolate_sc = True
+            evolved_sources.sc = self.sc
+            evolved_sources.t_merge = None
+
+            if self.t_merge is not None:
+                evolved_sources.t_merge = np.maximum(0 * u.Gyr,
+                                                     self.t_merge - t_evol)
+
+            # record which sources have merged
+            evolved_sources.merged = merged
+
+            # return the new source class
+            return evolved_sources
+        else:
+            # otherwise just update the existing class with evolution
+            self.ecc = ecc_evol
+            self.f_orb = f_orb_evol
+            self.merged = merged
+
+            if self.t_merge is not None:
+                self.t_merge = np.maximum(0 * u.Gyr, self.t_merge - t_evol)
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
                               **kwargs):  # pragma: no cover
@@ -785,15 +1004,21 @@ class Source():
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs=4*u.yr, verbose=False):
-        self.snr = self.get_snr_stationary(t_obs=t_obs, verbose=verbose)
+    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+                verbose=False):
+        self.snr = self.get_snr_stationary(t_obs=t_obs, instrument=instrument,
+                                           custom_psd=custom_psd,
+                                           verbose=verbose)
         return self.snr
 
 
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
-    def get_snr(self, t_obs=4*u.yr, n_step=100, verbose=False):
+    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+                n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
+                                         instrument=instrument,
+                                         custom_psd=custom_psd,
                                          verbose=verbose)
         return self.snr

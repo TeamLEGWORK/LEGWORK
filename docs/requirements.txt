@@ -6,3 +6,4 @@ sphinx_automodapi
 sphinxcontrib.bibtex
 IPython
 schwimmbad
+sphinx_copybutton
