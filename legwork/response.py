@@ -23,8 +23,8 @@ def D_plus_squared(theta, phi):
     """
 
     term_1 = 158 * np.cos(theta)**2
-    term_2 = 7 * np.cos(theta)**2
-    term_3 = -162 * np.sin(2 * phi) * (1 + np.cos(theta)**2)**2
+    term_2 = 7 * np.cos(theta)**4
+    term_3 = -162 * np.sin(2 * phi)**2 * (1 + np.cos(theta)**2)**2
     D_plus_2 = (3 / 2048) * (487 + term_1 + term_2 + term_3)
 
     return D_plus_2
