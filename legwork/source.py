@@ -473,11 +473,13 @@ class Source():
 
             # make sure the observation time matches
             if t_obs != sc_t_obs:
-                print("Warning: Current `sc_params` uses t_obs =",
-                      "{} but this function".format(self._sc_params["t_obs"]),
+                print("WARNING: Current `sc_params` uses t_obs =",
+                      "{} but this function".format(sc_t_obs),
                       "was passed t_obs = {}. Update your".format(t_obs),
                       "sc_params with Source.update_sc_params() to make sure",
-                      "your interpolated curve matches!")
+                      "your interpolated curve matches or don't use an",
+                      "interpolated sensitivity curve (set",
+                      "`interpolate_sc=False` when creating the class)!")
 
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
