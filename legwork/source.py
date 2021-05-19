@@ -278,7 +278,10 @@ class Source():
                 "include_confusion_noise": True
             }
             default_params.update(self._sc_params)
-            self.update_sc_params(default_params)
+
+            # if some parameters were excluded then put them in the sc_params
+            if default_params != self._sc_params:
+                self.update_sc_params(default_params)
 
             # get values
             frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
@@ -468,9 +471,9 @@ class Source():
             The signal-to-noise ratio
         """
         # if the user interpolated a sensitivity curve with different settings
-        if np.logical_and(self.interpolate_sc,    # pragma: no cover
-                          t_obs != self._sc_params["t_obs"] or
-                          instrument != self._sc_params["instrument"]):
+        if (self.interpolate_sc and self._sc_params is not None and
+                (t_obs != self._sc_params["t_obs"] or
+                 instrument != self._sc_params["instrument"])):   # pragma: no cover
 
             # re interpolate the sensitivity curve with new parameters
             if re_interpolate_sc:
