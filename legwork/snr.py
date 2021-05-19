@@ -32,10 +32,9 @@ def amplitude_modulation(theta, phi, psi, inc):
     modulation : `float/array`
         modulation to apply to strain from detector response
     """
-
     term1 = (1 + np.cos(inc) ** 2) ** 2 * utils.F_plus_squared(theta, phi, psi)
     term2 = 4 * np.cos(inc) ** 2 * utils.F_cross_squared(theta, phi, psi)
-    modulation = 0.5 * [term1 + term2]
+    modulation = 0.5 * (term1 + term2)
 
     return modulation
 
@@ -226,7 +225,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
     else:
         amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
-        snr_n_2 = ((amp_mod * h_f_src_ecc_2) / h_f_lisa_n_2).decompose()
+        snr_n_2 = ((h_f_src_ecc_2 * amp_mod[:, np.newaxis]) / h_f_lisa_n_2).decompose()
 
     if ret_snr2_by_harmonic:
         return snr_n_2
@@ -236,6 +235,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
 
     # calculate the signal-to-noise ratio
     snr = (np.sum(snr_n_2, axis=1)) ** 0.5
+
 
     return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
 
@@ -352,7 +352,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
         snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
     else:
         amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
-        snr = np.trapz(y=(h_c_n_2 * amp_mod) / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
+        snr = np.trapz(y=(h_c_n_2 * amp_mod[:, np.newaxis]) / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
 
     return snr.decompose()
 
@@ -476,7 +476,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
 
     # calculate the characteristic strain
     h_c_n_2 = strain.h_c_n(m_c=m_c, f_orb=f_orb_evol, ecc=e_evol, n=harms,
-                           dist=dist, interpolated_g=interpolated_g)**2
+                           dist=dist, interpolated_g=interpolated_g) ** 2
 
     # calculate the characteristic noise power
     if interpolated_sc is not None:
@@ -494,7 +494,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         snr_evol = h_c_n_2 / h_c_lisa_2
     else:
         amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
-        snr_evol = (h_c_n_2 * amp_mod) / h_c_lisa_2
+        snr_evol = (h_c_n_2 * amp_mod[:, np.newaxis, np.newaxis]) / h_c_lisa_2
 
     # integrate, sum and square root to get SNR
     # print(f_n_evol.diff(axis=1).shape)

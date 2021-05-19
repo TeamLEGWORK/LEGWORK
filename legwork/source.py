@@ -131,11 +131,11 @@ class Source():
 
         # ensure that if and of psi, inc, and position are supplied that
         # the other parameters are also supplied
-        if inc is not None and ((theta is None or phi is None) or
+        if inc is not None and ((theta is None or phi is None) and
                                 (ra is None or dec is None)):
             raise ValueError("If you specify the inclination, you must also specify a sky position.")
 
-        if psi is not None and ((theta is None or phi is None) or
+        if psi is not None and ((theta is None or phi is None) and
                                 (ra is None or dec is None)):
             raise ValueError("If you specify the polarization, you must also specify a sky position.")
 
