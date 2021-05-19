@@ -266,7 +266,7 @@ class Source():
         """Set Source sensitivity curve function
 
         If user wants to interpolate then perform interpolation of LISA
-        sensitivity curve using ``sn_params``. Otherwise just leave the
+        sensitivity curve using ``sc_params``. Otherwise just leave the
         function as None."""
         if self.interpolate_sc:
             # update the default settings with current params
@@ -278,6 +278,7 @@ class Source():
                 "include_confusion_noise": True
             }
             default_params.update(self._sc_params)
+            self.update_sc_params(default_params)
 
             # get values
             frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
@@ -434,7 +435,7 @@ class Source():
         return h_c_n[which_sources, :]
 
     def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None,
-                n_step=100, verbose=False):
+                n_step=100, verbose=False, re_interpolate_sc=True):
         """Computes the SNR for a generic binary. Also records the harmonic
         with maximum SNR for each binary in ``self.max_snr_harmonic``.
 
@@ -457,29 +458,35 @@ class Source():
         verbose : `boolean`
             Whether to print additional information to user
 
+        re_interpolate_sc : `boolean`
+            Whether to re-interpolate the sensitivity curve if the observation
+            time or instrument changes. If False, warning will instead be given
+
         Returns
         -------
         SNR : `array`
             The signal-to-noise ratio
         """
-        # if the user interpolated a sensitivity curve
-        if self.interpolate_sc and (self._sc_params
-                                    is not None):     # pragma: no cover
-            if "t_obs" in self._sc_params.keys():
-                sc_t_obs = self._sc_params["t_obs"]
-            else:
-                # default is 4 years if none passed
-                sc_t_obs = 4 * u.yr
+        # if the user interpolated a sensitivity curve with different settings
+        if np.logical_and(self.interpolate_sc,    # pragma: no cover
+                          t_obs != self._sc_params["t_obs"] or
+                          instrument != self._sc_params["instrument"]):
 
-            # make sure the observation time matches
-            if t_obs != sc_t_obs:
-                print("WARNING: Current `sc_params` uses t_obs =",
-                      "{} but this function".format(sc_t_obs),
-                      "was passed t_obs = {}. Update your".format(t_obs),
-                      "sc_params with Source.update_sc_params() to make sure",
-                      "your interpolated curve matches or don't use an",
-                      "interpolated sensitivity curve (set",
-                      "`interpolate_sc=False` when creating the class)!")
+            # re interpolate the sensitivity curve with new parameters
+            if re_interpolate_sc:
+                self._sc_params["t_obs"] = t_obs
+                self._sc_params["instrument"] = instrument
+
+                self.set_sc()
+
+            # otherwise warn the user that they are making a mistake
+            else:
+                print("WARNING: Current `sc_params` are different from what",
+                      "was passed to this function. Either set",
+                      "`re_interpolate_sc=True` to re-interpolate the",
+                      "sensitivity curve on the fly or update your",
+                      "`sc_params` with Source.update_sc_params() to make",
+                      "sure your interpolated curve matches")
 
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
