@@ -4,13 +4,46 @@ import numpy as np
 from legwork import strain, psd, utils, evol
 import astropy.units as u
 
-__all__ = ['snr_circ_stationary', 'snr_ecc_stationary', 'snr_circ_evolving',
-           'snr_ecc_evolving']
+__all__ = ['amplitude_modulation', 'snr_circ_stationary', 'snr_ecc_stationary',
+           'snr_circ_evolving', 'snr_ecc_evolving']
+
+
+def amplitude_modulation(theta, phi, psi, inc):
+    """Computes the modulation of the strain due to the
+    orbit averaged response of the detector to the position,
+    polarization, and inclination of the source
+
+    Parameters
+    ----------
+    theta : `float/array`
+        declination of the source
+
+    phi : `float/array`
+        right ascension of the source
+
+    psi : `float/array`
+        polarization of the source
+
+    inc : `float/array`
+        inclination of the source
+
+    Returns
+    -------
+    modulation : `float/array`
+        modulation to apply to strain from detector response
+    """
+
+    term1 = (1 + np.cos(inc) ** 2) ** 2 * utils.F_plus_squared(theta, phi, psi)
+    term2 = 4 * np.cos(inc) ** 2 * utils.F_cross_squared(theta, phi, psi)
+    modulation = 0.5 * [term1 + term2]
+
+    return modulation
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
                         interpolated_sc=None, instrument="LISA",
-                        custom_psd=None):
+                        custom_psd=None, theta=None, phi=None, psi=None,
+                        inc=None):
     """Computes SNR for circular and stationary sources
 
     Parameters
@@ -34,7 +67,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
-    interpolated_sn : `function`
+    interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that
         computes the LISA sensitivity curve. Default is None and uses exact
         values. Note: take care to ensure that your interpolated function has
@@ -48,6 +81,18 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
+    theta : `float/array`
+        declination of the source
+
+    phi : `float/array`
+        right ascension of the source
+
+    psi : `float/array`
+        polarization of the source
+
+    inc : `float/array`
+        inclination of the source
+
     Returns
     -------
     snr : `float/array`
@@ -57,7 +102,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
     # only need to compute n=2 harmonic for circular
     h_0_circ_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
                               ecc=np.zeros_like(f_orb).value, n=2, dist=dist,
-                              interpolated_g=interpolated_g).flatten()**2
+                              interpolated_g=interpolated_g).flatten() ** 2
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
     if interpolated_sc is not None:
@@ -65,8 +110,18 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
     else:
         h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs,
                                                 instrument=instrument,
-                                                custom_function=custom_psd)
-    snr = (h_f_src_circ_2 / h_f_lisa_2)**0.5
+                                                custom_function=custom_psd,
+                                                theta=theta, phi=phi, psi=psi)
+    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+        snr = (h_f_src_circ_2 / h_f_lisa_2) ** 0.5
+    elif (phi is not None) & (theta is not None):
+        if inc is None:
+            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
+        if psi is None:
+            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
+
+        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        snr = ((amp_mod * h_f_src_circ_2) / h_f_lisa_2) ** 0.5
 
     return snr.decompose()
 
@@ -74,7 +129,8 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
 def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
                        interpolated_g=None, interpolated_sc=None,
                        ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
-                       instrument="LISA", custom_psd=None):
+                       instrument="LISA", custom_psd=None, theta=None,
+                       phi=None, psi=None, inc=None):
     """Computes SNR for eccentric and stationary sources
 
     Parameters
@@ -104,7 +160,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
-    interpolated_sn : `function`
+    interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that
         computes the LISA sensitivity curve. Default is None and uses exact
         values. Note: take care to ensure that your interpolated function has
@@ -127,6 +183,18 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
+    theta : `float/array`
+        declination of the source
+
+    phi : `float/array`
+        right ascension of the source
+
+    psi : `float/array`
+        polarization of the source
+
+    inc : `float/array`
+        inclination of the source
+
     Returns
     -------
     snr : `float/array`
@@ -142,7 +210,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     # calculate source signal
     h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
                                ecc=ecc, n=n_range, dist=dist,
-                               interpolated_g=interpolated_g)**2
+                               interpolated_g=interpolated_g) ** 2
 
     # reshape the output since only one timestep
     h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), harmonics_required)
@@ -156,9 +224,19 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     else:
         h_f_lisa_n_2 = psd.power_spectral_density(f=f_n, t_obs=t_obs,
                                                   instrument=instrument,
-                                                  custom_function=custom_psd)
+                                                  custom_function=custom_psd,
+                                                  theta=theta, phi=phi, psi=psi)
 
-    snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
+    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+        snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
+    elif (phi is not None) & (theta is not None):
+        if inc is None:
+            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
+        if psi is None:
+            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
+
+        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        snr_n_2 = ((amp_mod * h_f_src_ecc_2) / h_f_lisa_n_2).decompose()
 
     if ret_snr2_by_harmonic:
         return snr_n_2
@@ -167,14 +245,15 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
 
     # calculate the signal-to-noise ratio
-    snr = (np.sum(snr_n_2, axis=1))**0.5
+    snr = (np.sum(snr_n_2, axis=1)) ** 0.5
 
     return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
 
 
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
                       interpolated_g=None, interpolated_sc=None,
-                      instrument="LISA", custom_psd=None):
+                      instrument="LISA", custom_psd=None, theta=None,
+                      phi=None, psi=None, inc=None):
     """Computes SNR for circular and stationary sources
 
     Parameters
@@ -207,7 +286,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
-    interpolated_sn : `function`
+    interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that
         computes the LISA sensitivity curve. Default is None and uses exact
         values. Note: take care to ensure that your interpolated function has
@@ -220,6 +299,18 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
     custom_psd : `function`
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+
+    theta : `float/array`
+        declination of the source
+
+    phi : `float/array`
+        right ascension of the source
+
+    psi : `float/array`
+        polarization of the source
+
+    inc : `float/array`
+        inclination of the source
 
     Returns
     -------
@@ -253,7 +344,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
                            ecc=np.zeros_like(f_orb_evol).value,
                            n=2,
                            dist=dist,
-                           interpolated_g=interpolated_g)**2
+                           interpolated_g=interpolated_g) ** 2
     h_c_n_2 = h_c_n_2.reshape(len(m_c), n_step)
 
     # calculate the characteristic noise power
@@ -263,10 +354,20 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
     else:
         h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs,
                                                 instrument=instrument,
-                                                custom_function=custom_psd)
-    h_c_lisa_2 = (2 * f_orb_evol)**2 * h_f_lisa_2
+                                                custom_function=custom_psd,
+                                                theta=theta, phi=phi, psi=psi)
+    h_c_lisa_2 = (2 * f_orb_evol) ** 2 * h_f_lisa_2
 
-    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1)**0.5
+    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+        snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
+    elif (phi is not None) & (theta is not None):
+        if inc is None:
+            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
+        if psi is None:
+            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
+
+        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        snr = np.trapz(y=(h_c_n_2 * amp_mod) / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
 
     return snr.decompose()
 
@@ -275,8 +376,8 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
                      n_step, t_merge=None, interpolated_g=None,
                      interpolated_sc=None, n_proc=1,
                      ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
-                     instrument="LISA",
-                     custom_psd=None):
+                     instrument="LISA", custom_psd=None, theta=None,
+                     phi=None, psi=None, inc=None):
     """Computes SNR for eccentric and evolving sources.
 
     Note that this function will not work for exactly circular (ecc = 0.0)
@@ -318,7 +419,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         interp2d returned functions (and thus unsorts).
         Default is None and uses exact g(n,e) in this case.
 
-    interpolated_sn : `function`
+    interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that
         computes the LISA sensitivity curve. Default is None and uses exact
         values. Note: take care to ensure that your interpolated function has
@@ -345,6 +446,18 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
+    theta : `float/array`
+        declination of the source
+
+    phi : `float/array`
+        right ascension of the source
+
+    psi : `float/array`
+        polarization of the source
+
+    inc : `float/array`
+        inclination of the source
+
     Returns
     -------
     snr : `float/array`
@@ -359,7 +472,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     # calculate minimum of observation time and merger time
     # if t_merge is None:
     t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
-                                    f_orb_i=f_orb_i, ecc_i=ecc)
+                                   f_orb_i=f_orb_i, ecc_i=ecc)
     t_evol = np.minimum(t_merge, t_obs).to(u.s)
 
     # get eccentricity and f_orb evolutions
@@ -368,7 +481,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
                                        n_proc=n_proc)
 
     maxes = np.where(np.logical_and(e_evol == 0.0, f_orb_evol == 1e2 * u.Hz),
-                      -1 * u.Hz, f_orb_evol).max(axis=1)
+                     -1 * u.Hz, f_orb_evol).max(axis=1)
     for source in range(len(f_orb_evol)):
         f_orb_evol[source][f_orb_evol[source] == 1e2 * u.Hz] = maxes[source]
 
@@ -387,11 +500,21 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         h_f_lisa = psd.power_spectral_density(f=f_n_evol.flatten(),
                                               t_obs=t_obs,
                                               instrument=instrument,
-                                              custom_function=custom_psd)
+                                              custom_function=custom_psd,
+                                              theta=theta, phi=phi, psi=psi)
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
-    h_c_lisa_2 = f_n_evol**2 * h_f_lisa
+    h_c_lisa_2 = f_n_evol ** 2 * h_f_lisa
 
-    snr_evol = h_c_n_2 / h_c_lisa_2
+    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+        snr_evol = h_c_n_2 / h_c_lisa_2
+    elif (phi is not None) & (theta is not None):
+        if inc is None:
+            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
+        if psi is None:
+            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
+
+        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        snr_evol = (h_c_n_2 * amp_mod) / h_c_lisa_2
 
     # integrate, sum and square root to get SNR
     # print(f_n_evol.diff(axis=1).shape)

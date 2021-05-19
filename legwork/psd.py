@@ -6,6 +6,7 @@ import astropy.units as u
 import astropy.constants as const
 from scipy.interpolate import splev, splrep
 from importlib import resources
+from legwork.utils import F_plus_squared
 
 __all__ = ['load_response_function', 'approximate_response_function',
            'power_spectral_density', 'lisa_psd', 'tianqin_psd']
@@ -35,7 +36,7 @@ def load_response_function(f, fstar=19.09e-3):
     try:
         with resources.path(package="legwork", resource="R.npy") as path:
             f_R, R = np.load(path)
-    except FileExistsError:                             # pragma: no cover
+    except FileExistsError:  # pragma: no cover
         print("WARNING: Can't find response function file, \
                         using approximation instead")
         return approximate_response_function(f, fstar)
@@ -66,11 +67,12 @@ def approximate_response_function(f, fstar):
     R : `float/array`
         response function at each frequency
     """
-    return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
+    return (3 / 10) / (1 + 0.6 * (f / fstar) ** 2)
 
 
-def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
-             include_confusion_noise=True):
+def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
+             include_confusion_noise=True, theta=None, phi=None,
+             psi=None):
     """Calculates the effective LISA power spectral density sensitivity
     curve
 
@@ -94,6 +96,15 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
     include_confusion_noise  : `boolean`
         Whether to include the Galactic confusion noise (default: yes)
 
+    theta : `float/array`
+        declination of the source (default: None)
+
+    phi : `float/array`
+        right ascension of the source (default: None)
+
+    psi : `float/array`
+        polarization of the source (default: None)
+
     Returns
     -------
     Sn : `float/array`
@@ -111,11 +122,11 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
 
     # single link optical metrology noise (Robson+ Eq. 10)
     def Poms(f):
-        return (1.5e-11)**2 * (1 + (2e-3 / f)**4)
+        return (1.5e-11) ** 2 * (1 + (2e-3 / f) ** 4)
 
     # single test mass acceleration noise (Robson+ Eq. 11)
     def Pacc(f):
-        return (3e-15)**2 * (1 + (0.4e-3 / f)**2) * (1 + (f / (8e-3))**4)
+        return (3e-15) ** 2 * (1 + (0.4e-3 / f) ** 2) * (1 + (f / (8e-3)) ** 4)
 
     # galactic confusion noise (Robson+ Eq. 14)
     def Sc(f, t_obs):
@@ -131,10 +142,10 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
         # find index of the closest length to inputted observation time
         ind = np.abs(t_obs - lengths).argmin()
 
-        return 9e-45 * f**(-7/3.) \
-            * np.exp(-f**(alpha[ind]) + beta[ind] * f
-                     * np.sin(kappa[ind] * f)) \
-            * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
+        return 9e-45 * f ** (-7 / 3.) \
+               * np.exp(-f ** (alpha[ind]) + beta[ind] * f
+                        * np.sin(kappa[ind] * f)) \
+               * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
 
     # calculate response function (either exactly or with approximation)
     fstar = (const.c / (2 * np.pi * L * u.m)).to(u.Hz).value
@@ -143,6 +154,15 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
     else:
         R = load_response_function(f, fstar)
 
+    # if sky position and polarization are specified, include them
+    # instead of the averaged response; to do this, we need to undo
+    # the 10/3 averaging term
+    if (theta is not None) & (phi is not None) & (psi is not None):
+        R = 3 / 10 * F_plus_squared(theta, phi, psi)
+    elif (theta is not None) & (phi is not None) & (psi is None):
+        psi = np.random.uniform(0, 2 * np.pi)
+        R = 3 / 10 * F_plus_squared(theta, phi, psi)
+
     # work out the confusion noise or just set to 0
     if include_confusion_noise:
         cn = Sc(f, t_obs)
@@ -150,7 +170,7 @@ def lisa_psd(f, t_obs=4*u.yr, L=2.5e9, approximate_R=False,
         cn = np.zeros(len(f)) if isinstance(f, (list, np.ndarray)) else 0.0
 
     # calculate sensitivity curve
-    psd = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
+    psd = (1 / (L ** 2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f) ** 4)) / R + cn
 
     # replace values for bad frequencies (set to extremely high value)
     psd = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), psd, np.inf)
@@ -188,17 +208,18 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
         Effective power strain spectral density
     """
     fstar = const.c / (2 * np.pi * L)
-    Sa = 1e-30 * u.m**2 * u.s**(-4) * u.Hz**(-1)
-    Sx = 1e-24 * u.m**2 * u.Hz**(-1)
-    psd = 1 / L**2 * (4 * Sa / (2 * np.pi * f)**4
-                      * (1 + (1e-4 * u.Hz / f)) + Sx) \
-        * (1 + 0.6 * (f / fstar)**2)
-    return psd.to(u.Hz**(-1))
+    Sa = 1e-30 * u.m ** 2 * u.s ** (-4) * u.Hz ** (-1)
+    Sx = 1e-24 * u.m ** 2 * u.Hz ** (-1)
+    psd = 1 / L ** 2 * (4 * Sa / (2 * np.pi * f) ** 4
+                        * (1 + (1e-4 * u.Hz / f)) + Sx) \
+          * (1 + 0.6 * (f / fstar) ** 2)
+    return psd.to(u.Hz ** (-1))
 
 
 def power_spectral_density(f, instrument="LISA", custom_function=None,
-                           t_obs=4*u.yr, L=None, approximate_R=False,
-                           include_confusion_noise=True):
+                           t_obs=4 * u.yr, L=None, approximate_R=False,
+                           include_confusion_noise=True, theta=None,
+                           phi=None, psi=None):
     """Calculates the effective power spectral density for all instruments.
 
     Parameters
@@ -226,6 +247,15 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
     include_confusion_noise  : `boolean`
         Whether to include the Galactic confusion noise (default: yes)
 
+    theta : `float/array`
+        declination of the source (default: None)
+
+    phi : `float/array`
+        right ascension of the source (default: None)
+
+    psi : `float/array`
+        polarization of the source (default: None)
+
     Returns
     -------
     psd : `float/array`
@@ -235,7 +265,8 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
         if L is None:
             L = 2.5e9
         psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
-                       include_confusion_noise=include_confusion_noise)
+                       include_confusion_noise=include_confusion_noise,
+                       theta=theta, phi=phi, psi=psi)
     elif instrument == "TianQin":
         if L is None:
             L = np.sqrt(3) * 1e5 * u.km
