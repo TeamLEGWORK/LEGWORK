@@ -1,4 +1,6 @@
 """A collection of classes for analysing gravitational wave sources"""
+import warnings
+
 from astropy import units as u
 import numpy as np
 from importlib import resources
@@ -42,6 +44,26 @@ class Source():
     a : `float/array`
         Semi-major axis (either `a` or `f_orb` must be supplied). Must have
         astropy units of length.
+
+    phi : `float/array`
+        azimuth of the source in the spherical projection on the sky. Must
+        have astropy angular units
+
+    theta : `float/array`
+        inclination from the pole of the source in the spherical
+        projection on the sky. Must have astropy angular units
+
+    ra : `float/array`
+        right ascension of the source. Must have astropy angular units
+
+    dec `float/array`
+        declination ascension of the source. Must have astropy angular units
+
+    psi : `float/array`
+        GW polarization of the source. Must have astropy angular units
+
+    inc : `float/array`
+        inclination of the source. Must have astropy angular units
 
     gw_lum_tol : `float`
         Allowed error on the GW luminosity when calculating snrs.
@@ -92,17 +114,42 @@ class Source():
     ------
     ValueError
         If both ``f_orb`` and ``a`` are missing.
+        If only part of the position, inclination, and polarization are supplied.
         If array-like parameters don't have the same length.
 
     AssertionError
         If a parameter is missing units
     """
+
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None,
+                 theta=None, phi=None, ra=None, dec=None, psi=None, inc=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
             raise ValueError("Either `f_orb` or `a` must be specified")
+
+        # ensure that if and of psi, inc, and position are supplied that
+        # the other parameters are also supplied
+        if inc is not None and ((theta is None or phi is None) or
+                                (ra is None or dec is None)):
+            raise ValueError("If you specify the inclination, you must also specify a sky position.")
+
+        if psi is not None and ((theta is None or phi is None) or
+                                (ra is None or dec is None)):
+            raise ValueError("If you specify the polarization, you must also specify a sky position.")
+
+        if (theta is not None and phi is not None) or (ra is not None and dec is not None):
+            if inc is None:
+                print("assume a randomly inclined source")
+                inc = np.arcsin(np.random.uniform(-1, 1, len(m_1)))
+            if psi is None:
+                print("assume a randomly inclined source")
+                psi = np.random.uniform(0, 2 * np.pi, len(m_1))
+
+        # convert ra/dec to spherical coordinates if needed
+        if (theta is None) and (phi is None) and (ra is not None) and (dec is not None):
+            theta, phi = utils.get_theta_phi(ra, dec)
 
         # calculate whichever one wasn't supplied
         f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb
@@ -113,8 +160,8 @@ class Source():
         unit_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a']
 
         for i in range(len(unit_args)):
-            assert(isinstance(unit_args[i], u.quantity.Quantity)), \
-                    "`{}` must have units".format(unit_args_str[i])
+            assert (isinstance(unit_args[i], u.quantity.Quantity)), \
+                "`{}` must have units".format(unit_args_str[i])
 
         # make sure the inputs are arrays
         fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, a, ecc)
@@ -135,6 +182,10 @@ class Source():
         self.stat_tol = stat_tol
         self.f_orb = f_orb
         self.a = a
+        self.theta = theta
+        self.phi = phi
+        self.inc = inc
+        self.psi = psi
         self.n_proc = n_proc
         self.t_merge = None
         self.snr = None
@@ -201,6 +252,7 @@ class Source():
         # conservatively round up to nearest integer
         def harmonics_required(e):
             return np.ceil(interpolated_hn(e)).astype(int)
+
         self.harmonics_required = harmonics_required
 
         # now calculate the max strain harmonics
@@ -209,7 +261,7 @@ class Source():
                                    bounds_error=False,
                                    fill_value=(2, np.max(harmonics_needed)))
 
-        def max_strain_harmonic(e):   # pragma: no cover
+        def max_strain_harmonic(e):  # pragma: no cover
             return np.round(interpolated_dh(e)).astype(int)
 
         self.max_strain_harmonic = max_strain_harmonic
@@ -464,7 +516,7 @@ class Source():
         """
         # if the user interpolated a sensitivity curve
         if self.interpolate_sc and (self._sc_params
-                                    is not None):     # pragma: no cover
+                                    is not None):  # pragma: no cover
             if "t_obs" in self._sc_params.keys():
                 sc_t_obs = self._sc_params["t_obs"]
             else:
@@ -560,7 +612,11 @@ class Source():
                                                  interpolated_g=self.g,
                                                  interpolated_sc=self.sc,
                                                  instrument=instrument,
-                                                 custom_psd=custom_psd,)
+                                                 custom_psd=custom_psd,
+                                                 theta=self.theta[c_mask],
+                                                 phi=self.phi[c_mask],
+                                                 psi=self.psi[c_mask],
+                                                 inc=self.inc[c_mask], )
         if e_mask.any():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
@@ -582,7 +638,11 @@ class Source():
                                                     interpolated_sc=self.sc,
                                                     ret_max_snr_harmonic=True,
                                                     instrument=instrument,
-                                                    custom_psd=custom_psd,)
+                                                    custom_psd=custom_psd,
+                                                    theta=self.theta[match],
+                                                    phi=self.phi[match],
+                                                    psi=self.psi[match],
+                                                    inc=self.inc[match], )
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
@@ -655,7 +715,11 @@ class Source():
                                                interpolated_g=self.g,
                                                interpolated_sc=self.sc,
                                                instrument=instrument,
-                                               custom_psd=custom_psd)
+                                               custom_psd=custom_psd,
+                                               theta=self.theta[c_mask],
+                                               phi=self.phi[c_mask],
+                                               psi=self.psi[c_mask],
+                                               inc=self.inc[c_mask], )
         if e_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
@@ -667,7 +731,7 @@ class Source():
                                            harmonics_required <= upper)
                 match = np.logical_and(harm_mask, e_mask)
                 if match.any():
-                    t_merge = None if self.t_merge is None\
+                    t_merge = None if self.t_merge is None \
                         else self.t_merge[match]
                     snr_msh = sn.snr_ecc_evolving(m_1=self.m_1[match],
                                                   m_2=self.m_2[match],
@@ -682,7 +746,11 @@ class Source():
                                                   n_proc=self.n_proc,
                                                   ret_max_snr_harmonic=True,
                                                   instrument=instrument,
-                                                  custom_psd=custom_psd)
+                                                  custom_psd=custom_psd,
+                                                  theta=self.theta[match],
+                                                  phi=self.phi[match],
+                                                  psi=self.psi[match],
+                                                  inc=self.inc[match], )
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
@@ -796,7 +864,7 @@ class Source():
             f_orb_evol[e_mask] = evolution[1][:, -1]
 
         # record which sources merged during evolution
-        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1e2* u.Hz)
+        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1e2 * u.Hz)
 
         if create_new_class:
             # create new source with same attributes (but evolved ecc/f_orb)
@@ -890,8 +958,8 @@ class Source():
         for var_str in [xstr, ystr]:
             if var_str not in convert.keys() and var_str is not None:
                 error_str = "`xstr` and `ystr` must be one of: " \
-                    + ', '.join(["`{}`".format(k)
-                                 for k in list(convert.keys())])
+                            + ', '.join(["`{}`".format(k)
+                                         for k in list(convert.keys())])
                 raise ValueError(error_str)
 
         # check the instance variable has been already set
@@ -1004,7 +1072,7 @@ class Source():
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None,
                 verbose=False):
         self.snr = self.get_snr_stationary(t_obs=t_obs, instrument=instrument,
                                            custom_psd=custom_psd,
@@ -1015,7 +1083,7 @@ class Stationary(Source):
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
-    def get_snr(self, t_obs=4*u.yr, instrument="LISA", custom_psd=None,
+    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None,
                 n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step,
                                          instrument=instrument,

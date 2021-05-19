@@ -114,12 +114,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
                                                 theta=theta, phi=phi, psi=psi)
     if (inc is None) & (phi is None) & (theta is None) & (psi is None):
         snr = (h_f_src_circ_2 / h_f_lisa_2) ** 0.5
-    elif (phi is not None) & (theta is not None):
-        if inc is None:
-            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
-        if psi is None:
-            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
-
+    else:
         amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
         snr = ((amp_mod * h_f_src_circ_2) / h_f_lisa_2) ** 0.5
 
@@ -229,12 +224,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
 
     if (inc is None) & (phi is None) & (theta is None) & (psi is None):
         snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
-    elif (phi is not None) & (theta is not None):
-        if inc is None:
-            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
-        if psi is None:
-            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
-
+    else:
         amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
         snr_n_2 = ((amp_mod * h_f_src_ecc_2) / h_f_lisa_n_2).decompose()
 
@@ -360,12 +350,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
 
     if (inc is None) & (phi is None) & (theta is None) & (psi is None):
         snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
-    elif (phi is not None) & (theta is not None):
-        if inc is None:
-            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
-        if psi is None:
-            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
-
+    else:
         amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
         snr = np.trapz(y=(h_c_n_2 * amp_mod) / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
 
@@ -507,12 +492,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
 
     if (inc is None) & (phi is None) & (theta is None) & (psi is None):
         snr_evol = h_c_n_2 / h_c_lisa_2
-    elif (phi is not None) & (theta is not None):
-        if inc is None:
-            inc = np.arcsin(np.random.uniform(-1, 1, len(m_c)))
-        if psi is None:
-            psi = np.random.uniform(0, 2 * np.pi, len(m_c))
-
+    else:
         amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
         snr_evol = (h_c_n_2 * amp_mod) / h_c_lisa_2
 
