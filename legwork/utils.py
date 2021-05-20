@@ -3,6 +3,7 @@
 from scipy.special import jv
 from astropy import constants as c
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 import numpy as np
 import legwork.evol as evol
 
@@ -402,8 +403,6 @@ def get_theta_phi(ra, dec):
         azimuth of the source in the spherical projection on the sky. Must
         have astropy angular units
     """
-    from astropy.coordinates import SkyCoord
-
     c = SkyCoord(ra=ra, dec=dec, frame='icrs')
     cb = c.transform_to(frame='barycentrictrueecliptic')
 
