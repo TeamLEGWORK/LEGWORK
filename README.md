@@ -30,15 +30,19 @@ And then activate the environment by running
 
     conda activate legwork
 
-LEGWORK is available for installation on PyPI and you can install the latest
-stable version using ``pip`` (we recommend doing this within a conda environment
-as described above) with
+Once within the environment, LEGWORK is available for installation on PyPI which lets you install the latest
+stable version using ``pip``. One last dependency is the schwimmbad package which is only available
+on PyPI not conda and therefore also needs to be brought in with ``pip``. So now to complete the installation just run
 
-    pip install legwork
+    pip install schwimmbad legwork
 
-If you see an error about llvmlite of the form "*ERROR: Cannot uninstall 'llvmlite'. It is a distutils installed project and thus we cannot accurately determine which files belong to it which would lead to only a partial uninstall.*" this is due to the nature of the llvmlite and numba packages and can be avoided by instead running
+and you should be all set! Check out our [quickstart tutorial](https://legwork.readthedocs.io/en/latest/notebooks/Quickstart.html) to learn some LEGWORK basics.
 
-    pip install legwork --ignore-installed llvmlite
+
+If you see an error about llvmlite of the form "*ERROR: Cannot uninstall 'llvmlite'. It is a distutils installed project and thus we cannot accurately determine which files belong to it which would lead to only a partial uninstall.*" this is due to the nature of the llvmlite and numba packages
+and can be avoided by instead running
+
+    pip install schwimmbad legwork --ignore-installed llvmlite
 
 ## Development Version
 The latest development version is available directly from our
