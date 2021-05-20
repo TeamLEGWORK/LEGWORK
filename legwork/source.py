@@ -139,10 +139,10 @@ class Source():
 
         if (theta is not None and phi is not None) or (ra is not None and dec is not None):
             if inc is None:
-                print("assume a randomly inclined source")
+                print("Generating random values for source inclinations")
                 inc = np.arcsin(np.random.uniform(-1, 1, len(m_1)))
             if psi is None:
-                print("assume a randomly inclined source")
+                print("Generating random values for source polarisations")
                 psi = np.random.uniform(0, 2 * np.pi, len(m_1))
 
         # convert ra/dec to spherical coordinates if needed
