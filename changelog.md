@@ -21,3 +21,25 @@ This log keeps track of the changes implemented in each version of LEGWORK.
 *TW, 19/05/21*
 - Change visualisation module to be more flexible with **kwargs (allow any for dist plot and add linewidth to sensitivity curve function)
 - Change Source.get_snr() to allow re-interpolation of the sensitivity curve for convenience (and fix the warning so it works properly)
+
+## 0.1.0
+Change changelog style in this version to table.
+<table>
+    <thead>
+        <th>Author</th>
+        <th>Date</th>
+        <th>Changes</th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>KB</td>
+            <td>19/05/21</td>
+            <td>
+                <ul>
+                    <li>Allow user to specific source inclination, sky position and polarisation in <code>Source</code> class</li>
+                    <li>Change <code>snr</code> module Calculate non-averaged SNR using exact inclination, sky position and polarisations</li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
