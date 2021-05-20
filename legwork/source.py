@@ -1,6 +1,4 @@
 """A collection of classes for analysing gravitational wave sources"""
-import warnings
-
 from astropy import units as u
 import numpy as np
 from importlib import resources
