@@ -18,5 +18,6 @@ This log keeps track of the changes implemented in each version of LEGWORK.
 - Add minor fixes to snr for evolving sources for when sources are closes to merging
 
 ## 0.0.4
-*TW, 30/04/21 (so far)*
+*TW, 19/05/21*
 - Change visualisation module to be more flexible with **kwargs (allow any for dist plot and add linewidth to sensitivity curve function)
+- Change Source.get_snr() to allow re-interpolation of the sensitivity curve for convenience (and fix the warning so it works properly)

@@ -16,13 +16,15 @@ And then activate the environment by running
 
     conda activate legwork
 
-LEGWORK is available for installation on PyPI and you can install the latest
-stable version using ``pip`` (we recommend doing this within a conda environment
-as described above) with
+Once within the environment, LEGWORK is available for installation on PyPI which lets you install the latest
+stable version using ``pip``. One last dependency is the schwimmbad package which is only available
+on PyPI not conda and therefore also needs to be brought in with ``pip``. So now to complete the installation just run
 
 .. code-block:: bash
 
-    pip install legwork
+    pip install schwimmbad legwork
+
+and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
 
 .. tip::
 
@@ -31,7 +33,7 @@ as described above) with
 
     .. code-block:: bash
 
-        pip install legwork --ignore-installed llvmlite
+        pip install schwimmbad legwork --ignore-installed llvmlite
 
 Development Version
 -------------------
