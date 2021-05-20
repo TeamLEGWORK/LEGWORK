@@ -127,7 +127,7 @@ class Source():
         if f_orb is None and a is None:
             raise ValueError("Either `f_orb` or `a` must be specified")
 
-        # ensure that if and of psi, inc, and position are supplied that
+        # ensure that if one of psi, inc, and position are supplied that
         # the other parameters are also supplied
         if inc is not None and ((theta is None or phi is None) and
                                 (ra is None or dec is None)):
