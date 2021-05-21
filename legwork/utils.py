@@ -6,11 +6,9 @@ from astropy import units as u
 import numpy as np
 import legwork.evol as evol
 
-__all__ = ['chirp_mass', 'peters_g', 'peters_f', 'get_a_from_f_orb',
-           'get_f_orb_from_a', 'get_a_from_ecc', 'beta', 'c_0',
-           'determine_stationarity', 'fn_dot', 'ensure_array',
-           'D_plus_squared', 'D_cross_squared', 'D_plus_D_cross',
-           'F_plus_squared', 'F_cross_squared', 'F_plus_F_cross']
+__all__ = ['chirp_mass', 'peters_g', 'peters_f', 'get_a_from_f_orb', 'get_f_orb_from_a', 'get_a_from_ecc',
+           'beta', 'c_0', 'determine_stationarity', 'fn_dot', 'ensure_array', 'D_plus_squared',
+           'D_cross_squared', 'D_plus_D_cross', 'F_plus_squared', 'F_cross_squared', 'F_plus_F_cross']
 
 
 def chirp_mass(m_1, m_2):
@@ -41,8 +39,7 @@ def chirp_mass(m_1, m_2):
 def peters_g(n, e):
     """Compute g(n, e) from Peters and Mathews (1963) Eq.20
 
-    This function gives the relative power of gravitational radiation
-    at the nth harmonic
+    This function gives the relative power of gravitational radiation at the nth harmonic
 
     Parameters
     ----------
@@ -58,14 +55,11 @@ def peters_g(n, e):
         g(n, e) from Peters and Mathews (1963) Eq. 20
     """
 
-    bracket_1 = jv(n-2, n*e) - 2*e*jv(n-1, n*e) \
-        + 2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) \
-        - jv(n+2, n*e)
+    bracket_1 = jv(n-2, n*e) - 2*e*jv(n-1, n*e) + 2/n*jv(n, n*e) + 2*e*jv(n+1, n*e) - jv(n+2, n*e)
     bracket_2 = jv(n-2, n*e) - 2*jv(n, n*e) + jv(n+2, n*e)
     bracket_3 = jv(n, n*e)
 
-    g = n**4/32 * (bracket_1**2 + (1 - e**2) * bracket_2**2 +
-                   4 / (3 * n**3) * bracket_3**2)
+    g = n**4/32 * (bracket_1**2 + (1 - e**2) * bracket_2**2 + 4 / (3 * n**3) * bracket_3**2)
 
     return g
 
@@ -73,9 +67,8 @@ def peters_g(n, e):
 def peters_f(e):
     """f(e) from Peters and Mathews (1963) Eq.17
 
-    This function gives the integrated enhancement factor of gravitational
-    radiation from an eccentric source compared to an equivalent circular
-    source.
+    This function gives the integrated enhancement factor of gravitational radiation from an eccentric
+    source compared to an equivalent circular source.
 
     Parameters
     ----------
@@ -207,8 +200,7 @@ def c_0(a_i, ecc_i):
     c_0 : `float`
         Constant defined in Peters and Mathews (1964) Eq.5.11
     """
-    c_0 = a_i * (1 - ecc_i**2) * ecc_i**(-12/19) \
-        * (1 + (121/304)*ecc_i**2)**(-870/2299)
+    c_0 = a_i * (1 - ecc_i**2) * ecc_i**(-12/19) * (1 + (121/304)*ecc_i**2)**(-870/2299)
 
     # simplify units if present
     if isinstance(c_0, u.quantity.Quantity):
@@ -220,8 +212,7 @@ def c_0(a_i, ecc_i):
 def get_a_from_ecc(ecc, c_0):
     """Convert eccentricity to semi-major axis
 
-    Use initial conditions and Peters (1964) Eq. 5.11 to convert ``ecc`` to
-    ``a``.
+    Use initial conditions and Peters (1964) Eq. 5.11 to convert ``ecc`` to ``a``.
 
     Parameters
     ----------
@@ -229,16 +220,14 @@ def get_a_from_ecc(ecc, c_0):
         Eccentricity
 
     c_0 : `float`
-        Constant defined in Peters and Mathews (1964) Eq. 5.11
-        See :meth:`legwork.utils.c_0`
+        Constant defined in Peters and Mathews (1964) Eq. 5.11. See :meth:`legwork.utils.c_0`
 
     Returns
     -------
     a : `float/array`
         Semi-major axis"""
 
-    a = c_0 * ecc**(12/19) / (1 - ecc**2) \
-        * (1 + (121/304) * ecc**2)**(870/2299)
+    a = c_0 * ecc**(12/19) / (1 - ecc**2) * (1 + (121/304) * ecc**2)**(870/2299)
 
     # simplify units if present
     if isinstance(a, u.quantity.Quantity):
@@ -247,16 +236,13 @@ def get_a_from_ecc(ecc, c_0):
     return a
 
 
-def determine_stationarity(f_orb_i, t_evol, ecc_i,
-                           m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
+def determine_stationarity(f_orb_i, t_evol, ecc_i, m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
     """Determine whether a binary is stationary
 
-    Check how much a binary's orbital frequency changes over ``t_evol`` time.
-    This function provides a conservative estimate in that some
-    binaries that are stationary may be marked as evolving. This
-    is because the eccentricity also evolves but only use the
-    initial value. Solving this in full would require the same
-    amount of time as assuming the binary is evolving.
+    Check how much a binary's orbital frequency changes over ``t_evol`` time. This function provides a
+    conservative estimate in that some binaries that are stationary may be marked as evolving. This is
+    because the eccentricity also evolves but only use the initial value. Solving this in full would
+    require the same amount of time as assuming the binary is evolving.
 
     Parameters
     ----------
@@ -279,8 +265,7 @@ def determine_stationarity(f_orb_i, t_evol, ecc_i,
         Chirp mass (overrides `m_1` and `m_2`)
 
     stat_tol : `float`
-        Fractional change in frequency above which we do not consider a binary
-        to be stationary
+        Fractional change in frequency above which we do not consider a binary to be stationary
 
     Returns
     -------
@@ -294,8 +279,7 @@ def determine_stationarity(f_orb_i, t_evol, ecc_i,
         m_c = chirp_mass(m_1, m_2)
 
     # calculate the final frequency
-    f_orb_f = evol.evolve_f_orb_circ(f_orb_i=f_orb_i, m_c=m_c,
-                                     t_evol=t_evol, ecc_i=ecc_i)
+    f_orb_f = evol.evolve_f_orb_circ(f_orb_i=f_orb_i, m_c=m_c, t_evol=t_evol, ecc_i=ecc_i)
 
     # check the stationary criterion
     stationary = (f_orb_f - f_orb_i) / f_orb_i <= stat_tol
@@ -324,8 +308,7 @@ def fn_dot(m_c, f_orb, e, n):
     fn_dot : `float/array`
         Rate of change of nth frequency
     """
-    fn_dot = (48 * n) / (5 * np.pi) * (c.G * m_c)**(5/3) / c.c**5 \
-        * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
+    fn_dot = (48 * n) / (5 * np.pi) * (c.G * m_c)**(5/3) / c.c**5 * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
 
     # simplify units if present
     if isinstance(fn_dot, u.quantity.Quantity):
