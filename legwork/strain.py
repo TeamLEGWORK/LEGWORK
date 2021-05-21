@@ -10,12 +10,11 @@ __all__ = ['h_0_n', 'h_c_n']
 def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     """Computes strain amplitude
 
-    Computes the dimensionless power of a general binary
-    radiating gravitational waves in the quadrupole approximation
-    at ``n`` harmonics of the orbital frequency
+    Computes the dimensionless power of a general binary radiating gravitational waves in the quadrupole
+    approximation at ``n`` harmonics of the orbital frequency
 
-    In the docs below, `x` refers to the number of sources, `y` to the number
-    of timesteps and `z` to the number of harmonics.
+    In the docs below, `x` refers to the number of sources, `y` to the number of timesteps and `z`
+    to the number of harmonics.
 
     Parameters
     ----------
@@ -23,26 +22,22 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
         Chirp mass of each binary. Shape should be (x,).
 
     f_orb : `float/array`
-        Orbital frequency of each binary at each timestep.
-        Shape should be (x, y), or (x,) if only one timestep.
-
-    ecc : `float/array`
-        Eccentricity of each binary at each timestep. Shape should be (x, y),
+        Orbital frequency of each binary at each timestep. Shape should be (x, y),
         or (x,) if only one timestep.
 
+    ecc : `float/array`
+        Eccentricity of each binary at each timestep. Shape should be (x, y), or (x,) if only one timestep.
+
     n : `int/array`
-        Harmonic(s) at which to calculate the strain. Either a single int or
-        shape should be (z,)
+        Harmonic(s) at which to calculate the strain. Either a single int or shape should be (z,)
 
     dist : `float/array`
         Distance to each binary. Shape should be (x,)
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that
-        computes g(n,e) from Peters (1964). The code assumes
-        that the function returns the output sorted as with the
-        interp2d returned functions (and thus unsorts).
-        Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
+        The code assumes that the function returns the output sorted as with the interp2d returned functions
+        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
 
     Returns
     -------
@@ -97,12 +92,11 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
 def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
     """Computes characteristic strain amplitude
 
-    Computes the dimensionless characteristic power of a general
-    binary radiating gravitational waves in the quadrupole approximation
-    at the nth harmonic of the orbital frequency.
+    Computes the dimensionless characteristic power of a general binary radiating gravitational waves in the
+    quadrupole approximation at ``n`` harmonics of the orbital frequency
 
-    In the docs below, `x` refers to the number of sources, `y` to the number
-    of timesteps and `z` to the number of harmonics.
+    In the docs below, `x` refers to the number of sources, `y` to the number of timesteps and `z`
+    to the number of harmonics.
 
     Parameters
     ----------
@@ -110,26 +104,22 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
         Chirp mass of each binary. Shape should be (x,).
 
     f_orb : `float/array`
-        Orbital frequency of each binary at each timestep.
-        Shape should be (x, y), or (x,) if only one timestep.
-
-    ecc : `float/array`
-        Eccentricity of each binary at each timestep. Shape should be (x, y),
+        Orbital frequency of each binary at each timestep. Shape should be (x, y),
         or (x,) if only one timestep.
 
+    ecc : `float/array`
+        Eccentricity of each binary at each timestep. Shape should be (x, y), or (x,) if only one timestep.
+
     n : `int/array`
-        Harmonic(s) at which to calculate the strain. Either a single int or
-        shape should be (z,)
+        Harmonic(s) at which to calculate the strain. Either a single int or shape should be (z,)
 
     dist : `float/array`
         Distance to each binary. Shape should be (x,)
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that
-        computes g(n,e) from Peters (1964). The code assumes
-        that the function returns the output sorted as with the
-        interp2d returned functions (and thus unsorts).
-        Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
+        The code assumes that the function returns the output sorted as with the interp2d returned functions
+        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
 
     Returns
     -------
@@ -152,8 +142,7 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
 
     # work out strain for n independent part
     prefac = (2**(5/3) / (3 * np.pi**(4/3)))**(0.5) * c.G**(5/6) / c.c**(3/2)
-    n_independent_part = prefac * m_c**(5/6) / dist * f_orb**(-1/6) \
-        / utils.peters_f(ecc)**(0.5)
+    n_independent_part = prefac * m_c**(5/6) / dist * f_orb**(-1/6) / utils.peters_f(ecc)**(0.5)
 
     # check whether to interpolate g(n, e)
     if interpolated_g is None:
