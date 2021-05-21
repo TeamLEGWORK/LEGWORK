@@ -210,7 +210,6 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     # calculate the signal-to-noise ratio
     snr = (np.sum(snr_n_2, axis=1)) ** 0.5
 
-
     return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
 
 

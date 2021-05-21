@@ -1,7 +1,6 @@
 """Functions to compute various power spectral densities for sensitivity
 curves"""
 
-from operator import pos
 import numpy as np
 import astropy.units as u
 import astropy.constants as const

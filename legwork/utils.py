@@ -365,8 +365,7 @@ def ensure_array(*args):
 
 
 def D_plus_squared(theta, phi):
-    """Required for the detector reponses
-    <F_+^2>, <F_x^2>, <F_+F_x>
+    """Required for the detector responses <F_+^2>, <F_x^2>, <F_+F_x>
 
     Parameters
     ----------
@@ -391,8 +390,7 @@ def D_plus_squared(theta, phi):
 
 
 def D_cross_squared(theta, phi):
-    """Required for the detector reponses
-    <F_+^2>, <F_x^2>, <F_+F_x>
+    """Required for the detector responses <F_+^2>, <F_x^2>, <F_+F_x>
 
     Parameters
     ----------
@@ -418,8 +416,7 @@ def D_cross_squared(theta, phi):
 
 
 def D_plus_D_cross(theta, phi):
-    """Required for the detector reponses
-    <F_+^2>, <F_x^2>, <F_+F_x>
+    """Required for the detector responses <F_+^2>, <F_x^2>, <F_+F_x>
 
     Parameters
     ----------

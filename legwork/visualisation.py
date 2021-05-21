@@ -257,7 +257,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
         An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
 
     show : `boolean`
-        Shether to immediately show the plot or only return the Figure and Axis
+        Whether to immediately show the plot or only return the Figure and Axis
 
     color : `string or tuple`
         Colour to use for the curve, see https://matplotlib.org/tutorials/colors/colors.html for details on

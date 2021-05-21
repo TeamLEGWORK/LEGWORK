@@ -239,7 +239,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None, m_2=
         f_orb_evol = utils.get_f_orb_from_a(a=a_not0, m_1=m_1[:, np.newaxis], m_2=m_2[:, np.newaxis])
 
         # change frequencies back to 1Hz since LISA can't measure above
-        f_orb_evol = np.where(a_not0.value == 1e-30, 1e2* u.Hz, f_orb_evol)
+        f_orb_evol = np.where(a_not0.value == 1e-30, 1e2 * u.Hz, f_orb_evol)
 
     # construct evolution output
     evolution = []
