@@ -9,15 +9,13 @@ __all__ = ['amplitude_modulation', 'snr_circ_stationary', 'snr_ecc_stationary',
 
 
 def amplitude_modulation(position, polarisation, inclination):
-    """Computes the modulation of the strain due to the
-    orbit averaged response of the detector to the position,
-    polarization, and inclination of the source
+    """Computes the modulation of the strain due to the orbit averaged response of the detector to the
+    position, polarisation, and inclination of the source
 
     Parameters
     ----------
     position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's
-        :class:`astropy.coordinates.SkyCoord` class.
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
         GW polarisation of the source. Must have astropy angular units.
@@ -57,8 +55,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
         Total duration of the observation
 
     position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's
-        :class:`astropy.coordinates.SkyCoord` class.
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
         GW polarisation of the source. Must have astropy angular units.
@@ -67,25 +64,21 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
         Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that
-        computes g(n,e) from Peters (1964). The code assumes
-        that the function returns the output sorted as with the
-        interp2d returned functions (and thus unsorts).
-        Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
+        The code assumes that the function returns the output sorted as with the interp2d returned functions
+        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that
-        computes the LISA sensitivity curve. Default is None and uses exact
-        values. Note: take care to ensure that your interpolated function has
-        the same LISA observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.
+        Default is None and uses exact values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs`` and uses the same instrument.
 
     instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
-        Instrument to observe with. If 'custom' then ``custom_psd`` must be
-        supplied.
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
 
     custom_psd : `function`
-        Custom function for computing the PSD. Must take the same arguments
-        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
+        even if it ignores some.
 
     Returns
     -------
@@ -94,16 +87,14 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
     """
 
     # only need to compute n=2 harmonic for circular
-    h_0_circ_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
-                              ecc=np.zeros_like(f_orb).value, n=2, dist=dist,
+    h_0_circ_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=np.zeros_like(f_orb).value, n=2, dist=dist,
                               interpolated_g=interpolated_g).flatten() ** 2
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
     if interpolated_sc is not None:
         h_f_lisa_2 = interpolated_sc(2 * f_orb)
     else:
-        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs,
-                                                instrument=instrument,
+        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs, instrument=instrument,
                                                 custom_function=custom_psd,
                                                 position=position, polarisation=polarisation)
     if position is None or polarisation is None or inclination is None:
@@ -115,7 +106,8 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
     return snr.decompose()
 
 
-def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required, position=None, polarisation=None, inclination=None,
+def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
+                       position=None, polarisation=None, inclination=None,
                        interpolated_g=None, interpolated_sc=None,
                        ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
                        instrument="LISA", custom_psd=None):
@@ -142,8 +134,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required, positio
         Maximum integer harmonic to compute
 
     position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's
-        :class:`astropy.coordinates.SkyCoord` class.
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
         GW polarisation of the source. Must have astropy angular units.
@@ -152,34 +143,28 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required, positio
         Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that
-        computes g(n,e) from Peters (1964). The code assumes
-        that the function returns the output sorted as with the
-        interp2d returned functions (and thus unsorts).
-        Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
+        The code assumes that the function returns the output sorted as with the interp2d returned functions
+        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that
-        computes the LISA sensitivity curve. Default is None and uses exact
-        values. Note: take care to ensure that your interpolated function has
-        the same LISA observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.
+        Default is None and uses exact values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs`` and uses the same instrument.
 
     ret_max_snr_harmonic : `boolean`
-        Whether to return (in addition to the snr), the harmonic with the
-        maximum SNR
+        Whether to return (in addition to the snr), the harmonic with the maximum SNR
 
     ret_snr2_by_harmonic : `boolean`
-        Whether to return the SNR^2 in each individual harmonic rather than
-        the total. The total can be retrieving by summing and then taking
-        the square root.
+        Whether to return the SNR^2 in each individual harmonic rather than the total.
+        The total can be retrieving by summing and then taking the square root.
 
     instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
-        Instrument to observe with. If 'custom' then ``custom_psd`` must be
-        supplied.
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
 
     custom_psd : `function`
-        Custom function for computing the PSD. Must take the same arguments
-        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
+        even if it ignores some.
 
     Returns
     -------
@@ -187,15 +172,13 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required, positio
         SNR for each binary
 
     max_snr_harmonic : `int/array`
-        harmonic with maximum SNR for each binary (only returned if
-        ``ret_max_snr_harmonic=True``)
+        harmonic with maximum SNR for each binary (only returned if ``ret_max_snr_harmonic=True``)
     """
     # define range of harmonics
     n_range = np.arange(1, harmonics_required + 1).astype(int)
 
     # calculate source signal
-    h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb,
-                               ecc=ecc, n=n_range, dist=dist,
+    h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=ecc, n=n_range, dist=dist,
                                interpolated_g=interpolated_g) ** 2
 
     # reshape the output since only one timestep
@@ -209,8 +192,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required, positio
         h_f_lisa_n_2 = h_f_lisa_n_2.reshape(f_n.shape)
     else:
         h_f_lisa_n_2 = psd.power_spectral_density(f=f_n, t_obs=t_obs,
-                                                  instrument=instrument,
-                                                  custom_function=custom_psd,
+                                                  instrument=instrument, custom_function=custom_psd,
                                                   position=position, polarisation=polarisation)
 
     if position is None or polarisation is None or inclination is None:
@@ -232,7 +214,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required, positio
     return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
 
 
-def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, position=None, polarisation=None, inclination=None, t_merge=None,
+def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
+                      position=None, polarisation=None, inclination=None, t_merge=None,
                       interpolated_g=None, interpolated_sc=None,
                       instrument="LISA", custom_psd=None):
     """Computes SNR for circular and stationary sources
@@ -258,8 +241,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, position=None, pol
         Number of time steps during observation duration
 
     position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's
-        :class:`astropy.coordinates.SkyCoord` class.
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
         GW polarisation of the source. Must have astropy angular units.
@@ -271,25 +253,21 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, position=None, pol
         Time until merger
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that
-        computes g(n,e) from Peters (1964). The code assumes
-        that the function returns the output sorted as with the
-        interp2d returned functions (and thus unsorts).
-        Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
+        The code assumes that the function returns the output sorted as with the interp2d returned functions
+        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that
-        computes the LISA sensitivity curve. Default is None and uses exact
-        values. Note: take care to ensure that your interpolated function has
-        the same LISA observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.
+        Default is None and uses exact values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs`` and uses the same instrument.
 
     instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
-        Instrument to observe with. If 'custom' then ``custom_psd`` must be
-        supplied.
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
 
     custom_psd : `function`
-        Custom function for computing the PSD. Must take the same arguments
-        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
+        even if it ignores some.
 
     Returns
     -------
@@ -300,29 +278,18 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, position=None, pol
 
     # calculate minimum of observation time and merger time
     if t_merge is None:
-        t_merge = evol.get_t_merge_circ(m_1=m_1,
-                                        m_2=m_2,
-                                        f_orb_i=f_orb_i)
+        t_merge = evol.get_t_merge_circ(m_1=m_1, m_2=m_2, f_orb_i=f_orb_i)
     t_evol = np.minimum(t_merge - (1 * u.s), t_obs)
 
     # get f_orb evolution
-    f_orb_evol = evol.evol_circ(t_evol=t_evol,
-                                n_step=n_step,
-                                m_1=m_1,
-                                m_2=m_2,
-                                f_orb_i=f_orb_i)
+    f_orb_evol = evol.evol_circ(t_evol=t_evol, n_step=n_step, m_1=m_1, m_2=m_2, f_orb_i=f_orb_i)
 
-    maxes = np.where(f_orb_evol == 1e2 * u.Hz,
-                     -1 * u.Hz, f_orb_evol).max(axis=1)
+    maxes = np.where(f_orb_evol == 1e2 * u.Hz, -1 * u.Hz, f_orb_evol).max(axis=1)
     for source in range(len(f_orb_evol)):
         f_orb_evol[source][f_orb_evol[source] == 1e2 * u.Hz] = maxes[source]
 
     # calculate the characteristic power
-    h_c_n_2 = strain.h_c_n(m_c=m_c,
-                           f_orb=f_orb_evol,
-                           ecc=np.zeros_like(f_orb_evol).value,
-                           n=2,
-                           dist=dist,
+    h_c_n_2 = strain.h_c_n(m_c=m_c, f_orb=f_orb_evol, ecc=np.zeros_like(f_orb_evol).value, n=2, dist=dist,
                            interpolated_g=interpolated_g) ** 2
     h_c_n_2 = h_c_n_2.reshape(len(m_c), n_step)
 
@@ -332,8 +299,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, position=None, pol
         h_f_lisa_2 = h_f_lisa_2.reshape(f_orb_evol.shape)
     else:
         h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs,
-                                                instrument=instrument,
-                                                custom_function=custom_psd,
+                                                instrument=instrument, custom_function=custom_psd,
                                                 position=position, polarisation=polarisation)
     h_c_lisa_2 = (2 * f_orb_evol) ** 2 * h_f_lisa_2
 
@@ -346,9 +312,9 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, position=None, pol
     return snr.decompose()
 
 
-def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
-                     n_step, position=None, polarisation=None, inclination=None, t_merge=None, interpolated_g=None,
-                     interpolated_sc=None, n_proc=1,
+def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_step,
+                     position=None, polarisation=None, inclination=None, t_merge=None,
+                     interpolated_g=None, interpolated_sc=None, n_proc=1,
                      ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
                      instrument="LISA", custom_psd=None):
     """Computes SNR for eccentric and evolving sources.
@@ -380,8 +346,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         Total duration of the observation
 
     position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's
-        :class:`astropy.coordinates.SkyCoord` class.
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
         GW polarisation of the source. Must have astropy angular units.
@@ -396,38 +361,32 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         Time until merger
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that
-        computes g(n,e) from Peters (1964). The code assumes
-        that the function returns the output sorted as with the
-        interp2d returned functions (and thus unsorts).
-        Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
+        The code assumes that the function returns the output sorted as with the interp2d returned functions
+        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
-        A function returned by :class:`scipy.interpolate.interp1d` that
-        computes the LISA sensitivity curve. Default is None and uses exact
-        values. Note: take care to ensure that your interpolated function has
-        the same LISA observation time as ``t_obs``.
+        A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.
+        Default is None and uses exact values. Note: take care to ensure that your interpolated function has
+        the same LISA observation time as ``t_obs`` and uses the same instrument.
 
     n_proc : `int`
         Number of processors to split eccentricity evolution over, where
         the default is n_proc=1
 
     ret_max_snr_harmonic : `boolean`
-        Whether to return (in addition to the snr), the harmonic with the
-        maximum SNR
+        Whether to return (in addition to the snr), the harmonic with the maximum SNR
 
     ret_snr2_by_harmonic : `boolean`
-        Whether to return the SNR^2 in each individual harmonic rather than
-        the total. The total can be retrieving by summing and then taking
-        the square root.
+        Whether to return the SNR^2 in each individual harmonic rather than the total.
+        The total can be retrieving by summing and then taking the square root.
 
     instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
-        Instrument to observe with. If 'custom' then ``custom_psd`` must be
-        supplied.
+        Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
 
     custom_psd : `function`
-        Custom function for computing the PSD. Must take the same arguments
-        as :meth:`legwork.psd.lisa_psd` even if it ignores some.
+        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
+        even if it ignores some.
 
     Returns
     -------
@@ -442,14 +401,12 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
 
     # calculate minimum of observation time and merger time
     if t_merge is None:
-        t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
-                                    f_orb_i=f_orb_i, ecc_i=ecc)
+        t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2, f_orb_i=f_orb_i, ecc_i=ecc)
     t_evol = np.minimum(t_merge, t_obs).to(u.s)
 
     # get eccentricity and f_orb evolutions
-    e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step,
-                                       m_1=m_1, m_2=m_2, f_orb_i=f_orb_i,
-                                       n_proc=n_proc)
+    e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step, m_1=m_1, m_2=m_2,
+                                       f_orb_i=f_orb_i, n_proc=n_proc)
 
     maxes = np.where(np.logical_and(e_evol == 0.0, f_orb_evol == 1e2 * u.Hz),
                      -1 * u.Hz, f_orb_evol).max(axis=1)
@@ -461,21 +418,19 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     f_n_evol = harms[np.newaxis, np.newaxis, :] * f_orb_evol[..., np.newaxis]
 
     # calculate the characteristic strain
-    h_c_n_2 = strain.h_c_n(m_c=m_c, f_orb=f_orb_evol, ecc=e_evol, n=harms,
-                           dist=dist, interpolated_g=interpolated_g) ** 2
+    h_c_n_2 = strain.h_c_n(m_c=m_c, f_orb=f_orb_evol, ecc=e_evol, n=harms, dist=dist,
+                           interpolated_g=interpolated_g) ** 2
 
     # calculate the characteristic noise power
     if interpolated_sc is not None:
         h_f_lisa = interpolated_sc(f_n_evol.flatten())
     else:
-        h_f_lisa = psd.power_spectral_density(f=f_n_evol.flatten(),
-                                              t_obs=t_obs,
-                                              instrument=instrument,
-                                              custom_function=custom_psd,
+        h_f_lisa = psd.power_spectral_density(f=f_n_evol.flatten(), t_obs=t_obs,
+                                              instrument=instrument, custom_function=custom_psd,
                                               position=position, polarisation=polarisation)
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
     h_c_lisa_2 = f_n_evol ** 2 * h_f_lisa
- 
+
     if position is None or polarisation is None or inclination is None:
         snr_evol = h_c_n_2 / h_c_lisa_2
     else:
