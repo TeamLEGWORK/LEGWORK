@@ -43,25 +43,19 @@ class Source():
         Semi-major axis (either `a` or `f_orb` must be supplied). Must have
         astropy units of length.
 
-    phi : `float/array`
-        azimuth of the source in the spherical projection on the sky. Must
-        have astropy angular units
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
 
-    theta : `float/array`
-        inclination from the pole of the source in the spherical
-        projection on the sky. Must have astropy angular units
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
 
-    ra : `float/array`
-        right ascension of the source. Must have astropy angular units
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
-    dec `float/array`
-        declination ascension of the source. Must have astropy angular units
-
-    psi : `float/array`
-        GW polarization of the source. Must have astropy angular units
-
-    inc : `float/array`
-        inclination of the source. Must have astropy angular units
+    random_missing : `boolean`, default=False
+        Whether to generate random values for any missing parameters (any of
+        position, polarisation and inclination) or just use average values
 
     gw_lum_tol : `float`
         Allowed error on the GW luminosity when calculating snrs.
@@ -120,34 +114,31 @@ class Source():
     """
 
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None,
-                 theta=None, phi=None, ra=None, dec=None, psi=None, inc=None,
+                 position=None, polarisation=None, inclination=None,
                  gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
             raise ValueError("Either `f_orb` or `a` must be specified")
 
-        # ensure that if one of psi, inc, and position are supplied that
-        # the other parameters are also supplied
-        if inc is not None and ((theta is None or phi is None) and
-                                (ra is None or dec is None)):
-            raise ValueError("If you specify the inclination, you must also specify a sky position.")
+        # raise errors or fill missing values
+        if position is None:
+            if inclination is not None:
+                raise ValueError("If you specify the inclination, you must also specify a sky position.")
 
-        if psi is not None and ((theta is None or phi is None) and
-                                (ra is None or dec is None)):
-            raise ValueError("If you specify the polarization, you must also specify a sky position.")
+            if polarisation is not None:
+                raise ValueError("If you specify the polarisation, you must also specify a sky position.")
 
-        if (theta is not None and phi is not None) or (ra is not None and dec is not None):
-            if inc is None:
+        else:
+            if inclination is None:
                 print("Generating random values for source inclinations")
-                inc = np.arcsin(np.random.uniform(-1, 1, len(m_1)))
-            if psi is None:
+                inclination = np.arcsin(np.random.uniform(-1, 1, len(m_1)))
+            if polarisation is None:
                 print("Generating random values for source polarisations")
-                psi = np.random.uniform(0, 2 * np.pi, len(m_1))
+                polarisation = np.random.uniform(0, 2 * np.pi, len(m_1))
 
-        # convert ra/dec to spherical coordinates if needed
-        if (theta is None) and (phi is None) and (ra is not None) and (dec is not None):
-            theta, phi = utils.get_theta_phi(ra, dec)
+        # ensure position is in the correct coordinate frame
+        position = position.transform_to("barycentrictrueecliptic")
 
         # calculate whichever one wasn't supplied
         f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb
@@ -180,10 +171,9 @@ class Source():
         self.stat_tol = stat_tol
         self.f_orb = f_orb
         self.a = a
-        self.theta = theta
-        self.phi = phi
-        self.inc = inc
-        self.psi = psi
+        self.position = position
+        self.inclination = inclination
+        self.polarisation = polarisation
         self.n_proc = n_proc
         self.t_merge = None
         self.snr = None
@@ -623,10 +613,9 @@ class Source():
                                                  interpolated_sc=self.sc,
                                                  instrument=instrument,
                                                  custom_psd=custom_psd,
-                                                 theta=self.theta[c_mask],
-                                                 phi=self.phi[c_mask],
-                                                 psi=self.psi[c_mask],
-                                                 inc=self.inc[c_mask], )
+                                                 position=self.position[c_mask],
+                                                 polarisation=self.polarisation[c_mask],
+                                                 inclination=self.inclination[c_mask], )
         if e_mask.any():
             if verbose:
                 print("\t\t{} sources are stationary and eccentric".format(
@@ -649,10 +638,9 @@ class Source():
                                                     ret_max_snr_harmonic=True,
                                                     instrument=instrument,
                                                     custom_psd=custom_psd,
-                                                    theta=self.theta[match],
-                                                    phi=self.phi[match],
-                                                    psi=self.psi[match],
-                                                    inc=self.inc[match], )
+                                                    position=self.position[match],
+                                                    polarisation=self.polarisation[match],
+                                                    inclination=self.inclination[match], )
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
@@ -726,10 +714,9 @@ class Source():
                                                interpolated_sc=self.sc,
                                                instrument=instrument,
                                                custom_psd=custom_psd,
-                                               theta=self.theta[c_mask],
-                                               phi=self.phi[c_mask],
-                                               psi=self.psi[c_mask],
-                                               inc=self.inc[c_mask], )
+                                               position=self.position[c_mask],
+                                               polarisation=self.polarisation[c_mask],
+                                               inclination=self.inclination[c_mask])
         if e_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(
@@ -757,10 +744,9 @@ class Source():
                                                   ret_max_snr_harmonic=True,
                                                   instrument=instrument,
                                                   custom_psd=custom_psd,
-                                                  theta=self.theta[match],
-                                                  phi=self.phi[match],
-                                                  psi=self.psi[match],
-                                                  inc=self.inc[match], )
+                                                  position=self.position[match],
+                                                  polarisation=self.polarisation[match],
+                                                  inclination=self.inclination[match])
                     snr[match], msh[match] = snr_msh
 
         if self.max_snr_harmonic is None:
