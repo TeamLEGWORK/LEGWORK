@@ -9,8 +9,8 @@ from scipy.interpolate import splev, splrep
 from importlib import resources
 from legwork.utils import F_plus_squared
 
-__all__ = ['load_response_function', 'approximate_response_function',
-           'power_spectral_density', 'lisa_psd', 'tianqin_psd']
+__all__ = ['load_response_function', 'approximate_response_function', 'power_spectral_density',
+           'lisa_psd', 'tianqin_psd']
 
 
 def load_response_function(f, fstar=19.09e-3):
@@ -38,8 +38,7 @@ def load_response_function(f, fstar=19.09e-3):
         with resources.path(package="legwork", resource="R.npy") as path:
             f_R, R = np.load(path)
     except FileExistsError:  # pragma: no cover
-        print("WARNING: Can't find response function file, \
-                        using approximation instead")
+        print("WARNING: Can't find response function file, using approximation instead")
         return approximate_response_function(f, fstar)
 
     # interpolate the R values in the file
@@ -71,10 +70,9 @@ def approximate_response_function(f, fstar):
     return (3 / 10) / (1 + 0.6 * (f / fstar) ** 2)
 
 
-def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
-             include_confusion_noise=True, position=None, polarisation=None):
-    """Calculates the effective LISA power spectral density sensitivity
-    curve
+def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_noise=True,
+             position=None, polarisation=None):
+    """Calculates the effective LISA power spectral density sensitivity curve
 
     Using equations from Robson+19, calculate the effective LISA power spectral
     density for the sensitivity curve
@@ -97,8 +95,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
         Whether to include the Galactic confusion noise (default: yes)
 
     position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's
-        :class:`astropy.coordinates.SkyCoord` class.
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
         GW polarisation of the source. Must have astropy angular units.
@@ -140,10 +137,8 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
         # find index of the closest length to inputted observation time
         ind = np.abs(t_obs - lengths).argmin()
 
-        return 9e-45 * f ** (-7 / 3.) \
-               * np.exp(-f ** (alpha[ind]) + beta[ind] * f
-                        * np.sin(kappa[ind] * f)) \
-               * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
+        return 9e-45 * f ** (-7 / 3.) * np.exp(-f ** (alpha[ind]) + beta[ind] * f * np.sin(kappa[ind] * f)) \
+            * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
 
     # calculate response function (either exactly or with approximation)
     fstar = (const.c / (2 * np.pi * L * u.m)).to(u.Hz).value
@@ -177,8 +172,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
 
 def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
                 include_confusion_noise=None):
-    """Calculates the effective TianQin power spectral density sensitivity
-    curve
+    """Calculates the effective TianQin power spectral density sensitivity curve
 
     Using equations from Huang+20, calculate the effective TianQin power
     spectral density for the sensitivity curve
@@ -208,15 +202,14 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
     fstar = const.c / (2 * np.pi * L)
     Sa = 1e-30 * u.m ** 2 * u.s ** (-4) * u.Hz ** (-1)
     Sx = 1e-24 * u.m ** 2 * u.Hz ** (-1)
-    psd = 1 / L ** 2 * (4 * Sa / (2 * np.pi * f) ** 4
-                        * (1 + (1e-4 * u.Hz / f)) + Sx) \
-          * (1 + 0.6 * (f / fstar) ** 2)
+    psd = 1 / L ** 2 * (4 * Sa / (2 * np.pi * f) ** 4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
+        * (1 + 0.6 * (f / fstar) ** 2)
     return psd.to(u.Hz ** (-1))
 
 
-def power_spectral_density(f, instrument="LISA", custom_function=None,
-                           t_obs=4 * u.yr, L=None, approximate_R=False,
-                           include_confusion_noise=True, position=None, polarisation=None):
+def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 * u.yr, L=None,
+                           approximate_R=False, include_confusion_noise=True,
+                           position=None, polarisation=None):
     """Calculates the effective power spectral density for all instruments.
 
     Parameters
@@ -225,12 +218,11 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
         Frequencies at which to evaluate the sensitivity curve
 
     instrument: {{ `LISA`, `TianQin`, `custom` }}
-        Instrument to use. LISA is used by default. Choosing `custom` uses
-        ``custom_function`` to compute PSD.
+        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_function`` to compute PSD.
 
     custom_function : `function`
-        Custom function for computing the PSD. Must take the same arguments as
-        :meth:`legwork.psd.lisa_psd` even if it ignores some.
+        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
+        even if it ignores some.
 
     t_obs : `float`
         Observation time (default 4 years)
@@ -245,8 +237,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
         Whether to include the Galactic confusion noise (default: yes)
 
     position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's
-        :class:`astropy.coordinates.SkyCoord` class.
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
         GW polarisation of the source. Must have astropy angular units.
@@ -268,8 +259,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                           include_confusion_noise=include_confusion_noise)
     elif instrument == "custom":
-        psd = custom_function(f=f, L=L, t_obs=t_obs,
-                              approximate_R=approximate_R,
+        psd = custom_function(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                               include_confusion_noise=include_confusion_noise)
     else:
         raise ValueError("instrument: `{}` not recognised".format(instrument))
