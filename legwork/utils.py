@@ -3,16 +3,14 @@
 from scipy.special import jv
 from astropy import constants as c
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 import numpy as np
 import legwork.evol as evol
 
 __all__ = ['chirp_mass', 'peters_g', 'peters_f', 'get_a_from_f_orb',
            'get_f_orb_from_a', 'get_a_from_ecc', 'beta', 'c_0',
            'determine_stationarity', 'fn_dot', 'ensure_array',
-           'get_theta_phi', 'D_plus_squared', 'D_cross_squared',
-           'D_plus_D_cross', 'F_plus_squared', 'F_cross_squared',
-           'F_plus_F_cross']
+           'D_plus_squared', 'D_cross_squared', 'D_plus_D_cross',
+           'F_plus_squared', 'F_cross_squared', 'F_plus_F_cross']
 
 
 def chirp_mass(m_1, m_2):
@@ -381,36 +379,6 @@ def ensure_array(*args):
         else:
             array_args[i] = args[i]
     return array_args, any_not_arrays
-
-def get_theta_phi(ra, dec):
-    """Calculates the spherical inclination from the pole coordinate
-    using astropy coordinates
-    Parameters
-    ----------
-    ra : `float/array`
-        right ascension of the source. Must have astropy angular units
-
-    dec : `float/array`
-        declination ascension of the source. Must have astropy angular units
-
-    Returns
-    -------
-    theta : `float/array`
-        inclination from the pole of the source in the spherical
-        projection on the sky. Must have astropy angular units
-
-    phi : `float/array`
-        azimuth of the source in the spherical projection on the sky. Must
-        have astropy angular units
-    """
-    c = SkyCoord(ra=ra, dec=dec, frame='icrs')
-    cb = c.transform_to(frame='barycentrictrueecliptic')
-
-    theta = np.pi * u.rad / 2 - cb.lat
-    phi = cb.lon
-
-    return theta, phi
-
 
 
 def D_plus_squared(theta, phi):
