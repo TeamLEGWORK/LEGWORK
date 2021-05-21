@@ -8,41 +8,38 @@ __all__ = ['amplitude_modulation', 'snr_circ_stationary', 'snr_ecc_stationary',
            'snr_circ_evolving', 'snr_ecc_evolving']
 
 
-def amplitude_modulation(theta, phi, psi, inc):
+def amplitude_modulation(position, polarisation, inclination):
     """Computes the modulation of the strain due to the
     orbit averaged response of the detector to the position,
     polarization, and inclination of the source
 
     Parameters
     ----------
-    theta : `float/array`
-        declination of the source
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
 
-    phi : `float/array`
-        right ascension of the source
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
 
-    psi : `float/array`
-        polarization of the source
-
-    inc : `float/array`
-        inclination of the source
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
     Returns
     -------
     modulation : `float/array`
         modulation to apply to strain from detector response
     """
-    term1 = (1 + np.cos(inc) ** 2) ** 2 * utils.F_plus_squared(theta, phi, psi)
-    term2 = 4 * np.cos(inc) ** 2 * utils.F_cross_squared(theta, phi, psi)
+    theta, phi = position.lat, position.lon
+    term1 = (1 + np.cos(inclination) ** 2) ** 2 * utils.F_plus_squared(theta, phi, polarisation)
+    term2 = 4 * np.cos(inclination) ** 2 * utils.F_cross_squared(theta, phi, polarisation)
     modulation = 0.5 * (term1 + term2)
 
     return modulation
 
 
-def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
-                        interpolated_sc=None, instrument="LISA",
-                        custom_psd=None, theta=None, phi=None, psi=None,
-                        inc=None):
+def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=None, inclination=None,
+                        interpolated_g=None, interpolated_sc=None, instrument="LISA", custom_psd=None):
     """Computes SNR for circular and stationary sources
 
     Parameters
@@ -58,6 +55,16 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
 
     t_obs : `float`
         Total duration of the observation
+
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
+
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
+
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
         A function returned by :class:`scipy.interpolate.interp2d` that
@@ -80,18 +87,6 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
-    theta : `float/array`
-        declination of the source
-
-    phi : `float/array`
-        right ascension of the source
-
-    psi : `float/array`
-        polarization of the source
-
-    inc : `float/array`
-        inclination of the source
-
     Returns
     -------
     snr : `float/array`
@@ -111,20 +106,19 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, interpolated_g=None,
                                                 instrument=instrument,
                                                 custom_function=custom_psd,
                                                 theta=theta, phi=phi, psi=psi)
-    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+    if position is None or polarisation is None or inclination is None:
         snr = (h_f_src_circ_2 / h_f_lisa_2) ** 0.5
     else:
-        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
         snr = ((amp_mod * h_f_src_circ_2) / h_f_lisa_2) ** 0.5
 
     return snr.decompose()
 
 
-def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
+def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required, position=None, polarisation=None, inclination=None,
                        interpolated_g=None, interpolated_sc=None,
                        ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
-                       instrument="LISA", custom_psd=None, theta=None,
-                       phi=None, psi=None, inc=None):
+                       instrument="LISA", custom_psd=None):
     """Computes SNR for eccentric and stationary sources
 
     Parameters
@@ -146,6 +140,16 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
 
     harmonics_required : `integer`
         Maximum integer harmonic to compute
+
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
+
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
+
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
         A function returned by :class:`scipy.interpolate.interp2d` that
@@ -176,18 +180,6 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     custom_psd : `function`
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
-
-    theta : `float/array`
-        declination of the source
-
-    phi : `float/array`
-        right ascension of the source
-
-    psi : `float/array`
-        polarization of the source
-
-    inc : `float/array`
-        inclination of the source
 
     Returns
     -------
@@ -221,10 +213,10 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
                                                   custom_function=custom_psd,
                                                   theta=theta, phi=phi, psi=psi)
 
-    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+    if position is None or polarisation is None or inclination is None:
         snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
     else:
-        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
         snr_n_2 = ((h_f_src_ecc_2 * amp_mod[:, np.newaxis]) / h_f_lisa_n_2).decompose()
 
     if ret_snr2_by_harmonic:
@@ -240,10 +232,9 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
 
 
-def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
+def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, position=None, polarisation=None, inclination=None, t_merge=None,
                       interpolated_g=None, interpolated_sc=None,
-                      instrument="LISA", custom_psd=None, theta=None,
-                      phi=None, psi=None, inc=None):
+                      instrument="LISA", custom_psd=None):
     """Computes SNR for circular and stationary sources
 
     Parameters
@@ -265,6 +256,16 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
 
     n_step : `int`
         Number of time steps during observation duration
+
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
+
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
+
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
     t_merge : `float/array`
         Time until merger
@@ -289,18 +290,6 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
     custom_psd : `function`
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
-
-    theta : `float/array`
-        declination of the source
-
-    phi : `float/array`
-        right ascension of the source
-
-    psi : `float/array`
-        polarization of the source
-
-    inc : `float/array`
-        inclination of the source
 
     Returns
     -------
@@ -348,21 +337,20 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
                                                 theta=theta, phi=phi, psi=psi)
     h_c_lisa_2 = (2 * f_orb_evol) ** 2 * h_f_lisa_2
 
-    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+    if position is None or polarisation is None or inclination is None:
         snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
     else:
-        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
         snr = np.trapz(y=(h_c_n_2 * amp_mod[:, np.newaxis]) / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
 
     return snr.decompose()
 
 
 def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
-                     n_step, t_merge=None, interpolated_g=None,
+                     n_step, position=None, polarisation=None, inclination=None, t_merge=None, interpolated_g=None,
                      interpolated_sc=None, n_proc=1,
                      ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
-                     instrument="LISA", custom_psd=None, theta=None,
-                     phi=None, psi=None, inc=None):
+                     instrument="LISA", custom_psd=None):
     """Computes SNR for eccentric and evolving sources.
 
     Note that this function will not work for exactly circular (ecc = 0.0)
@@ -390,6 +378,16 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
 
     t_obs : `float`
         Total duration of the observation
+
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
+
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
+
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
     n_step : `int`
         Number of time steps during observation duration
@@ -431,18 +429,6 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
         Custom function for computing the PSD. Must take the same arguments
         as :meth:`legwork.psd.lisa_psd` even if it ignores some.
 
-    theta : `float/array`
-        declination of the source
-
-    phi : `float/array`
-        right ascension of the source
-
-    psi : `float/array`
-        polarization of the source
-
-    inc : `float/array`
-        inclination of the source
-
     Returns
     -------
     snr : `float/array`
@@ -455,9 +441,9 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     m_c = utils.chirp_mass(m_1=m_1, m_2=m_2)
 
     # calculate minimum of observation time and merger time
-    # if t_merge is None:
-    t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
-                                   f_orb_i=f_orb_i, ecc_i=ecc)
+    if t_merge is None:
+        t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
+                                    f_orb_i=f_orb_i, ecc_i=ecc)
     t_evol = np.minimum(t_merge, t_obs).to(u.s)
 
     # get eccentricity and f_orb evolutions
@@ -489,16 +475,14 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
                                               theta=theta, phi=phi, psi=psi)
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
     h_c_lisa_2 = f_n_evol ** 2 * h_f_lisa
-
-    if (inc is None) & (phi is None) & (theta is None) & (psi is None):
+ 
+    if position is None or polarisation is None or inclination is None:
         snr_evol = h_c_n_2 / h_c_lisa_2
     else:
-        amp_mod = amplitude_modulation(theta=theta, phi=phi, psi=psi, inc=inc)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
         snr_evol = (h_c_n_2 * amp_mod[:, np.newaxis, np.newaxis]) / h_c_lisa_2
 
     # integrate, sum and square root to get SNR
-    # print(f_n_evol.diff(axis=1).shape)
-    # print(f_n_evol.diff(axis=1))
     snr_n_2 = np.trapz(y=snr_evol, x=f_n_evol, axis=1)
 
     if ret_snr2_by_harmonic:
