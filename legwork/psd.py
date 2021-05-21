@@ -1,6 +1,7 @@
 """Functions to compute various power spectral densities for sensitivity
 curves"""
 
+from operator import pos
 import numpy as np
 import astropy.units as u
 import astropy.constants as const
@@ -71,8 +72,7 @@ def approximate_response_function(f, fstar):
 
 
 def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
-             include_confusion_noise=True, theta=None, phi=None,
-             psi=None):
+             include_confusion_noise=True, position=None, polarisation=None):
     """Calculates the effective LISA power spectral density sensitivity
     curve
 
@@ -96,14 +96,12 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
     include_confusion_noise  : `boolean`
         Whether to include the Galactic confusion noise (default: yes)
 
-    theta : `float/array`
-        declination of the source (default: None)
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
 
-    phi : `float/array`
-        right ascension of the source (default: None)
-
-    psi : `float/array`
-        polarization of the source (default: None)
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
 
     Returns
     -------
@@ -157,11 +155,11 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False,
     # if sky position and polarization are specified, include them
     # instead of the averaged response; to do this, we need to undo
     # the 10/3 averaging term
-    if (theta is not None) & (phi is not None) & (psi is not None):
-        R = 3 / 10 * F_plus_squared(theta, phi, psi)
-    elif (theta is not None) & (phi is not None) & (psi is None):
-        psi = np.random.uniform(0, 2 * np.pi)
-        R = 3 / 10 * F_plus_squared(theta, phi, psi)
+    if position is not None and polarisation is not None:
+        R = 3 / 10 * F_plus_squared(position.lat, position.lon, polarisation)
+    elif position is not None and polarisation is None:
+        polarisation = np.random.uniform(0, 2 * np.pi)
+        R = 3 / 10 * F_plus_squared(position.lat, position.lon, polarisation)
 
     # work out the confusion noise or just set to 0
     if include_confusion_noise:
@@ -218,8 +216,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
 
 def power_spectral_density(f, instrument="LISA", custom_function=None,
                            t_obs=4 * u.yr, L=None, approximate_R=False,
-                           include_confusion_noise=True, theta=None,
-                           phi=None, psi=None):
+                           include_confusion_noise=True, position=None, polarisation=None):
     """Calculates the effective power spectral density for all instruments.
 
     Parameters
@@ -247,14 +244,12 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
     include_confusion_noise  : `boolean`
         Whether to include the Galactic confusion noise (default: yes)
 
-    theta : `float/array`
-        declination of the source (default: None)
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's
+        :class:`astropy.coordinates.SkyCoord` class.
 
-    phi : `float/array`
-        right ascension of the source (default: None)
-
-    psi : `float/array`
-        polarization of the source (default: None)
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
 
     Returns
     -------
@@ -266,7 +261,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None,
             L = 2.5e9
         psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                        include_confusion_noise=include_confusion_noise,
-                       theta=theta, phi=phi, psi=psi)
+                       position=position, polarisation=polarisation)
     elif instrument == "TianQin":
         if L is None:
             L = np.sqrt(3) * 1e5 * u.km
