@@ -100,7 +100,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
     if position is None or polarisation is None or inclination is None:
         snr = (h_f_src_circ_2 / h_f_lisa_2) ** 0.5
     else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
         snr = ((amp_mod * h_f_src_circ_2) / h_f_lisa_2) ** 0.5
 
     return snr.decompose()
@@ -198,7 +198,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     if position is None or polarisation is None or inclination is None:
         snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
     else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
         snr_n_2 = ((h_f_src_ecc_2 * amp_mod[:, np.newaxis]) / h_f_lisa_n_2).decompose()
 
     if ret_snr2_by_harmonic:
@@ -305,7 +305,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     if position is None or polarisation is None or inclination is None:
         snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
     else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
         snr = np.trapz(y=(h_c_n_2 * amp_mod[:, np.newaxis]) / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
 
     return snr.decompose()
@@ -433,7 +433,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
     if position is None or polarisation is None or inclination is None:
         snr_evol = h_c_n_2 / h_c_lisa_2
     else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inc=inclination)
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
         snr_evol = (h_c_n_2 * amp_mod[:, np.newaxis, np.newaxis]) / h_c_lisa_2
 
     # integrate, sum and square root to get SNR
