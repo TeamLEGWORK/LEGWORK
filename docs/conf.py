@@ -12,6 +12,7 @@
 #
 import os
 import sys
+import inspect
 sys.path.insert(0, os.path.abspath('.'))
 
 # HACKS - credit to "https://github.com/rodluger/starry_process"
@@ -44,7 +45,8 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinxcontrib.bibtex',
     'sphinx.ext.intersphinx',
-    'sphinx_copybutton'
+    'sphinx_copybutton',
+    'sphinx.ext.linkcode'
 ]
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
@@ -118,3 +120,34 @@ nbsphinx_execute_arguments = [
 mathjax_config = {
     'TeX': {'equationNumbers': {'autoNumber': 'AMS', 'useLabelIds': True}},
 }
+
+
+def linkcode_resolve(domain, info):
+    """function for linkcode sphinx extension"""
+    def find_func():
+        # find the installed module in sys module
+        sys_mod = sys.modules[info["module"]]
+
+        # use inspect to find the source code and starting line number
+        func = getattr(sys_mod, info["fullname"])
+        source_code, line_num = inspect.getsourcelines(func)
+
+        # get the file name from the module
+        file = info["module"].split(".")[-1]
+
+        return file, line_num, line_num + len(source_code) - 1
+
+    # ensure it has the proper domain and has a module
+    if domain != 'py' or not info['module']:
+        return None
+
+    # attempt to cleverly locate the function in the file
+    try:
+        file, start, end = find_func()
+        # stitch together a github link with specific lines
+        filename = "legwork/{}.py#L{}-L{}".format(file, start, end)
+
+    # if you can't find it in the file then just link to the correct file
+    except Exception:
+        filename = info['module'].replace('.', '/') + '.py'
+    return "https://github.com/katiebreivik/LEGWORK/blob/main/{}".format(filename)
