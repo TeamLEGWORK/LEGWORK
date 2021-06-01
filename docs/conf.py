@@ -129,7 +129,10 @@ def linkcode_resolve(domain, info):
         sys_mod = sys.modules[info["module"]]
 
         # use inspect to find the source code and starting line number
-        func = getattr(sys_mod, info["fullname"])
+        names = info["fullname"].split(".")
+        func = sys_mod
+        for name in names:
+            func = getattr(func, name)
         source_code, line_num = inspect.getsourcelines(func)
 
         # get the file name from the module
