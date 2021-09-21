@@ -6,7 +6,6 @@ import astropy.units as u
 import astropy.constants as const
 from scipy.interpolate import splev, splrep
 from importlib import resources
-from legwork.utils import F_plus_squared
 
 __all__ = ['load_response_function', 'approximate_response_function', 'power_spectral_density',
            'lisa_psd', 'tianqin_psd']
@@ -146,14 +145,8 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_
     else:
         R = load_response_function(f, fstar)
 
-    # if sky position and polarization are specified, include them
-    # instead of the averaged response; to do this, we need to undo
-    # the 10/3 averaging term
-    if position is not None and polarisation is not None:
-        R = 3 / 10 * F_plus_squared(position.lat, position.lon, polarisation)
-    elif position is not None and polarisation is None:
-        polarisation = np.random.uniform(0, 2 * np.pi)
-        R = 3 / 10 * F_plus_squared(position.lat, position.lon, polarisation)
+    if position is not None:
+        R *= (10 / 3)
 
     # work out the confusion noise or just set to 0
     if include_confusion_noise:

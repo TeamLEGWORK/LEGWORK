@@ -128,7 +128,7 @@ class Source():
                 polarisation = np.random.uniform(0, 2 * np.pi, len(m_1))
 
         # ensure position is in the correct coordinate frame
-        position = position.transform_to("barycentrictrueecliptic")
+        position = position.transform_to("heliocentrictrueecliptic")
 
         # calculate whichever one wasn't supplied
         f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb
@@ -1009,9 +1009,7 @@ class VerificationBinaries(Source):
             vbs = np.load(path, allow_pickle=True)
             vbs = vbs.item()
 
-        print(vbs)
-
-        position = SkyCoord(l=vbs["l_gal"], b=vbs["b_gal"], frame="galactic")
+        position = SkyCoord(l=vbs["l_gal"], b=vbs["b_gal"], distance=vbs["dist"], frame="galactic")
 
         # call the usual Source init function with this data
         super().__init__(m_1=vbs["m_1"], m_2=vbs["m_2"], dist=vbs["dist"],
