@@ -46,8 +46,11 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx.ext.intersphinx',
     'sphinx_copybutton',
-    'sphinx.ext.linkcode'
+    'sphinx.ext.linkcode',
+    'sphinx_tabs.tabs'
 ]
+
+sphinx_tabs_disable_tab_closing = True
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'matplotlib': ('https://matplotlib.org/stable', None),
