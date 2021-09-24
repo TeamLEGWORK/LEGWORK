@@ -1,5 +1,5 @@
 -e .[docs]
-nbsphinx
+nbsphinx>=0.8.6
 numpydoc
 sphinx_rtd_theme
 sphinx_automodapi
