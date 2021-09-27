@@ -357,7 +357,8 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
 
     t_before : `float`
         How much time before the merger to cutoff the integration (default is
-        1 Myr)
+        1 Myr - this will prevent all LSODA warnings for e < 0.95, you may
+        need to increase this time if your sample is more eccentric than this)
 
     Returns
     -------
