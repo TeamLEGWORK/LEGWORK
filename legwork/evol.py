@@ -289,7 +289,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
              output_vars=['ecc', 'f_orb'], n_proc=1,
-             avoid_merger=True, exact_t_merge=False):
+             avoid_merger=True, exact_t_merge=False, t_before=1 * u.Myr):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     This function use Peters & Mathews (1964) Eq. 5.11 and 5.13.
@@ -346,6 +346,19 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         Number of processors to split eccentricity evolution over, where
         the default is n_proc=1
 
+    avoid_merger : `boolean`
+        Whether to avoid integration around the merger of the binary. Warning:
+        setting this to false will result in many LSODA errors to be outputted
+        since the derivatives get so large.
+
+    exact_t_merge : `boolean`
+        Whether to calculate the merger time exactly or use a fit (only
+        relevant when ``avoid_merger`` is set to True
+
+    t_before : `float`
+        How much time before the merger to cutoff the integration (default is
+        1 Myr)
+
     Returns
     -------
     evolution : `array`
@@ -372,12 +385,19 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
                                        t_evol=t_evol, n_step=n_step,
                                        timesteps=timesteps)
 
+    # if avoiding the merger during integration
     if avoid_merger:
+        # calculate the merger time
         t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
                                   beta=beta, exact=exact_t_merge).to(u.Gyr)
-        too_close = timesteps >= t_merge[:, np.newaxis] - (1 * u.Myr)
+
+        # make a mask for any timesteps that are too close to the merger
+        too_close = timesteps >= t_merge[:, np.newaxis] - t_before
+
+        # set them all equal to the previous timestep before passing the limit
         timesteps[too_close] = -1 * u.Gyr
-        timesteps[too_close] = timesteps.max(axis=1).repeat(timesteps.shape[1]).reshape(timesteps.shape)[too_close]
+        previous = timesteps.max(axis=1).repeat(timesteps.shape[1])
+        timesteps[too_close] = previous.reshape(timesteps.shape)[too_close]
 
     # get rid of the units for faster integration
     c_0 = c_0.to(u.m).value
