@@ -375,7 +375,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     if avoid_merger:
         t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
                                   beta=beta, exact=exact_t_merge).to(u.Gyr)
-        too_close = timesteps >= 0.99 * t_merge[:, np.newaxis]
+        too_close = timesteps >= t_merge[:, np.newaxis] - (1 * u.Myr)
         timesteps[too_close] = -1 * u.Gyr
         timesteps[too_close] = timesteps.max(axis=1).repeat(timesteps.shape[1]).reshape(timesteps.shape)[too_close]
 
