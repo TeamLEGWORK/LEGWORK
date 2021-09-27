@@ -467,11 +467,18 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
     return t_merge.to(u.Gyr)
 
 
-@njit
 def t_merge_mandel_fit(ecc_i):
+    coefficients = np.array([-1.20317749e+03, 5.67211219e+03, -1.13935479e+04,
+                             1.27306422e+04, -8.66281737e+03,  3.69447796e+03,
+                             -9.79864734e+02,  1.54873214e+02, -1.32267683e+01,
+                             5.32494018e-01,  9.93382093e-01])
+    n_coeff = len(coefficients)
+    correction = np.array([coefficients[i] * np.power(ecc_i, n_coeff - (i + 1))
+                           for i in range(n_coeff)]).sum(axis=0)
+
     return (1 + (0.27 * ecc_i**10)
             + (0.33 * ecc_i**20)
-            + (0.20 * ecc_i**1000)) * (1 - ecc_i**2)**(7/2)
+            + (0.20 * ecc_i**1000)) * (1 - ecc_i**2)**(7/2) / correction
 
 
 def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
