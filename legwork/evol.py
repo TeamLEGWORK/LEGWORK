@@ -476,7 +476,8 @@ def t_merge_mandel_fit(ecc_i):
 
 def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
                     beta=None, m_1=None, m_2=None,
-                    small_e_tol=1e-2, large_e_tol=1 - 1e-2):
+                    small_e_tol=1e-2, large_e_tol=1 - 1e-2,
+                    exact=True):
     """Computes the merger time for binaries
 
     This function implements Peters (1964) Eq. 5.10, 5.14 and the two
@@ -514,6 +515,10 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
         Eccentricity above which to apply the large e approximation
         (second unlabelled equation following Eq. 5.14 of Peters 1964)
 
+    exact : `boolean`
+        Whether to calculate the merger time exactly with numerical
+        integration or to instead use a fit
+
     Returns
     -------
     t_merge : `float/array`
@@ -526,7 +531,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
     if np.all(ecc_i == 0.0):
         return get_t_merge_circ(beta=beta, a_i=a_i)
 
-    @jit(nopython=True)
+    @njit
     def peters_5_14(e):                                 # pragma: no cover
         """ merger time from Peters Eq. 5.14 """
         return np.power(e, 29/19) * np.power(1 + (121/304)*e**2, 1181/2299) \
@@ -561,9 +566,14 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
             * (1 + 121/304 * ecc_i[large_e]**2)**(3480/2299)
 
         # merger time for general binaries (Peters Eq. 5.14)
-        prefac = ((12 / 19) * c0[other_e]**4 / beta[other_e]).to(u.Gyr)
-        t_merge[other_e] = prefac * [quad(peters_5_14, 0, ecc_i[other_e][i])[0]
-                                     for i in range(len(ecc_i[other_e]))]
+        if exact:
+            prefac = ((12 / 19) * c0[other_e]**4 / beta[other_e]).to(u.Gyr)
+            t_merge[other_e] = prefac * [quad(peters_5_14, 0, ecc_i[other_e][i])[0]
+                                        for i in range(len(ecc_i[other_e]))]
+        else:
+            t_merge[other_e] = get_t_merge_circ(beta=beta[other_e],
+                                                a_i=a_i[other_e]) \
+                * t_merge_mandel_fit(ecc_i[other_e]
     # case with only one binary
     else:
         # calculate c0 from Peters Eq. 5.11
@@ -576,9 +586,12 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19) * (768 / 425) \
                 * (1 - ecc_i**2)**(-1/2) \
                 * (1 + 121/304 * ecc_i**2)**(3480/2299)
-        else:
+        elif exact:
             t_merge = ((12 / 19) * c0**4 / beta
                        * quad(peters_5_14, 0, ecc_i)[0])
+        else:
+            t_merge = get_t_merge_circ(beta=beta, a_i=a_i) \
+                * t_merge_mandel_fit(ecc_i)
     return t_merge.to(u.Gyr)
 
 
