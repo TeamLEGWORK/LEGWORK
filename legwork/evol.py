@@ -468,6 +468,23 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
 
 
 def t_merge_mandel_fit(ecc_i):
+    """A fit to the Peters 1964 merger time equation (5.14) by Ilya Mandel.
+    Function gives a factor which, when multiplied by the circular merger
+    time, gives the eccentric merger time with 3% errors. We add a simple
+    polynomial correction to reduce these errors to within 0.5%.
+    TODO: Add ArXiv link once posted
+
+    Parameters
+    ----------
+    ecc_i : `float/array`
+        Initial eccentricity
+
+    Returns
+    -------
+    factor : `float/array`
+        Factor by which to multiply the circular merger timescale by to get
+        the overall merger time.
+    """
     coefficients = np.array([-1.20317749e+03, 5.67211219e+03, -1.13935479e+04,
                              1.27306422e+04, -8.66281737e+03,  3.69447796e+03,
                              -9.79864734e+02,  1.54873214e+02, -1.32267683e+01,
