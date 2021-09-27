@@ -2,7 +2,7 @@
 inspiral times and evolve binary parameters."""
 
 import legwork.utils as utils
-from numba import jit
+from numba import jit, njit
 from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
@@ -465,6 +465,13 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
     t_merge = a_i**4 / (4 * beta)
 
     return t_merge.to(u.Gyr)
+
+
+@njit
+def t_merge_mandel_fit(ecc_i):
+    return (1 + (0.27 * ecc_i**10)
+            + (0.33 * ecc_i**20)
+            + (0.20 * ecc_i**1000)) * (1 - ecc_i**2)**(7/2)
 
 
 def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
