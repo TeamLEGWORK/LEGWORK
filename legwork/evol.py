@@ -573,7 +573,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None,
         else:
             t_merge[other_e] = get_t_merge_circ(beta=beta[other_e],
                                                 a_i=a_i[other_e]) \
-                * t_merge_mandel_fit(ecc_i[other_e]
+                * t_merge_mandel_fit(ecc_i[other_e])
     # case with only one binary
     else:
         # calculate c0 from Peters Eq. 5.11
