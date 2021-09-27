@@ -288,7 +288,8 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
 
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
-             output_vars=['ecc', 'f_orb'], n_proc=1):
+             output_vars=['ecc', 'f_orb'], n_proc=1,
+             avoid_merger=True, exact_t_merge=False):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     This function use Peters & Mathews (1964) Eq. 5.11 and 5.13.
@@ -370,6 +371,13 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
     timesteps = create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc_i,
                                        t_evol=t_evol, n_step=n_step,
                                        timesteps=timesteps)
+
+    if avoid_merger:
+        t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
+                                  beta=beta, exact=exact_t_merge).to(u.Gyr)
+        too_close = timesteps >= 0.99 * t_merge[:, np.newaxis]
+        timesteps[too_close] = -1 * u.Gyr
+        timesteps[too_close] = timesteps.max(axis=1).repeat(timesteps.shape[1]).reshape(timesteps.shape)[too_close]
 
     # get rid of the units for faster integration
     c_0 = c_0.to(u.m).value
