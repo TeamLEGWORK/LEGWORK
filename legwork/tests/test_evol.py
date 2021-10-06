@@ -18,7 +18,7 @@ class Test(unittest.TestCase):
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
-        e = np.random.uniform(0, 1, n_values)
+        e = np.random.uniform(0, 0.95, n_values)
 
         circ_time = evol.get_t_merge_circ(m_1=m_1, m_2=m_2, f_orb_i=f_orb)
         ecc_time = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
@@ -111,7 +111,7 @@ class Test(unittest.TestCase):
         beta = np.random.uniform(10, 50, 1) * u.AU**4 / u.Gyr
         a_i = np.random.uniform(0.01, 0.1, 1) * u.AU
 
-        for e in [0.0, 0.005, 0.5, 0.999]:
+        for e in [0.0, 0.005, 0.5, 0.95]:
             ecc_i = np.array([e])
             array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
                                               ecc_i=ecc_i).to(u.yr)
