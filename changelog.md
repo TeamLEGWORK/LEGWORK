@@ -21,3 +21,8 @@ This log keeps track of the changes implemented in each version of LEGWORK.
 *TW, 19/05/21*
 - Change visualisation module to be more flexible with **kwargs (allow any for dist plot and add linewidth to sensitivity curve function)
 - Change Source.get_snr() to allow re-interpolation of the sensitivity curve for convenience (and fix the warning so it works properly)
+
+## 0.0.5
+*TW, 25/09/21*
+- Change numerical integration package from scipy to NumbaLSODA for vast speed increases
+- Avoid LSODA warnings by preventing integration to get near the singularity at the merger
