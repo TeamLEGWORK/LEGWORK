@@ -4,7 +4,7 @@ Demos
 This section contains a series of demos that highlight ``LEGWORK``'s capabilities
 with some example use cases. We'll continue to update this page with new demos
 and if you've got an idea for a great use case for ``LEGWORK`` please `open a
-pull request <https://www.github.com/katiebreivik/LEGWORK/pulls>`_ and show off your new demo!
+pull request <https://www.github.com/TeamLEGWORK/LEGWORK/pulls>`_ and show off your new demo!
 
 .. raw:: html
 
