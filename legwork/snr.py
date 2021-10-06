@@ -163,13 +163,14 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     if ret_snr2_by_harmonic:
         return snr_n_2
 
-    if ret_max_snr_harmonic:
-        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
-
     # calculate the signal-to-noise ratio
     snr = (np.sum(snr_n_2, axis=1))**0.5
 
-    return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
+    if ret_max_snr_harmonic:
+        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
+        return snr, max_snr_harmonic
+    else:
+        return snr
 
 
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
@@ -401,10 +402,11 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     if ret_snr2_by_harmonic:
         return snr_n_2
 
-    if ret_max_snr_harmonic:
-        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
-
     snr_2 = snr_n_2.sum(axis=1)
     snr = np.sqrt(snr_2)
 
-    return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
+    if ret_max_snr_harmonic:
+        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
+        return snr, max_snr_harmonic
+    else:
+        return snr
