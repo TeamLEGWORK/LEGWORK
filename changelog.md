@@ -24,5 +24,5 @@ This log keeps track of the changes implemented in each version of LEGWORK.
 
 ## 0.0.5
 *TW, 25/09/21*
-- Change numerical integration package from scipy to NumbaLSODA for vast speed increases
-- Avoid LSODA warnings by preventing integration to get near the singularity at the merger
+- Avoid LSODA warnings by preventing integration from getting near the singularity at the merger
+- Allow user to select how long before a merger to stop integration
