@@ -114,10 +114,39 @@ class Test(unittest.TestCase):
         for e in [0.0, 0.005, 0.5, 0.95]:
             ecc_i = np.array([e])
             array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
-                                              ecc_i=ecc_i).to(u.yr)
+                                              ecc_i=ecc_i,
+                                              large_e_tol=0.94).to(u.yr)
             single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0],
-                                               ecc_i=ecc_i[0]).to(u.yr)
+                                               ecc_i=ecc_i[0],
+                                               large_e_tol=0.94).to(u.yr)
             self.assertTrue(array_time[0] == single_time)
+
+    def test_mandel_fit(self):
+        """checks that the Mandel fit to the Peters timescale is the same
+        as the exact version"""
+
+        n_values = 1000
+        beta = np.random.uniform(10, 50, n_values) * u.AU**4 / u.Gyr
+        a_i = np.random.uniform(0.01, 0.1, n_values) * u.AU
+        ecc = np.random.uniform(0, 0.95, n_values)
+
+        # ensure you get the same value no matter which function you use
+        exact_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
+                                        ecc_i=ecc, exact=True).to(u.yr)
+        fit_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
+                                        ecc_i=ecc, exact=False).to(u.yr)
+
+        self.assertTrue(np.allclose(exact_time, fit_time, rtol=0.05))
+
+        beta = np.random.uniform(10, 50, 1) * u.AU**4 / u.Gyr
+        a_i = np.random.uniform(0.01, 0.1, 1) * u.AU
+        ecc = np.random.uniform(0.02, 0.98, 1) # make sure it is in the middle
+
+        array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
+                                          ecc_i=ecc, exact=False).to(u.yr)
+        single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0],
+                                           ecc_i=ecc[0], exact=False).to(u.yr)
+        self.assertTrue(array_time[0] == single_time)
 
     def test_timestep_creation(self):
         n_values = 10
