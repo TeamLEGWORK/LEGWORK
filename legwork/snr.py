@@ -360,12 +360,14 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     # if t_merge is None:
     t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2,
                                     f_orb_i=f_orb_i, ecc_i=ecc)
-    t_evol = np.minimum(t_merge, t_obs).to(u.s)
 
+    t_before = 0.1 * u.yr
+
+    t_evol = np.minimum(t_merge - t_before, t_obs).to(u.s)
     # get eccentricity and f_orb evolutions
     e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step,
                                        m_1=m_1, m_2=m_2, f_orb_i=f_orb_i,
-                                       n_proc=n_proc)
+                                       n_proc=n_proc, t_before=t_before)
 
     maxes = np.where(np.logical_and(e_evol == 0.0, f_orb_evol == 1e2 * u.Hz),
                       -1 * u.Hz, f_orb_evol).max(axis=1)
@@ -394,8 +396,6 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs,
     snr_evol = h_c_n_2 / h_c_lisa_2
 
     # integrate, sum and square root to get SNR
-    # print(f_n_evol.diff(axis=1).shape)
-    # print(f_n_evol.diff(axis=1))
     snr_n_2 = np.trapz(y=snr_evol, x=f_n_evol, axis=1)
 
     if ret_snr2_by_harmonic:

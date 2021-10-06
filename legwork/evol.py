@@ -2,8 +2,7 @@
 inspiral times and evolve binary parameters."""
 
 import legwork.utils as utils
-from NumbaLSODA import lsoda_sig, lsoda
-from numba import jit, njit, cfunc
+from numba import jit, njit
 import numba as nb
 from scipy.integrate import odeint, quad
 import numpy as np
@@ -14,14 +13,6 @@ from schwimmbad import MultiPool
 __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc',
            'get_t_merge_circ', 'get_t_merge_ecc', 'evolve_f_orb_circ',
            'check_mass_freq_input', 'create_timesteps_array']
-
-@cfunc(lsoda_sig)
-def de_dt_Numba(t, e, de, data):
-    e_ = nb.carray(e, (1,))
-    # beta, c_0 = nb.carray(data, (2,))
-    data_ = nb.carray(data, (2,))
-    de[0] = -19 / 12 * data_[0] / data_[1]**4 * (e_[0]**(-29.0 / 19.0) * (1 - e_[0]**2)**(3.0/2.0)) \
-        / (1 + (121./304.) * e_[0]**2)**(1181./2299.)
 
 @jit
 def de_dt(e, times, beta, c_0):                             # pragma: no cover
@@ -405,10 +396,11 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         # make a mask for any timesteps that are too close to the merger
         too_close = timesteps >= t_merge[:, np.newaxis] - t_before
 
-        # set them all equal to the previous timestep before passing the limit
-        timesteps[too_close] = -1 * u.Gyr
-        previous = timesteps.max(axis=1).repeat(timesteps.shape[1])
-        timesteps[too_close] = previous.reshape(timesteps.shape)[too_close]
+        if np.any(too_close):
+            # set them all equal to the previous timestep before passing the limit
+            timesteps[too_close] = -1 * u.Gyr
+            previous = timesteps.max(axis=1).repeat(timesteps.shape[1])
+            timesteps[too_close] = previous.reshape(timesteps.shape)[too_close]
 
     # get rid of the units for faster integration
     c_0 = c_0.to(u.m).value
@@ -424,16 +416,9 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
                                                   beta,
                                                   c_0))))
     else:
-        if old:
-            ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
-                                        args=(beta[i], c_0[i])).flatten()
-                                for i in range(len(ecc_i))])
-        else:
-            ecc_evol = np.array([lsoda(de_dt_Numba.address,
-                                       np.array([ecc_i[i]]), timesteps[i],
-                                       data=np.array([beta[i], c_0[i]]),
-                                       rtol=1.49012e-8, atol=1.49012e-8)[0].flatten()
-                                 for i in range(len(ecc_i))])
+        ecc_evol = np.array([odeint(de_dt, ecc_i[i], timesteps[i],
+                                    args=(beta[i], c_0[i])).flatten()
+                            for i in range(len(ecc_i))])
 
     c_0 = c_0[:, np.newaxis] * u.m
     ecc_evol = np.nan_to_num(ecc_evol, nan=0.0)
