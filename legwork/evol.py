@@ -289,8 +289,7 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
              output_vars=['ecc', 'f_orb'], n_proc=1,
-             avoid_merger=True, exact_t_merge=False, t_before=1 * u.Myr,
-             old=False):
+             avoid_merger=True, exact_t_merge=False, t_before=1 * u.Myr):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     This function use Peters & Mathews (1964) Eq. 5.11 and 5.13.
