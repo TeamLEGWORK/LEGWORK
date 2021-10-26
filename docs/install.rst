@@ -40,10 +40,10 @@ Installation
     .. tab:: Development (from GitHub)
 
         The latest development version is available directly from our `GitHub Repo
-        <https://github.com/katiebreivik/LEGWORK>`_:
+        <https://github.com/TeamLEGWORK/LEGWORK>`_:
 
         .. code-block:: bash
         
-            git clone https://github.com/katiebreivik/LEGWORK
+            git clone https://github.com/TeamLEGWORK/LEGWORK
             cd LEGWORK
             pip install .

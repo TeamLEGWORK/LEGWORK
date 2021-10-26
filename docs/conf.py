@@ -111,7 +111,7 @@ todo_include_todos = True
 nbsphinx_prolog = """
 {% set docname = env.doc2path(env.docname, base=None) %}
 .. note:: This tutorial was generated from a Jupyter notebook that can be
-          downloaded `here <https://github.com/katiebreivik/LEGWORK/tree/main/docs/{{ docname }}>`_.
+          downloaded `here <https://github.com/TeamLEGWORK/LEGWORK/tree/main/docs/{{ docname }}>`_.
 """
 nbsphinx_prompt_width = "0"
 
@@ -155,4 +155,4 @@ def linkcode_resolve(domain, info):
     # if you can't find it in the file then just link to the correct file
     except Exception:
         filename = info['module'].replace('.', '/') + '.py'
-    return "https://github.com/katiebreivik/LEGWORK/blob/main/{}".format(filename)
+    return "https://github.com/TeamLEGWORK/LEGWORK/blob/main/{}".format(filename)

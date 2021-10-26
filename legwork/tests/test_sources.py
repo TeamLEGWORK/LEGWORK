@@ -283,7 +283,7 @@ class Test(unittest.TestCase):
         n_values = 10
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
-        ecc = np.random.uniform(0.0, 1.0, n_values)
+        ecc = np.random.uniform(0.0, 0.95, n_values)
         dist = np.random.uniform(0, 10, n_values) * u.kpc
         f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
 
