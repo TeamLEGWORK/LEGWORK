@@ -113,12 +113,13 @@ class Test(unittest.TestCase):
 
         for e in [0.0, 0.005, 0.5, 0.95]:
             ecc_i = np.array([e])
+            # large_e_tol=0.9 so high ecc approximation triggers (for coverage)
             array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
                                               ecc_i=ecc_i,
-                                              large_e_tol=0.94).to(u.yr)
+                                              large_e_tol=0.9).to(u.yr)
             single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0],
                                                ecc_i=ecc_i[0],
-                                               large_e_tol=0.94).to(u.yr)
+                                               large_e_tol=0.9).to(u.yr)
             self.assertTrue(array_time[0] == single_time)
 
     def test_mandel_fit(self):
