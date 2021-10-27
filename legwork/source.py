@@ -493,10 +493,17 @@ class Source():
 
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
+            print("\t{}".format(len(self.merged[self.merged])),
+                  "sources have already merged")
         snr = np.zeros(self.n_sources)
-        stat_mask = self.get_source_mask(circular=None, stationary=True,
-                                         t_obs=t_obs)
-        evol_mask = np.logical_not(stat_mask)
+        stat_mask = np.logical_and(self.get_source_mask(circular=None,
+                                                        stationary=True,
+                                                        t_obs=t_obs),
+                                   np.logical_not(self.merged))
+        evol_mask = np.logical_and(self.get_source_mask(circular=None,
+                                                        stationary=False,
+                                                        t_obs=t_obs),
+                                   np.logical_not(self.merged))
 
         if stat_mask.any():
             if verbose:
@@ -773,7 +780,7 @@ class Source():
         """
         # if merger time hasn't be calculated, calculate a quick fit for it
         if self.t_merge is None:
-            self.get_merger_time(exact=False)
+            self.get_merger_time()
 
         merged = t_evol >= self.t_merge
 
@@ -793,6 +800,9 @@ class Source():
         n_step = 2
         ecc_evol = np.zeros(self.n_sources)
         f_orb_evol = np.zeros(self.n_sources) * u.Hz
+
+        # set the frequency of the merged objects
+        f_orb_evol[merged] = 100 * u.Hz
 
         # calculate the evolved values for circular binaries
         if c_mask.any():
