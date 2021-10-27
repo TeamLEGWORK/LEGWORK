@@ -27,7 +27,7 @@ class Test(unittest.TestCase):
                                 interpolate_sc=False)
 
         # calculate the merger times
-        t_merge = sources.get_merger_time()
+        t_merge = sources.get_merger_time(save_in_class=False)
 
         # create a new class after evolving every source for 10 years
         evolved_sources = sources.evolve_sources(10 * u.yr,
@@ -238,7 +238,7 @@ class Test(unittest.TestCase):
         m_1 = np.random.uniform(0, 10, n_values) * u.Msun
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         dist = np.random.uniform(0, 30, n_values) * u.kpc
-        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        f_orb = 10**(np.random.uniform(-5, -3, n_values)) * u.Hz
         ecc = np.random.uniform(0.0, 0.9, n_values)
 
         # compare snr calculated directly with through Source
@@ -250,6 +250,8 @@ class Test(unittest.TestCase):
 
         interp_snr = sources_interp.get_snr(verbose=True)
         snr = sources.get_snr(verbose=True)
+
+        print(interp_snr / snr)
 
         self.assertTrue(np.allclose(interp_snr, snr, atol=1e-1, rtol=1e-1))
 

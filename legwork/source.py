@@ -152,9 +152,10 @@ class Source():
 
         # interpolate g(n,e) for more than 100 sources or eccentric populations
         if interpolate_g == "auto":
-            interpolate_g = np.logical_or(self.n_sources > 100,
-                                          np.any(self.ecc > 0.9))
-        self.set_g(interpolate_g)
+            self.set_g(np.logical_or(self.n_sources > 100,
+                                     np.any(self.ecc > 0.9)))
+        else:
+            self.set_g(interpolate_g)
         self.set_sc()
 
     def create_harmonics_functions(self):
