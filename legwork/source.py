@@ -845,6 +845,7 @@ class Source():
                 self.t_merge = np.maximum(0 * u.Gyr, self.t_merge - t_evol)
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
+                              exclude_merged_sources=True,
                               **kwargs):  # pragma: no cover
         """Plot distributions of Source variables. If two variables are
         specified then produce a 2D distribution, otherwise a 1D distribution.
@@ -863,6 +864,10 @@ class Source():
 
         which_sources : `boolean array`
             Mask for which sources should be plotted (default is all sources)
+
+        exclude_merged_sources : `boolean`
+            Whether to exclude merged sources in distributions (default is
+            True)
 
         **kwargs : `various`
             When only ``xstr`` is provided, the kwargs are the same as
@@ -897,6 +902,10 @@ class Source():
 
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        if exclude_merged_sources:
+            which_sources = np.logical_and(which_sources,
+                                           np.logical_not(self.merged))
 
         # ensure that the variable is a valid choice
         for var_str in [xstr, ystr]:
@@ -973,8 +982,12 @@ class Source():
             sources. Evolving sources will not be plotted and a warning will be
             shown instead. We are working on implementing soon!
         """
+        detectable = self.snr > snr_cutoff
+        inspiraling = np.logical_not(self.merged)
+
         # plot circular and stationary sources
         circ_stat = self.get_source_mask(circular=True, stationary=True)
+        circ_stat = np.logical_and.reduce((circ_stat, detectable, inspiraling))
         if circ_stat.any():
             f_orb = self.f_orb[circ_stat]
             h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
@@ -989,6 +1002,7 @@ class Source():
 
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
+        ecc_stat = np.logical_and.reduce((ecc_stat, detectable, inspiraling))
         if ecc_stat.any():
             f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
@@ -999,12 +1013,14 @@ class Source():
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
+        circ_evol = np.logical_and.reduce((circ_evol, detectable, inspiraling))
         if circ_evol.any():
             print("{} circular and evolving".format(len(circ_evol[circ_evol])),
                   "sources detected, plotting not yet implemented for",
                   "evolving sources.")
 
-        ecc_evol = self.get_source_mask(circular=False, stationary=False)
+        ecc_evol = self.get_source_mask(circular=True, stationary=False)
+        ecc_evol = np.logical_and.reduce((ecc_evol, detectable, inspiraling))
         if ecc_evol.any():
             print("{} eccentric and evolving".format(len(ecc_evol[ecc_evol])),
                   "sources detected, plotting not yet implemented for",
