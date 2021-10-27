@@ -56,8 +56,11 @@ class Source():
         Fractional change in frequency above which a
         binary should be considered to be stationary
 
-    interpolate_g : `boolean`
-        Whether to interpolate the g(n,e) function from Peters (1964)
+    interpolate_g : `boolean` or 'auto'
+        Whether to interpolate the g(n,e) function from Peters (1964). If
+        'auto' is inputted then LEGWORK will decide whether it is
+        necessary to interpolate g(n,e) based on the number of sources and
+        their eccentricity.
 
     interpolate_sc : `boolean`
         Whether to interpolate the LISA sensitivity curve
@@ -98,7 +101,7 @@ class Source():
         If a parameter is missing units
     """
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None,
-                 gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
+                 gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto",
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
@@ -146,6 +149,11 @@ class Source():
         self.merged = np.repeat(False, self.n_sources)
 
         self.update_gw_lum_tol(gw_lum_tol)
+
+        # interpolate g(n,e) for more than 100 sources or eccentric populations
+        if interpolate_g == "auto":
+            interpolate_g = np.logical_or(self.n_sources > 100,
+                                          np.any(self.ecc > 0.9))
         self.set_g(interpolate_g)
         self.set_sc()
 
