@@ -707,7 +707,8 @@ class Source():
 
         return snr[which_sources]
 
-    def get_merger_time(self, save_in_class=True, which_sources=None):
+    def get_merger_time(self, save_in_class=True, which_sources=None,
+                        exact=True):
         """Get the merger time for each source. Set ``save_in_class`` to true
         to save the values as an instance variable in the class. Use
         ``which_sources`` to select a subset of the sources in the class. Note
@@ -722,6 +723,9 @@ class Source():
         which_sources : `bool/array`, optional
             A mask for the subset of sources for which to calculate the merger
             time, by default all sources (None)
+        exact : `boolean`, optional
+            Whether to calculate the merger time exactly with numerical
+            integration or to instead use a fit
 
         Returns
         -------
@@ -739,7 +743,8 @@ class Source():
         t_merge[insp] = evol.get_t_merge_ecc(ecc_i=self.ecc[insp],
                                              f_orb_i=self.f_orb[insp],
                                              m_1=self.m_1[insp],
-                                             m_2=self.m_2[insp])
+                                             m_2=self.m_2[insp],
+                                             exact=exact)
         if save_in_class:
             self.t_merge = t_merge
 
@@ -766,9 +771,15 @@ class Source():
             The new class with evolved sources, only returned if
             ``create_new_class`` is ``True``.
         """
+        # if merger time hasn't be calculated, calculate a quick fit for it
+        if self.t_merge is None:
+            self.get_merger_time(exact=False)
+
+        merged = t_evol >= self.t_merge
+
         # separate out the exactly circular sources from eccentric ones
-        c_mask = self.ecc == 0.0
-        e_mask = np.logical_not(c_mask)
+        c_mask = np.logical_and(self.ecc == 0.0, np.logical_not(merged))
+        e_mask = np.logical_and(self.ecc != 0.0, np.logical_not(merged))
 
         # split up the evolution times if need be
         if isinstance(t_evol.value, (int, float)):
@@ -801,14 +812,12 @@ class Source():
                                       m_2=self.m_2[e_mask],
                                       f_orb_i=self.f_orb[e_mask],
                                       ecc_i=self.ecc[e_mask],
-                                      output_vars=["ecc", "f_orb"])
+                                      output_vars=["ecc", "f_orb"],
+                                      avoid_merger=False)
 
             # drop everything except the final evolved value
             ecc_evol[e_mask] = evolution[0][:, -1]
             f_orb_evol[e_mask] = evolution[1][:, -1]
-
-        # record which sources merged during evolution
-        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1e2* u.Hz)
 
         if create_new_class:
             # create new source with same attributes (but evolved ecc/f_orb)
