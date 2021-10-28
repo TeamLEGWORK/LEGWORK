@@ -5,6 +5,7 @@ sphinx_rtd_theme
 sphinx_automodapi
 sphinxcontrib.bibtex
 IPython
+ipykernel
 schwimmbad
 sphinx_copybutton
 sphinx-tabs

@@ -5,11 +5,11 @@
 <h2 align="center">
     The <b>L</b>ISA <b>E</b>volution and <b>G</b>ravitational <b>W</b>ave <b>OR</b>bit <b>K</b>it
     <br>
-    <a href="https://app.codecov.io/gh/TeamLEGWORK/LEGWORK">
-      <img src="https://app.codecov.io/gh/TeamLEGWORK/LEGWORK/branch/main/graph/badge.svg?token=FUG4RFYCWX)">
+    <a href="https://codecov.io/gh/TeamLEGWORK/LEGWORK">
+        <img src="https://codecov.io/gh/TeamLEGWORK/LEGWORK/branch/main/graph/badge.svg?token=FUG4RFYCWX"/>
     </a>
     <a href='https://legwork.readthedocs.io/en/latest/?badge=latest'>
-    <img src='https://readthedocs.org/projects/legwork/badge/?version=latest' alt='Documentation Status' />
+        <img src='https://readthedocs.org/projects/legwork/badge/?version=latest' alt='Documentation Status' />
     </a>
 </h2>
 

@@ -289,7 +289,8 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None,
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
              m_1=None, m_2=None, a_i=None, f_orb_i=None,
              output_vars=['ecc', 'f_orb'], n_proc=1,
-             avoid_merger=True, exact_t_merge=False, t_before=1 * u.Myr):
+             avoid_merger=True, exact_t_merge=False,
+             t_before=1 * u.Myr, t_merge=None):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     This function use Peters & Mathews (1964) Eq. 5.11 and 5.13.
@@ -360,6 +361,12 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         1 Myr - this will prevent all LSODA warnings for e < 0.95, you may
         need to increase this time if your sample is more eccentric than this)
 
+    t_merge : `float/array`
+        Merger times for each source to be evolved. Only used when
+        `avoid_merger=True`. If `None` then these will be automatically
+        calculated either approximately or exactly based on the values of
+        `exact_t_merge`.
+
     Returns
     -------
     evolution : `array`
@@ -388,15 +395,26 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
 
     # if avoiding the merger during integration
     if avoid_merger:
-        # calculate the merger time
-        t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
-                                  beta=beta, exact=exact_t_merge).to(u.Gyr)
+        if t_merge is None:
+            # calculate the merger time
+            t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
+                                      beta=beta, exact=exact_t_merge).to(u.Gyr)
 
         # make a mask for any timesteps that are too close to the merger
         too_close = timesteps >= t_merge[:, np.newaxis] - t_before
 
+        check = too_close
+        check[:, 0] = True
+        if np.all(check):
+            print("WARNING: All timesteps are too close to merger so",
+                  "evolution is not possible. Either set `t_before` to a",
+                  "smaller time or turn off `avoid_merger`")
+
+        # ensure that the first timestep is always valid
+        too_close[:, 0] = False
+
         if np.any(too_close):
-            # set them all equal to the previous timestep before passing the limit
+            # set them all equal to the previous timestep before passing limit
             timesteps[too_close] = -1 * u.Gyr
             previous = timesteps.max(axis=1).repeat(timesteps.shape[1])
             timesteps[too_close] = previous.reshape(timesteps.shape)[too_close]

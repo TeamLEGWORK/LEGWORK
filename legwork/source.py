@@ -56,8 +56,11 @@ class Source():
         Fractional change in frequency above which a
         binary should be considered to be stationary
 
-    interpolate_g : `boolean`
-        Whether to interpolate the g(n,e) function from Peters (1964)
+    interpolate_g : `boolean` or 'auto'
+        Whether to interpolate the g(n,e) function from Peters (1964). If
+        'auto' is inputted then LEGWORK will decide whether it is
+        necessary to interpolate g(n,e) based on the number of sources and
+        their eccentricity.
 
     interpolate_sc : `boolean`
         Whether to interpolate the LISA sensitivity curve
@@ -98,7 +101,7 @@ class Source():
         If a parameter is missing units
     """
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None,
-                 gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
+                 gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto",
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
@@ -146,7 +149,13 @@ class Source():
         self.merged = np.repeat(False, self.n_sources)
 
         self.update_gw_lum_tol(gw_lum_tol)
-        self.set_g(interpolate_g)
+
+        # interpolate g(n,e) for more than 100 sources or eccentric populations
+        if interpolate_g == "auto":
+            self.set_g(np.logical_or(self.n_sources > 100,
+                                     np.any(self.ecc > 0.9)))
+        else:
+            self.set_g(interpolate_g)
         self.set_sc()
 
     def create_harmonics_functions(self):
@@ -493,10 +502,17 @@ class Source():
 
         if verbose:
             print("Calculating SNR for {} sources".format(self.n_sources))
+            print("\t{}".format(len(self.merged[self.merged])),
+                  "sources have already merged")
         snr = np.zeros(self.n_sources)
-        stat_mask = self.get_source_mask(circular=None, stationary=True,
-                                         t_obs=t_obs)
-        evol_mask = np.logical_not(stat_mask)
+        stat_mask = np.logical_and(self.get_source_mask(circular=None,
+                                                        stationary=True,
+                                                        t_obs=t_obs),
+                                   np.logical_not(self.merged))
+        evol_mask = np.logical_and(self.get_source_mask(circular=None,
+                                                        stationary=False,
+                                                        t_obs=t_obs),
+                                   np.logical_not(self.merged))
 
         if stat_mask.any():
             if verbose:
@@ -707,7 +723,8 @@ class Source():
 
         return snr[which_sources]
 
-    def get_merger_time(self, save_in_class=True, which_sources=None):
+    def get_merger_time(self, save_in_class=True, which_sources=None,
+                        exact=True):
         """Get the merger time for each source. Set ``save_in_class`` to true
         to save the values as an instance variable in the class. Use
         ``which_sources`` to select a subset of the sources in the class. Note
@@ -722,6 +739,9 @@ class Source():
         which_sources : `bool/array`, optional
             A mask for the subset of sources for which to calculate the merger
             time, by default all sources (None)
+        exact : `boolean`, optional
+            Whether to calculate the merger time exactly with numerical
+            integration or to instead use a fit
 
         Returns
         -------
@@ -739,7 +759,8 @@ class Source():
         t_merge[insp] = evol.get_t_merge_ecc(ecc_i=self.ecc[insp],
                                              f_orb_i=self.f_orb[insp],
                                              m_1=self.m_1[insp],
-                                             m_2=self.m_2[insp])
+                                             m_2=self.m_2[insp],
+                                             exact=exact)
         if save_in_class:
             self.t_merge = t_merge
 
@@ -766,9 +787,15 @@ class Source():
             The new class with evolved sources, only returned if
             ``create_new_class`` is ``True``.
         """
+        # if merger time hasn't be calculated, calculate a quick fit for it
+        if self.t_merge is None:
+            self.get_merger_time()
+
+        merged = t_evol >= self.t_merge
+
         # separate out the exactly circular sources from eccentric ones
-        c_mask = self.ecc == 0.0
-        e_mask = np.logical_not(c_mask)
+        c_mask = np.logical_and(self.ecc == 0.0, np.logical_not(merged))
+        e_mask = np.logical_and(self.ecc != 0.0, np.logical_not(merged))
 
         # split up the evolution times if need be
         if isinstance(t_evol.value, (int, float)):
@@ -782,6 +809,9 @@ class Source():
         n_step = 2
         ecc_evol = np.zeros(self.n_sources)
         f_orb_evol = np.zeros(self.n_sources) * u.Hz
+
+        # set the frequency of the merged objects
+        f_orb_evol[merged] = 100 * u.Hz
 
         # calculate the evolved values for circular binaries
         if c_mask.any():
@@ -801,14 +831,12 @@ class Source():
                                       m_2=self.m_2[e_mask],
                                       f_orb_i=self.f_orb[e_mask],
                                       ecc_i=self.ecc[e_mask],
-                                      output_vars=["ecc", "f_orb"])
+                                      output_vars=["ecc", "f_orb"],
+                                      avoid_merger=False)
 
             # drop everything except the final evolved value
             ecc_evol[e_mask] = evolution[0][:, -1]
             f_orb_evol[e_mask] = evolution[1][:, -1]
-
-        # record which sources merged during evolution
-        merged = np.logical_and(ecc_evol == 0.0, f_orb_evol == 1e2* u.Hz)
 
         if create_new_class:
             # create new source with same attributes (but evolved ecc/f_orb)
@@ -845,6 +873,7 @@ class Source():
                 self.t_merge = np.maximum(0 * u.Gyr, self.t_merge - t_evol)
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
+                              exclude_merged_sources=True,
                               **kwargs):  # pragma: no cover
         """Plot distributions of Source variables. If two variables are
         specified then produce a 2D distribution, otherwise a 1D distribution.
@@ -863,6 +892,10 @@ class Source():
 
         which_sources : `boolean array`
             Mask for which sources should be plotted (default is all sources)
+
+        exclude_merged_sources : `boolean`
+            Whether to exclude merged sources in distributions (default is
+            True)
 
         **kwargs : `various`
             When only ``xstr`` is provided, the kwargs are the same as
@@ -897,6 +930,10 @@ class Source():
 
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        if exclude_merged_sources:
+            which_sources = np.logical_and(which_sources,
+                                           np.logical_not(self.merged))
 
         # ensure that the variable is a valid choice
         for var_str in [xstr, ystr]:
@@ -973,8 +1010,12 @@ class Source():
             sources. Evolving sources will not be plotted and a warning will be
             shown instead. We are working on implementing soon!
         """
+        detectable = self.snr > snr_cutoff
+        inspiraling = np.logical_not(self.merged)
+
         # plot circular and stationary sources
         circ_stat = self.get_source_mask(circular=True, stationary=True)
+        circ_stat = np.logical_and.reduce((circ_stat, detectable, inspiraling))
         if circ_stat.any():
             f_orb = self.f_orb[circ_stat]
             h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
@@ -989,6 +1030,7 @@ class Source():
 
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
+        ecc_stat = np.logical_and.reduce((ecc_stat, detectable, inspiraling))
         if ecc_stat.any():
             f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom,
@@ -999,12 +1041,14 @@ class Source():
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
+        circ_evol = np.logical_and.reduce((circ_evol, detectable, inspiraling))
         if circ_evol.any():
             print("{} circular and evolving".format(len(circ_evol[circ_evol])),
                   "sources detected, plotting not yet implemented for",
                   "evolving sources.")
 
-        ecc_evol = self.get_source_mask(circular=False, stationary=False)
+        ecc_evol = self.get_source_mask(circular=True, stationary=False)
+        ecc_evol = np.logical_and.reduce((ecc_evol, detectable, inspiraling))
         if ecc_evol.any():
             print("{} eccentric and evolving".format(len(ecc_evol[ecc_evol])),
                   "sources detected, plotting not yet implemented for",
