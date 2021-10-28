@@ -403,6 +403,13 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None,
         # make a mask for any timesteps that are too close to the merger
         too_close = timesteps >= t_merge[:, np.newaxis] - t_before
 
+        check = too_close
+        check[:, 0] = True
+        if np.all(check):
+            print("WARNING: All timesteps are too close to merger so",
+                  "evolution is not possible. Either set `t_before` to a",
+                  "smaller time or turn off `avoid_merger`")
+
         # ensure that the first timestep is always valid
         too_close[:, 0] = False
 
