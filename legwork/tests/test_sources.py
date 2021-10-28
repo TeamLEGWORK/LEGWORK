@@ -251,8 +251,6 @@ class Test(unittest.TestCase):
         interp_snr = sources_interp.get_snr(verbose=True)
         snr = sources.get_snr(verbose=True)
 
-        print(interp_snr / snr)
-
         self.assertTrue(np.allclose(interp_snr, snr, atol=1e-1, rtol=1e-1))
 
     def test_interpolated_sc(self):
