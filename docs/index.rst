@@ -33,5 +33,5 @@ We are thankful to Lieke van Son for suggesting the name LEGWORK and Stas Babak,
     Demos <demos>
     Modules <modules>
     Derivations <notebooks/Derivations.ipynb>
-    GitHub <https://github.com/katiebreivik/LEGWORK>
-    Submit an issue <https://github.com/katiebreivik/LEGWORK/issues/new>
+    GitHub <https://github.com/TeamLEGWORK/LEGWORK>
+    Submit an issue <https://github.com/TeamLEGWORK/LEGWORK/issues/new>

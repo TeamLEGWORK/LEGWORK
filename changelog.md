@@ -22,6 +22,19 @@ This log keeps track of the changes implemented in each version of LEGWORK.
 - Change visualisation module to be more flexible with **kwargs (allow any for dist plot and add linewidth to sensitivity curve function)
 - Change Source.get_snr() to allow re-interpolation of the sensitivity curve for convenience (and fix the warning so it works properly)
 
+## 0.0.5
+*TW, 25/09/21*
+- Avoid LSODA warnings by preventing integration from getting near the singularity at the merger
+- Allow user to select how long before a merger to stop integration
+
+## 0.0.6
+*TW, 26/10/21*
+- Avoid plotting merged sources in any of the automatic routines
+- Allow source class evolution code to handle sources close to their merger
+- Ensure SNR calculation works if some sources have merged and produces no warnings
+- Change default behaviour of Source class with interpolate_g - no longer always interpolate, only when the collection of sources is fairly large or it contains eccentric sources
+- Add a warning for if all timesteps are too close to the merger (based on `t_before`) and hence evolution can't happen
+
 ## 0.1.0
 Change changelog style in this version to table.
 <table>

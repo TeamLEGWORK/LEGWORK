@@ -2,7 +2,8 @@
 binary parameters."""
 
 import legwork.utils as utils
-from numba import jit
+from numba import jit, njit
+import numba as nb
 from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
@@ -11,7 +12,6 @@ from schwimmbad import MultiPool
 
 __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc', 'get_t_merge_circ', 'get_t_merge_ecc',
            'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array']
-
 
 @jit
 def de_dt(e, times, beta, c_0):                             # pragma: no cover
@@ -260,7 +260,8 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None, m_2=
 
 
 def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None, m_2=None,
-             a_i=None, f_orb_i=None, output_vars=['ecc', 'f_orb'], n_proc=1):
+             a_i=None, f_orb_i=None, output_vars=['ecc', 'f_orb'], n_proc=1,
+             avoid_merger=True, exact_t_merge=False, t_before=1 * u.Myr, t_merge=None):
     """Evolve an array of eccentric binaries for ``t_evol`` time
 
     This function use Peters & Mathews (1964) Eq. 5.11 and 5.13.
@@ -311,6 +312,26 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None
     n_proc : `int`
         Number of processors to split eccentricity evolution over, where the default is n_proc=1
 
+    avoid_merger : `boolean`
+        Whether to avoid integration around the merger of the binary. Warning:
+        setting this to false will result in many LSODA errors to be outputted
+        since the derivatives get so large.
+
+    exact_t_merge : `boolean`
+        Whether to calculate the merger time exactly or use a fit (only
+        relevant when ``avoid_merger`` is set to True
+
+    t_before : `float`
+        How much time before the merger to cutoff the integration (default is
+        1 Myr - this will prevent all LSODA warnings for e < 0.95, you may
+        need to increase this time if your sample is more eccentric than this)
+
+    t_merge : `float/array`
+        Merger times for each source to be evolved. Only used when
+        `avoid_merger=True`. If `None` then these will be automatically
+        calculated either approximately or exactly based on the values of
+        `exact_t_merge`.
+
     Returns
     -------
     evolution : `array`
@@ -330,6 +351,32 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None
     c_0 = utils.c_0(a_i=a_i, ecc_i=ecc_i)
     timesteps = create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc_i,
                                        t_evol=t_evol, n_step=n_step, timesteps=timesteps)
+
+    # if avoiding the merger during integration
+    if avoid_merger:
+        if t_merge is None:
+            # calculate the merger time
+            t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
+                                      beta=beta, exact=exact_t_merge).to(u.Gyr)
+
+        # make a mask for any timesteps that are too close to the merger
+        too_close = timesteps >= t_merge[:, np.newaxis] - t_before
+
+        check = too_close
+        check[:, 0] = True
+        if np.all(check):
+            print("WARNING: All timesteps are too close to merger so",
+                  "evolution is not possible. Either set `t_before` to a",
+                  "smaller time or turn off `avoid_merger`")
+
+        # ensure that the first timestep is always valid
+        too_close[:, 0] = False
+
+        if np.any(too_close):
+            # set them all equal to the previous timestep before passing limit
+            timesteps[too_close] = -1 * u.Gyr
+            previous = timesteps.max(axis=1).repeat(timesteps.shape[1])
+            timesteps[too_close] = previous.reshape(timesteps.shape)[too_close]
 
     # get rid of the units for faster integration
     c_0 = c_0.to(u.m).value
@@ -418,8 +465,39 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
     return t_merge.to(u.Gyr)
 
 
+def t_merge_mandel_fit(ecc_i):
+    """A fit to the Peters 1964 merger time equation (5.14) by Ilya Mandel.
+    Function gives a factor which, when multiplied by the circular merger
+    time, gives the eccentric merger time with 3% errors. We add a simple
+    polynomial correction to reduce these errors to within 0.5%.
+    TODO: Add ArXiv link once posted
+
+    Parameters
+    ----------
+    ecc_i : `float/array`
+        Initial eccentricity
+
+    Returns
+    -------
+    factor : `float/array`
+        Factor by which to multiply the circular merger timescale by to get
+        the overall merger time.
+    """
+    coefficients = np.array([-1.20317749e+03, 5.67211219e+03, -1.13935479e+04,
+                             1.27306422e+04, -8.66281737e+03,  3.69447796e+03,
+                             -9.79864734e+02,  1.54873214e+02, -1.32267683e+01,
+                             5.32494018e-01,  9.93382093e-01])
+    n_coeff = len(coefficients)
+    correction = np.array([coefficients[i] * np.power(ecc_i, n_coeff - (i + 1))
+                           for i in range(n_coeff)]).sum(axis=0)
+
+    return (1 + (0.27 * ecc_i**10)
+            + (0.33 * ecc_i**20)
+            + (0.20 * ecc_i**1000)) * (1 - ecc_i**2)**(7/2) / correction
+
+
 def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None,
-                    small_e_tol=1e-2, large_e_tol=1 - 1e-2):
+                    small_e_tol=1e-2, large_e_tol=1 - 1e-2, exact=True):
     """Computes the merger time for binaries
 
     This function implements Peters (1964) Eq. 5.10, 5.14 and the two unlabelled equations after 5.14
@@ -454,6 +532,10 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
         Eccentricity above which to apply the large e approximation
         (second unlabelled equation following Eq. 5.14 of Peters 1964)
 
+    exact : `boolean`
+        Whether to calculate the merger time exactly with numerical
+        integration or to instead use a fit
+
     Returns
     -------
     t_merge : `float/array`
@@ -465,8 +547,9 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
     if np.all(ecc_i == 0.0):
         return get_t_merge_circ(beta=beta, a_i=a_i)
 
-    @jit(nopython=True)
-    def peters_5_14(e):  # pragma: no cover
+
+    @njit
+    def peters_5_14(e):                                 # pragma: no cover
         """ merger time from Peters Eq. 5.14 """
         return np.power(e, 29/19) * np.power(1 + (121/304)*e**2, 1181/2299) / np.power(1 - e**2, 3/2)
 
@@ -498,9 +581,14 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
             * (1 + 121/304 * ecc_i[large_e]**2)**(3480/2299)
 
         # merger time for general binaries (Peters Eq. 5.14)
-        prefac = ((12 / 19) * c0[other_e]**4 / beta[other_e]).to(u.Gyr)
-        t_merge[other_e] = prefac * [quad(peters_5_14, 0, ecc_i[other_e][i])[0]
-                                     for i in range(len(ecc_i[other_e]))]
+        if exact:
+            prefac = ((12 / 19) * c0[other_e]**4 / beta[other_e]).to(u.Gyr)
+            t_merge[other_e] = prefac * [quad(peters_5_14, 0, ecc_i[other_e][i])[0]
+                                        for i in range(len(ecc_i[other_e]))]
+        else:
+            t_merge[other_e] = get_t_merge_circ(beta=beta[other_e],
+                                                a_i=a_i[other_e]) \
+                * t_merge_mandel_fit(ecc_i[other_e])
     # case with only one binary
     else:
         # calculate c0 from Peters Eq. 5.11
@@ -513,8 +601,10 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19) * (768 / 425) \
                 * (1 - ecc_i**2)**(-1/2) \
                 * (1 + 121/304 * ecc_i**2)**(3480/2299)
-        else:
+        elif:
             t_merge = ((12 / 19) * c0**4 / beta * quad(peters_5_14, 0, ecc_i)[0])
+        else:
+            t_merge = get_t_merge_circ(beta=beta, a_i=a_i) * t_merge_mandel_fit(ecc_i)
     return t_merge.to(u.Gyr)
 
 
