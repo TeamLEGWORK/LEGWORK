@@ -601,7 +601,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
             t_merge = c0**4 / (4 * beta) * ecc_i**(48/19) * (768 / 425) \
                 * (1 - ecc_i**2)**(-1/2) \
                 * (1 + 121/304 * ecc_i**2)**(3480/2299)
-        elif:
+        elif exact:
             t_merge = ((12 / 19) * c0**4 / beta * quad(peters_5_14, 0, ecc_i)[0])
         else:
             t_merge = get_t_merge_circ(beta=beta, a_i=a_i) * t_merge_mandel_fit(ecc_i)
