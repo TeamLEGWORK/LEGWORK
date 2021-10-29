@@ -39,23 +39,23 @@ class Test(unittest.TestCase):
         ecc = np.random.uniform(0.1, 0.15, n_values)
         t_obs = 4 * u.yr
 
-        snr_circ = snr.snr_ecc_stationary(m_c=m_c, ecc=ecc,
+        snr_stat = snr.snr_ecc_stationary(m_c=m_c, ecc=ecc,
                                           f_orb=f_orb, dist=dist,
                                           t_obs=t_obs, harmonics_required=10)
-        snr_ecc = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
-                                       f_orb_i=f_orb, dist=dist, n_step=100,
-                                       t_obs=t_obs, harmonics_required=10)
+        snr_evol = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
+                                        f_orb_i=f_orb, dist=dist, n_step=100,
+                                        t_obs=t_obs, harmonics_required=10)
 
-        snr2_circ_n = snr.snr_ecc_stationary(m_c=m_c, ecc=ecc, f_orb=f_orb,
+        snr2_stat_n = snr.snr_ecc_stationary(m_c=m_c, ecc=ecc, f_orb=f_orb,
                                              dist=dist, t_obs=t_obs,
                                              harmonics_required=10,
                                              ret_snr2_by_harmonic=True)
-        snr2_ecc_n = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
-                                          f_orb_i=f_orb, dist=dist, n_step=100,
-                                          t_obs=t_obs, harmonics_required=10,
-                                          ret_snr2_by_harmonic=True)
+        snr2_evol_n = snr.snr_ecc_evolving(m_1=m_1, m_2=m_2, ecc=ecc,
+                                           f_orb_i=f_orb, dist=dist, n_step=100,
+                                           t_obs=t_obs, harmonics_required=10,
+                                           ret_snr2_by_harmonic=True)
 
-        self.assertTrue(np.allclose(snr2_circ_n.sum(axis=1)**(0.5), snr_circ))
-        self.assertTrue(np.allclose(snr2_ecc_n.sum(axis=1)**(0.5), snr_ecc))
+        self.assertTrue(np.allclose(snr2_stat_n.sum(axis=1)**(0.5), snr_stat))
+        self.assertTrue(np.allclose(snr2_evol_n.sum(axis=1)**(0.5), snr_evol))
 
-        self.assertTrue(np.allclose(snr_circ, snr_ecc, atol=1e-1, rtol=1e-2))
+        self.assertTrue(np.allclose(snr_stat, snr_evol, atol=1e-1, rtol=1e-2))

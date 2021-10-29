@@ -12,6 +12,7 @@
 #
 import os
 import sys
+import inspect
 sys.path.insert(0, os.path.abspath('.'))
 
 # HACKS - credit to "https://github.com/rodluger/starry_process"
@@ -44,8 +45,12 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinxcontrib.bibtex',
     'sphinx.ext.intersphinx',
-    'sphinx_copybutton'
+    'sphinx_copybutton',
+    'sphinx.ext.linkcode',
+    'sphinx_tabs.tabs'
 ]
+
+sphinx_tabs_disable_tab_closing = True
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'matplotlib': ('https://matplotlib.org/stable', None),
@@ -106,7 +111,7 @@ todo_include_todos = True
 nbsphinx_prolog = """
 {% set docname = env.doc2path(env.docname, base=None) %}
 .. note:: This tutorial was generated from a Jupyter notebook that can be
-          downloaded `here <https://github.com/katiebreivik/LEGWORK/tree/main/docs/{{ docname }}>`_.
+          downloaded `here <https://github.com/TeamLEGWORK/LEGWORK/tree/main/docs/{{ docname }}>`_.
 """
 nbsphinx_prompt_width = "0"
 
@@ -115,6 +120,39 @@ nbsphinx_execute_arguments = [
     "--InlineBackend.rc={'figure.dpi': 96}",
 ]
 
-mathjax_config = {
-    'TeX': {'equationNumbers': {'autoNumber': 'AMS', 'useLabelIds': True}},
+mathjax3_config = {
+    'tex': {'tags': 'ams', 'useLabelIds': True},
 }
+
+def linkcode_resolve(domain, info):
+    """function for linkcode sphinx extension"""
+    def find_func():
+        # find the installed module in sys module
+        sys_mod = sys.modules[info["module"]]
+
+        # use inspect to find the source code and starting line number
+        names = info["fullname"].split(".")
+        func = sys_mod
+        for name in names:
+            func = getattr(func, name)
+        source_code, line_num = inspect.getsourcelines(func)
+
+        # get the file name from the module
+        file = info["module"].split(".")[-1]
+
+        return file, line_num, line_num + len(source_code) - 1
+
+    # ensure it has the proper domain and has a module
+    if domain != 'py' or not info['module']:
+        return None
+
+    # attempt to cleverly locate the function in the file
+    try:
+        file, start, end = find_func()
+        # stitch together a github link with specific lines
+        filename = "legwork/{}.py#L{}-L{}".format(file, start, end)
+
+    # if you can't find it in the file then just link to the correct file
+    except Exception:
+        filename = info['module'].replace('.', '/') + '.py'
+    return "https://github.com/TeamLEGWORK/LEGWORK/blob/main/{}".format(filename)

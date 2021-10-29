@@ -204,13 +204,14 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     if ret_snr2_by_harmonic:
         return snr_n_2
 
-    if ret_max_snr_harmonic:
-        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
-
     # calculate the signal-to-noise ratio
     snr = (np.sum(snr_n_2, axis=1)) ** 0.5
 
-    return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
+    if ret_max_snr_harmonic:
+        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
+        return snr, max_snr_harmonic
+    else:
+        return snr
 
 
 def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
@@ -401,11 +402,13 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
     # calculate minimum of observation time and merger time
     if t_merge is None:
         t_merge = evol.get_t_merge_ecc(m_1=m_1, m_2=m_2, f_orb_i=f_orb_i, ecc_i=ecc)
-    t_evol = np.minimum(t_merge, t_obs).to(u.s)
 
+    t_before = 0.1 * u.yr
+
+    t_evol = np.minimum(t_merge - t_before, t_obs).to(u.s)
     # get eccentricity and f_orb evolutions
     e_evol, f_orb_evol = evol.evol_ecc(ecc_i=ecc, t_evol=t_evol, n_step=n_step, m_1=m_1, m_2=m_2,
-                                       f_orb_i=f_orb_i, n_proc=n_proc)
+                                       f_orb_i=f_orb_i, n_proc=n_proc, t_before=t_before)
 
     maxes = np.where(np.logical_and(e_evol == 0.0, f_orb_evol == 1e2 * u.Hz),
                      -1 * u.Hz, f_orb_evol).max(axis=1)
@@ -442,10 +445,11 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
     if ret_snr2_by_harmonic:
         return snr_n_2
 
-    if ret_max_snr_harmonic:
-        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
-
     snr_2 = snr_n_2.sum(axis=1)
     snr = np.sqrt(snr_2)
 
-    return snr, max_snr_harmonic if ret_max_snr_harmonic else snr
+    if ret_max_snr_harmonic:
+        max_snr_harmonic = np.argmax(snr_n_2, axis=1) + 1
+        return snr, max_snr_harmonic
+    else:
+        return snr
