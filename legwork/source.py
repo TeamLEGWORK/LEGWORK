@@ -108,7 +108,7 @@ class Source():
         If a parameter is missing units
     """
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None, position=None, polarisation=None,
-                 inclination=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto, interpolate_sc=True,
+                 inclination=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto", interpolate_sc=True,
                  sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
