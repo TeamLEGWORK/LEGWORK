@@ -48,26 +48,24 @@ class Test(unittest.TestCase):
 
     def test_average_response(self):
         """make sure that response integrals are correct"""
-        # based on Flanagan and Hughes 1998, the average responses <F_plus^2 a_plus^2>
+        # based on Babak+2021, the sum of the average responses <F_plus^2 a_plus^2>
         # and <F_cross^2 a_cross^2>, when averaged over the position (theta, phi),
-        # polarization (psi) and inclination (inc) are equal to 1/5
+        # polarization (psi) and assuming an optimal (face-on) inclination, is 3/10
 
-        def integrand(theta, phi, psi, inc):
-            intgl1 = 1 / (4 * np.pi) * (1 / (np.pi)) *\
-                     utils.F_plus_squared(theta=theta, phi=phi, psi=psi) *\
-                     np.sin(theta) * (1 + np.cos(inc) ** 2) / 2 * np.sin(inc)
-            intgl2 = 1 / (4 * np.pi) * (1 / (np.pi)) *\
-                     utils.F_cross_squared(theta=theta, phi=phi, psi=psi) *\
-                     np.sin(theta) * (np.cos(inc)) * np.sin(inc)
+        def integrand(theta, phi, psi):
+            f_plus_2 = utils.F_plus_squared(theta=theta, phi=phi, psi=psi)
+            intgl1 = 1 / (4 * np.pi) * (1 / (2 * np.pi)) * f_plus_2 * np.sin(theta)
+
+            f_cross_2 = utils.F_cross_squared(theta=theta, phi=phi, psi=psi)
+            intgl2 = 1 / (4 * np.pi) * (1 / (2 * np.pi)) * f_cross_2 * np.sin(theta)
 
             intgl = intgl1 + intgl2
             return intgl
 
         result, error = integrate.nquad(
             integrand,
-            [[0, np.pi],  # theta
-             [0, 2 * np.pi],  # phi
-             [0, 2 * np.pi],  # psi
-             [0, np.pi]])  # inc
+            [[0, math.pi],      # theta
+             [0, 2 * math.pi],  # phi
+             [0, 2 * math.pi]]) # psi
 
-        self.assertAlmostEqual(result, 2/5)
+        self.assertAlmostEqual(result, 3/10)
