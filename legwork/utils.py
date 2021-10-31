@@ -8,7 +8,7 @@ import legwork.evol as evol
 
 __all__ = ['chirp_mass', 'peters_g', 'peters_f', 'get_a_from_f_orb', 'get_f_orb_from_a', 'get_a_from_ecc',
            'beta', 'c_0', 'determine_stationarity', 'fn_dot', 'ensure_array', 'D_plus_squared',
-           'D_cross_squared', 'D_plus_D_cross', 'F_plus_squared', 'F_cross_squared', 'F_plus_F_cross']
+           'D_cross_squared', 'D_plus_D_cross', 'F_plus_squared', 'F_cross_squared']
 
 
 def chirp_mass(m_1, m_2):
@@ -497,32 +497,3 @@ def F_cross_squared(theta, phi, psi):
     F_cross_2 = (1 / 4) * (term_1 + term_2 + term_3)
 
     return F_cross_2
-
-
-def F_plus_F_cross(theta, phi, psi):
-    """The cross-correlated detector response for the
-    plus and cross polarizations
-
-    Parameters
-    ----------
-    theta : `float/array`
-        declination of the source
-
-    phi : `float/array`
-        right ascension of the source
-
-    psi : `float/array`
-        polarization of the source
-
-    Returns
-    -------
-    F_plus_cross : `float/array`
-    """
-
-    D_diff = D_plus_squared(theta, phi) - D_cross_squared(theta, phi)
-    term_1 = np.sin(4 * psi) * D_diff
-    term_2 = 2 * np.cos(4 * psi) * D_plus_D_cross
-
-    F_plus_cross = (1 / 8) * (term_1 + term_2)
-
-    return F_plus_cross

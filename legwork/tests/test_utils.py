@@ -1,6 +1,7 @@
 import numpy as np
 import legwork.utils as utils
 import unittest
+from scipy import integrate
 
 from astropy import units as u
 
@@ -44,3 +45,29 @@ class Test(unittest.TestCase):
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
+
+    def test_average_response(self):
+        """make sure that response integrals are correct"""
+        # based on Flanagan and Hughes 1998, the average responses <F_plus^2 a_plus^2>
+        # and <F_cross^2 a_cross^2>, when averaged over the position (theta, phi),
+        # polarization (psi) and inclination (inc) are equal to 1/5
+
+        def integrand(theta, phi, psi, inc):
+            intgl1 = 1 / (4 * np.pi) * (1 / (np.pi)) *\
+                     utils.F_plus_squared(theta=theta, phi=phi, psi=psi) *\
+                     np.sin(theta) * (1 + np.cos(inc) ** 2) / 2 * np.sin(inc)
+            intgl2 = 1 / (4 * np.pi) * (1 / (np.pi)) *\
+                     utils.F_cross_squared(theta=theta, phi=phi, psi=psi) *\
+                     np.sin(theta) * (np.cos(inc)) * np.sin(inc)
+
+            intgl = intgl1 + intgl2
+            return intgl
+
+        result, error = integrate.nquad(
+            integrand,
+            [[0, np.pi],  # theta
+             [0, 2 * np.pi],  # phi
+             [0, 2 * np.pi],  # psi
+             [0, np.pi]])  # inc
+
+        self.assertAlmostEqual(result, 2/5)
