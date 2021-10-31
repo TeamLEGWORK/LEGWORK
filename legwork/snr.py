@@ -165,11 +165,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
                                                   instrument=instrument, custom_function=custom_psd,
                                                   position=position, polarisation=polarisation)
 
-    if position is None or polarisation is None or inclination is None:
-        snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
-    else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
-        snr_n_2 = ((h_f_src_ecc_2 * amp_mod[:, np.newaxis]) / h_f_lisa_n_2).decompose()
+    snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
 
     if ret_snr2_by_harmonic:
         return snr_n_2
