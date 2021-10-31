@@ -133,6 +133,12 @@ class Source():
         if position is not None:
             position = position.transform_to("heliocentrictrueecliptic")
 
+        # ensure that the position, polarisation, and inclination
+        # quantities are at least 1d for masking later on
+        position = np.atleast_1d(position)
+        polarisation = np.atleast_1d(polarisation)
+        inclination = np.atleast_1d(inclination)
+
         # calculate whichever one wasn't supplied
         f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb
         a = utils.get_a_from_f_orb(f_orb, m_1, m_2) if a is None else a
