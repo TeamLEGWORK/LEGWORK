@@ -4,36 +4,8 @@ import numpy as np
 from legwork import strain, psd, utils, evol
 import astropy.units as u
 
-__all__ = ['amplitude_modulation', 'snr_circ_stationary', 'snr_ecc_stationary',
+__all__ = ['snr_circ_stationary', 'snr_ecc_stationary',
            'snr_circ_evolving', 'snr_ecc_evolving']
-
-
-def amplitude_modulation(position, polarisation, inclination):
-    """Computes the modulation of the strain due to the orbit averaged response of the detector to the
-    position, polarisation, and inclination of the source
-
-    Parameters
-    ----------
-    position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
-
-    polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
-
-    inclination : `float/array`, optional
-        Inclination of the source. Must have astropy angular units.
-
-    Returns
-    -------
-    modulation : `float/array`
-        modulation to apply to strain from detector response
-    """
-    theta, phi = position.lat, position.lon
-    term1 = (1 + np.cos(inclination) ** 2) ** 2 * utils.F_plus_squared(theta, phi, polarisation)
-    term2 = 4 * np.cos(inclination) ** 2 * utils.F_cross_squared(theta, phi, polarisation)
-    modulation = 0.5 * (term1 + term2)
-
-    return modulation
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=None, inclination=None,
@@ -88,6 +60,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
 
     # only need to compute n=2 harmonic for circular
     h_0_circ_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=np.zeros_like(f_orb).value, n=2, dist=dist,
+                              position=position, polarisation=polarisation, inclination=inclination,
                               interpolated_g=interpolated_g).flatten() ** 2
 
     h_f_src_circ_2 = h_0_circ_2 * t_obs
@@ -97,11 +70,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
         h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs, instrument=instrument,
                                                 custom_function=custom_psd,
                                                 position=position, polarisation=polarisation)
-    if position is None or polarisation is None or inclination is None:
-        snr = (h_f_src_circ_2 / h_f_lisa_2) ** 0.5
-    else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
-        snr = ((amp_mod * h_f_src_circ_2) / h_f_lisa_2) ** 0.5
+    snr = (h_f_src_circ_2 / h_f_lisa_2) ** 0.5
 
     return snr.decompose()
 
@@ -179,7 +148,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
 
     # calculate source signal
     h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=ecc, n=n_range, dist=dist,
-                               interpolated_g=interpolated_g) ** 2
+                               position=position, polarisation=polarisation,
+                               inclination=inclination, interpolated_g=interpolated_g) ** 2
 
     # reshape the output since only one timestep
     h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), harmonics_required)
@@ -303,11 +273,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
                                                 position=position, polarisation=polarisation)
     h_c_lisa_2 = (2 * f_orb_evol) ** 2 * h_f_lisa_2
 
-    if position is None or polarisation is None or inclination is None:
-        snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
-    else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
-        snr = np.trapz(y=(h_c_n_2 * amp_mod[:, np.newaxis]) / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
+    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1) ** 0.5
 
     return snr.decompose()
 
@@ -421,6 +387,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
 
     # calculate the characteristic strain
     h_c_n_2 = strain.h_c_n(m_c=m_c, f_orb=f_orb_evol, ecc=e_evol, n=harms, dist=dist,
+                           position=position, polarisation=polarisation, inclination=inclination,
                            interpolated_g=interpolated_g) ** 2
 
     # calculate the characteristic noise power
@@ -433,11 +400,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
     h_c_lisa_2 = f_n_evol ** 2 * h_f_lisa
 
-    if position is None or polarisation is None or inclination is None:
-        snr_evol = h_c_n_2 / h_c_lisa_2
-    else:
-        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
-        snr_evol = (h_c_n_2 * amp_mod[:, np.newaxis, np.newaxis]) / h_c_lisa_2
+    snr_evol = h_c_n_2 / h_c_lisa_2
 
     # integrate, sum and square root to get SNR
     snr_n_2 = np.trapz(y=snr_evol, x=f_n_evol, axis=1)

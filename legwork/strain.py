@@ -4,10 +4,38 @@ import astropy.constants as c
 from legwork import utils
 import numpy as np
 
-__all__ = ['h_0_n', 'h_c_n']
+__all__ = ['amplitude_modulation', 'h_0_n', 'h_c_n']
 
 
-def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
+def amplitude_modulation(position, polarisation, inclination):
+    """Computes the modulation of the strain due to the orbit averaged response of the detector to the
+    position, polarisation, and inclination of the source
+
+    Parameters
+    ----------
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
+
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
+
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
+
+    Returns
+    -------
+    modulation : `float/array`
+        modulation to apply to strain from detector response
+    """
+    theta, phi = position.lat, position.lon
+    term1 = (1 + np.cos(inclination) ** 2) ** 2 * utils.F_plus_squared(theta, phi, polarisation)
+    term2 = 4 * np.cos(inclination) ** 2 * utils.F_cross_squared(theta, phi, polarisation)
+    modulation = 0.5 * (term1 + term2)
+
+    return modulation
+
+
+def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclination=None, interpolated_g=None):
     """Computes strain amplitude
 
     Computes the dimensionless power of a general binary radiating gravitational waves in the quadrupole
@@ -33,6 +61,15 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
 
     dist : `float/array`
         Distance to each binary. Shape should be (x,)
+
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
+
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
+
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
         A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
@@ -86,10 +123,14 @@ def h_0_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
 
     h_0 = n_independent_part[..., np.newaxis] * n_dependent_part
 
+    if position is not None or polarisation is not None or inclination is not None:
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
+        h_0 = amp_mod**0.5 * h_0
+
     return h_0.decompose()
 
 
-def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
+def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclination=None, interpolated_g=None):
     """Computes characteristic strain amplitude
 
     Computes the dimensionless characteristic power of a general binary radiating gravitational waves in the
@@ -115,6 +156,15 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
 
     dist : `float/array`
         Distance to each binary. Shape should be (x,)
+
+    position : `SkyCoord/array`, optional
+        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
+
+    polarisation : `float/array`, optional
+        GW polarisation of the source. Must have astropy angular units.
+
+    inclination : `float/array`, optional
+        Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
         A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
@@ -167,4 +217,9 @@ def h_c_n(m_c, f_orb, ecc, n, dist, interpolated_g=None):
         n_dependent_part = (g_vals / n[np.newaxis, np.newaxis, :])**(0.5)
 
     h_c = n_independent_part[..., np.newaxis] * n_dependent_part
+
+    if position is not None or polarisation is not None or inclination is not None:
+        amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
+        h_c = amp_mod**0.5 * h_c
+
     return h_c.decompose()
