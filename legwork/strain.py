@@ -125,6 +125,7 @@ def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
 
     if position is not None or polarisation is not None or inclination is not None:
         amp_mod = amplitude_modulation(position=position, polarisation=polarisation, inclination=inclination)
+        amp_mod = amp_mod[..., np.newaxis, np.newaxis]
         h_0 = amp_mod**0.5 * h_0
 
     return h_0.decompose()

@@ -124,20 +124,22 @@ class Source():
         else:
             if inclination is None:
                 print("Generating random values for source inclinations")
-                inclination = np.arcsin(np.random.uniform(-1, 1, len(m_1)))
+                inclination = np.arcsin(np.random.uniform(-1, 1, len(m_1))) * u.rad
             if polarisation is None:
                 print("Generating random values for source polarisations")
-                polarisation = np.random.uniform(0, 2 * np.pi, len(m_1))
+                polarisation = np.random.uniform(0, 2 * np.pi, len(m_1)) * u.rad
 
         # ensure position is in the correct coordinate frame
         if position is not None:
             position = position.transform_to("heliocentrictrueecliptic")
 
-        # ensure that the position, polarisation, and inclination
-        # quantities are at least 1d for masking later on
-        position = np.atleast_1d(position)
-        polarisation = np.atleast_1d(polarisation)
-        inclination = np.atleast_1d(inclination)
+            # ensure that the position, polarisation, and inclination
+            # quantities are at least 1d for masking later on
+            lon, lat = position.lon, position.lat
+            lon, lat = np.atleast_1d(lon), np.atleast_1d(lat)
+            position = SkyCoord(lon=lon, lat=lat, distance=dist, frame='heliocentrictrueecliptic')
+            polarisation = np.atleast_1d(polarisation)
+            inclination = np.atleast_1d(inclination)
 
         # calculate whichever one wasn't supplied
         f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb
