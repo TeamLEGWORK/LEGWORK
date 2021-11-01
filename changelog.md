@@ -36,23 +36,10 @@ This log keeps track of the changes implemented in each version of LEGWORK.
 - Add a warning for if all timesteps are too close to the merger (based on `t_before`) and hence evolution can't happen
 
 ## 0.1.0
-Change changelog style in this version to table.
-<table>
-    <thead>
-        <th>Author</th>
-        <th>Date</th>
-        <th>Changes</th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>KB</td>
-            <td>19/05/21</td>
-            <td>
-                <ul>
-                    <li>Allow user to specific source inclination, sky position and polarisation in <code>Source</code> class</li>
-                    <li>Change <code>snr</code> module Calculate non-averaged SNR using exact inclination, sky position and polarisations</li>
-                </ul>
-            </td>
-        </tr>
-    </tbody>
-</table>
+*TW, KB 31/10/21*
+Major version change as we've added a significant enhancement with the new non-average SNR calculations.
+
+- Change `snr` module to allow the calculation of non-averaged SNR using exact inclination, sky position and polarisations
+- Let users specific inclination, sky position and polarisation in `Source` instantiation
+- Add `VerificationBinaries` class to `Source` module for convenient access to LISA verification binary data from Kupfer+18
+- Change max line length in code from 80 to 110 to increase readability
