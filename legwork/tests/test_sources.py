@@ -287,6 +287,11 @@ class Test(unittest.TestCase):
         ecc = np.random.uniform(0.0, 0.95, n_values)
         dist = np.random.uniform(0, 10, n_values) * u.kpc
         f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        position = SkyCoord(lat=np.random.uniform(0.0, 90, n_values) * u.deg,
+                            lon=np.random.uniform(0, 360, n_values) * u.deg,
+                            distance=dist, frame="heliocentrictrueecliptic")
+        inclination = np.arcsin(np.random.uniform(-1, 1, n_values)) * u.rad
+        polarisation = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
 
         # try creating sources with no f_orb or a
         no_worries = True
@@ -317,6 +322,43 @@ class Test(unittest.TestCase):
                       ecc=[0.1], dist=8 * u.kpc, f_orb=3e-4 * u.Hz)
         self.assertTrue(no_worries)
 
+        # try creating a source with inclination but not position
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, inclination=inclination)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # try creating a source with polarisation but not position
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, polarisation=polarisation)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # create a source with position but not inclination or polarisation with eccentric sources
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, position=position)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # create a source with position but not inclination or polarisation with circular sources
+        ecc = np.zeros_like(ecc)
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, position=position)
+        except ValueError:
+            no_worries = False
+        self.assertTrue(no_worries)
+
         # try creating sources with different length arrays
         no_worries = True
         dist = np.append(dist, 8 * u.kpc)
@@ -326,4 +368,3 @@ class Test(unittest.TestCase):
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
-        
