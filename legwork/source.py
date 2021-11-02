@@ -626,18 +626,9 @@ class Source():
 
         # only apply the mask to the position, polarization and inclination
         # if they are provided
-        if self.position is not None:
-            position = self.position[c_mask]
-        else:
-            position = self.position
-        if self.polarisation is not None:
-            polarisation = self.polarisation[c_mask]
-        else:
-            polarisation = self.polarisation
-        if self.inclination is not None:
-            inclination = self.inclination[c_mask]
-        else:
-            inclination = self.inclination
+        position = self.position[c_mask] if self.position is not None else None
+        polarisation = self.polarisation[c_mask] if self.position is not None else None
+        inclination = self.inclination[c_mask] if self.position is not None else None
 
         # only compute snr if there is at least one binary in mask
         if c_mask.any():
@@ -665,18 +656,9 @@ class Source():
 
                 # only apply the mask to the position, polarization and inclination
                 # if they are provided
-                if self.position is not None:
-                    position = self.position[match]
-                else:
-                    position = self.position
-                if self.polarisation is not None:
-                    polarisation = self.polarisation[match]
-                else:
-                    polarisation = self.polarisation
-                if self.inclination is not None:
-                    inclination = self.inclination[match]
-                else:
-                    inclination = self.inclination
+                position = self.position[match] if self.position is not None else None
+                polarisation = self.polarisation[match] if self.position is not None else None
+                inclination = self.inclination[match] if self.position is not None else None
 
                 if match.any():
                     snr[match], msh[match] = sn.snr_ecc_stationary(m_c=self.m_c[match],
@@ -745,18 +727,9 @@ class Source():
 
         # only apply the mask to the position, polarization and inclination
         # if they are provided
-        if self.position is not None:
-            position = self.position[c_mask]
-        else:
-            position = self.position
-        if self.polarisation is not None:
-            polarisation = self.polarisation[c_mask]
-        else:
-            polarisation = self.polarisation
-        if self.inclination is not None:
-            inclination = self.inclination[c_mask]
-        else:
-            inclination = self.inclination
+        position = self.position[c_mask] if self.position is not None else None
+        polarisation = self.polarisation[c_mask] if self.position is not None else None
+        inclination = self.inclination[c_mask] if self.position is not None else None
 
         # default to n = 2 for max snr harmonic
         msh = np.repeat(2, self.n_sources)
@@ -789,18 +762,9 @@ class Source():
                 match = np.logical_and(harm_mask, e_mask)
                 # only apply the mask to the position, polarization and inclination
                 # if they are provided
-                if self.position is not None:
-                    position = self.position[match]
-                else:
-                    position = self.position
-                if self.polarisation is not None:
-                    polarisation = self.polarisation[match]
-                else:
-                    polarisation = self.polarisation
-                if self.inclination is not None:
-                    inclination = self.inclination[match]
-                else:
-                    inclination = self.inclination
+                position = self.position[match] if self.position is not None else None
+                polarisation = self.polarisation[match] if self.position is not None else None
+                inclination = self.inclination[match] if self.position is not None else None
 
                 if match.any():
                     t_merge = None if self.t_merge is None else self.t_merge[match]
