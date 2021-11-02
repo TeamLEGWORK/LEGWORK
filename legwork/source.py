@@ -1117,9 +1117,8 @@ class VerificationBinaries(Source):
 
         # call the usual Source init function with this data
         super().__init__(m_1=vbs["m_1"], m_2=vbs["m_2"], dist=vbs["dist"],
-                         f_orb=vbs["f_GW"] / 2, ecc=np.zeros(len(vbs["m_1"])),
-                         position=position, inclination=vbs["i"],
-                         interpolate_g=False, interpolate_sc=False)
+                         f_orb=vbs["f_GW"].to(u.Hz) / 2, ecc=np.zeros(len(vbs["m_1"])),
+                         position=position, inclination=vbs["i"])
 
         # also assign the labels and SNR
         self.labels = vbs["label"]
