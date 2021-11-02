@@ -7,6 +7,7 @@ import legwork.utils as utils
 import unittest
 
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 
 
 class Test(unittest.TestCase):
@@ -125,6 +126,62 @@ class Test(unittest.TestCase):
                                         n=[1, 2, 3], dist=dist)[:, 0, :]
 
         self.assertTrue(np.all(source_char_strain == true_char_strain))
+
+    def test_amplitude_modulation_h_0_n(self):
+        """Make sure that the amplitude modulated strains are correct.
+        Note that this is very redundant with the utils modulation tests"""
+        n_values = 500
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_c = utils.chirp_mass(m_1, m_2)
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10 ** (np.random.uniform(-5, -4, n_values)) * u.Hz
+        ecc = np.repeat(0.0, n_values)
+        incs = np.arccos(np.random.uniform(-1, 1, n_values)) * u.rad
+        thetas = np.arcsin(np.random.uniform(-1, 1, n_values)) * u.rad
+        phis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
+        psis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
+
+        positions = SkyCoord(phis, thetas, distance=dist, frame='heliocentrictrueecliptic')
+
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist,
+                                position=positions, inclination=incs,
+                                polarisation=psis, interpolate_g=False)
+        source_strains = sources.get_h_0_n([1, 2, 3])
+        true_strain = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
+                                   dist=dist, position=positions,
+                                   inclination=incs, polarisation=psis,
+                                   n=[1,2,3])[:, 0, :]
+        self.assertTrue(np.all(source_strains == true_strain))
+
+    def test_amplitude_modulation_h_c_n(self):
+        """Make sure that the amplitude modulated strains are correct.
+        Note that this is very redundant with the utils modulation tests"""
+        n_values = 500
+        m_1 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(0, 10, n_values) * u.Msun
+        m_c = utils.chirp_mass(m_1, m_2)
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10 ** (np.random.uniform(-5, -4, n_values)) * u.Hz
+        ecc = np.repeat(0.0, n_values)
+        incs = np.arccos(np.random.uniform(-1, 1, n_values)) * u.rad
+        thetas = np.arcsin(np.random.uniform(-1, 1, n_values)) * u.rad
+        phis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
+        psis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
+
+        positions = SkyCoord(phis, thetas, distance=dist, frame='heliocentrictrueecliptic')
+
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
+                                ecc=ecc, dist=dist,
+                                position=positions, inclination=incs,
+                                polarisation=psis, interpolate_g=False)
+        source_strains = sources.get_h_c_n([1, 2, 3])
+        true_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
+                                       dist=dist, position=positions,
+                                       inclination=incs, polarisation=psis,
+                                       n=[1,2,3])[:, 0, :]
+        self.assertTrue(np.all(source_strains == true_strain))
 
     def test_stationary_subclass(self):
         # create random (circular/stationary) binaries
@@ -286,6 +343,11 @@ class Test(unittest.TestCase):
         ecc = np.random.uniform(0.0, 0.95, n_values)
         dist = np.random.uniform(0, 10, n_values) * u.kpc
         f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        position = SkyCoord(lat=np.random.uniform(0.0, 90, n_values) * u.deg,
+                            lon=np.random.uniform(0, 360, n_values) * u.deg,
+                            distance=dist, frame="heliocentrictrueecliptic")
+        inclination = np.arcsin(np.random.uniform(-1, 1, n_values)) * u.rad
+        polarisation = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
 
         # try creating sources with no f_orb or a
         no_worries = True
@@ -316,6 +378,43 @@ class Test(unittest.TestCase):
                       ecc=[0.1], dist=8 * u.kpc, f_orb=3e-4 * u.Hz)
         self.assertTrue(no_worries)
 
+        # try creating a source with inclination but not position
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, inclination=inclination)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # try creating a source with polarisation but not position
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, polarisation=polarisation)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # create a source with position but not inclination or polarisation with eccentric sources
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, position=position)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        # create a source with position but not inclination or polarisation with circular sources
+        ecc = np.zeros_like(ecc)
+        no_worries = True
+        try:
+            source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                          dist=dist, f_orb=f_orb, position=position)
+        except ValueError:
+            no_worries = False
+        self.assertTrue(no_worries)
+
         # try creating sources with different length arrays
         no_worries = True
         dist = np.append(dist, 8 * u.kpc)
@@ -325,3 +424,14 @@ class Test(unittest.TestCase):
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
+
+
+    def test_verification_binaries(self):
+        """simple to test to check if you can instantiate VerificationBinaries"""
+
+        no_worries = True
+        try:
+            source.VerificationBinaries()
+        except ValueError:
+            no_worries = False
+        self.assertTrue(no_worries)
