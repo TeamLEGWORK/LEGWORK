@@ -322,23 +322,9 @@ class Source():
         ``sc_params``. Otherwise just leave the function as None.
         """
         if self.interpolate_sc:
-            # update the default settings with current params
-            default_params = {
-                "instrument": "LISA",
-                "t_obs": 4 * u.yr,
-                "L": 2.5e9,
-                "approximate_R": False,
-                "include_confusion_noise": True
-            }
-            default_params.update(self._sc_params)
-
-            # if some parameters were excluded then put them in the sc_params
-            if default_params != self._sc_params:
-                self.update_sc_params(default_params)
-
             # get values
             frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
-            sc = psd.power_spectral_density(frequency_range, **default_params)
+            sc = psd.power_spectral_density(frequency_range, **self._sc_params)
 
             # interpolate
             interp_sc = interp1d(frequency_range, sc, bounds_error=False, fill_value=1e30)
@@ -436,18 +422,9 @@ class Source():
 
         # only apply the mask to the position, polarization and inclination
         # if they are provided
-        if self.position is not None:
-            position = self.position[insp_sources]
-        else:
-            position = self.position
-        if self.polarisation is not None:
-            polarisation = self.polarisation[insp_sources]
-        else:
-            polarisation = self.polarisation
-        if self.inclination is not None:
-            inclination = self.inclination[insp_sources]
-        else:
-            inclination = self.inclination
+        position = self.position[insp_sources] if self.position is not None else None
+        polarisation = self.polarisation[insp_sources] if self.position is not None else None
+        inclination = self.inclination[insp_sources] if self.position is not None else None
 
         # calculate strain for these values
         h_0_n[insp_sources, :] = strain.h_0_n(m_c=self.m_c[insp_sources],
@@ -494,18 +471,9 @@ class Source():
 
         # only apply the mask to the position, polarization and inclination
         # if they are provided
-        if self.position is not None:
-            position = self.position[insp_sources]
-        else:
-            position = self.position
-        if self.polarisation is not None:
-            polarisation = self.polarisation[insp_sources]
-        else:
-            polarisation = self.polarisation
-        if self.inclination is not None:
-            inclination = self.inclination[insp_sources]
-        else:
-            inclination = self.inclination
+        position = self.position[insp_sources] if self.position is not None else None
+        polarisation = self.polarisation[insp_sources] if self.position is not None else None
+        inclination = self.inclination[insp_sources] if self.position is not None else None
 
         # calculate strain for these values
         h_c_n[insp_sources, :] = strain.h_c_n(m_c=self.m_c[insp_sources],
