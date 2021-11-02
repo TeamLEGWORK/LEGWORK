@@ -107,6 +107,7 @@ class Source():
     AssertionError
         If a parameter is missing units
     """
+
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None, position=None, polarisation=None,
                  inclination=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto", interpolate_sc=True,
                  sc_params={}):
@@ -131,13 +132,18 @@ class Source():
 
         # ensure position is in the correct coordinate frame
         if position is not None:
-            position = position.transform_to("heliocentrictrueecliptic")
+            if ecc.any() > 0.0:
+                raise ValueError("The sky position, inclination, and polarization "
+                                 "modulation is only valued for circular sources")
+
+            # make sure that the positions are in the heliocentric ecliptic frame
+            position = position.transform_to("heliocentrictruecliptic")
 
             # ensure that the position, polarisation, and inclination
             # quantities are at least 1d for masking later on
-            lon, lat = position.lon, position.lat
+            lon, lat = position.ra, position.dec
             lon, lat = np.atleast_1d(lon), np.atleast_1d(lat)
-            position = SkyCoord(lon=lon, lat=lat, distance=dist, frame='heliocentrictrueecliptic')
+            position = SkyCoord(lon, lat, distance=dist, frame="heliocentrictruecliptic")
             polarisation = np.atleast_1d(polarisation)
             inclination = np.atleast_1d(inclination)
 
@@ -150,7 +156,7 @@ class Source():
         unit_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a']
 
         for i in range(len(unit_args)):
-            assert (isinstance(unit_args[i], u.quantity.Quantity)),\
+            assert (isinstance(unit_args[i], u.quantity.Quantity)), \
                 "`{}` must have units".format(unit_args_str[i])
 
         # make sure the inputs are arrays
@@ -543,7 +549,7 @@ class Source():
         # if the user interpolated a sensitivity curve with different settings
         if (self.interpolate_sc and self._sc_params is not None
                 and (t_obs != self._sc_params["t_obs"]
-                     or instrument != self._sc_params["instrument"])):   # pragma: no cover
+                     or instrument != self._sc_params["instrument"])):  # pragma: no cover
 
             # re interpolate the sensitivity curve with new parameters
             if re_interpolate_sc:
@@ -1021,8 +1027,8 @@ class Source():
         # ensure that the variable is a valid choice
         for var_str in [xstr, ystr]:
             if var_str not in convert.keys() and var_str is not None:
-                error_str = "`xstr` and `ystr` must be one of: "\
-                    + ', '.join(["`{}`".format(k) for k in list(convert.keys())])
+                error_str = "`xstr` and `ystr` must be one of: " \
+                            + ', '.join(["`{}`".format(k) for k in list(convert.keys())])
                 raise ValueError(error_str)
 
         # check the instance variable has been already set
@@ -1142,6 +1148,7 @@ class Evolving(Source):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step, instrument=instrument,
                                          custom_psd=custom_psd, verbose=verbose)
         return self.snr
+
 
 class VerificationBinaries(Source):
     """Generate a Source class with the LISA verification binaries preloaded.

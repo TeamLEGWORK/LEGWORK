@@ -497,3 +497,4 @@ def F_cross_squared(theta, phi, psi):
     F_cross_2 = (1 / 4) * (term_1 + term_2 + term_3)
 
     return F_cross_2
+

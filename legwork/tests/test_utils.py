@@ -69,3 +69,26 @@ class Test(unittest.TestCase):
              [0, 2 * np.pi]]) # psi
 
         self.assertAlmostEqual(result, 3/10)
+
+        def integrand2(theta, phi, psi, inc):
+            f_plus_2 = utils.F_plus_squared(theta=theta, phi=phi, psi=psi)
+            a_plus_2 = (1 / 4) * (1 + np.cos(inc) ** 2) ** 2
+            intgl1 = 1 / (4 * np.pi) * (1 / (2 * np.pi)) * f_plus_2 * np.sin(theta) * a_plus_2 * np.sin(inc)
+
+            f_cross_2 = utils.F_cross_squared(theta=theta, phi=phi, psi=psi)
+            a_cross_2 = np.cos(inc) ** 2
+            intgl2 = 1 / (4 * np.pi) * (1 / (2 * np.pi)) * f_cross_2 * np.sin(theta) * a_cross_2 * np.sin(inc)
+
+            return intgl1 + intgl2
+
+        result, error = integrate.nquad(
+            integrand2,
+            [[0, np.pi],  # theta
+             [0, 2 * np.pi],  # phi
+             [0, 2 * np.pi],  # psi
+             [0, np.pi / 2]])  # inc
+
+        self.assertAlmostEqual(result, 0.12)
+
+
+

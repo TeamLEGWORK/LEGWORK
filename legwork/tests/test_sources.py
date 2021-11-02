@@ -7,6 +7,7 @@ import legwork.utils as utils
 import unittest
 
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 
 
 class Test(unittest.TestCase):
@@ -325,3 +326,32 @@ class Test(unittest.TestCase):
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
+
+    def test_position_polarization_inclination(self):
+        m_1 = 10 * u.Msun
+        m_2 = 5 * u.Msun
+        ecc = 0.0
+        dist = 1 * u.kpc
+        f_orb = 1e-3 * u.Hz
+        inc = 0.69 * u.rad
+        theta = 0.69 * u.rad
+        phi = np.pi * u.rad
+        position = SkyCoord(ra=phi, dec=theta, distance=dist)
+        psi = np.pi * u.rad
+
+        sources_ppi = source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                                    dist=dist, position=position,
+                                    polarisation=psi,
+                                    inclination=inc,
+                                    f_orb=f_orb, interpolate_g=False)
+
+        sources_none = source.Source(m_1=m_1, m_2=m_2, ecc=ecc,
+                                    dist=dist, position=None,
+                                    polarisation=None,
+                                    inclination=None,
+                                    f_orb=f_orb, interpolate_g=False)
+
+        snr_ppi = sources_ppi.get_snr()
+        snr_none = sources_none.get_snr()
+
+        self.assertAlmostEqual(snr_ppi, snr_none)

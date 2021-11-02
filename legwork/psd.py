@@ -145,8 +145,8 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_
     else:
         R = load_response_function(f, fstar)
 
-    if position is not None:
-        R *= (10 / 3)
+    #if position is not None:
+    #    R *= 0.15
 
     # work out the confusion noise or just set to 0
     if include_confusion_noise:
