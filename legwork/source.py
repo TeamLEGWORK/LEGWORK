@@ -132,7 +132,7 @@ class Source():
 
         # ensure position is in the correct coordinate frame
         if position is not None:
-            if ecc.any() > 0.0:
+            if np.atleast_1d(ecc).any() > 0.0:
                 raise ValueError("The sky position, inclination, and polarization "
                                  "modulation is only valued for circular sources")
 
