@@ -161,6 +161,16 @@ class Source():
         if length_check.any():
             raise ValueError("All input arrays must have the same length")
 
+        default_sc_params = {
+                "instrument": "LISA",
+                "t_obs": 4 * u.yr,
+                "L": 2.5e9,
+                "approximate_R": False,
+                "include_confusion_noise": True
+            }
+        default_sc_params.update(sc_params)
+        self._sc_params = default_sc_params
+
         self.m_1 = m_1
         self.m_2 = m_2
         self.m_c = utils.chirp_mass(m_1, m_2)
@@ -178,7 +188,6 @@ class Source():
         self.max_snr_harmonic = None
         self.n_sources = len(m_1)
         self.interpolate_sc = interpolate_sc
-        self._sc_params = sc_params
 
         self.merged = np.repeat(False, self.n_sources)
 
@@ -506,7 +515,7 @@ class Source():
         return h_c_n[which_sources, :]
 
     def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, n_step=100,
-                verbose=False, re_interpolate_sc=True):
+                verbose=False, re_interpolate_sc=True, which_sources=None):
         """Computes the SNR for a generic binary. Also records the harmonic with maximum SNR for each
         binary in ``self.max_snr_harmonic``.
 
@@ -531,6 +540,9 @@ class Source():
         re_interpolate_sc : `boolean`
             Whether to re-interpolate the sensitivity curve if the observation time or instrument
             changes. If False, warning will instead be given
+
+        which_sources : `boolean/array`
+            Mask of which sources to calculate the SNR for. If None then calculate SNR for all sources.
 
         Returns
         -------
@@ -557,15 +569,22 @@ class Source():
                       "interpolated curve matches")
 
         if verbose:
-            print("Calculating SNR for {} sources".format(self.n_sources))
+            n_snr = len(which_sources[which_sources]) if which_sources is not None else self.n_sources
+            print("Calculating SNR for {} sources".format(n_snr))
             print("\t{}".format(len(self.merged[self.merged])),
                   "sources have already merged")
         snr = np.zeros(self.n_sources)
 
-        stat_mask = np.logical_and(self.get_source_mask(circular=None, stationary=True, t_obs=t_obs),
-                                   np.logical_not(self.merged))
-        evol_mask = np.logical_and(self.get_source_mask(circular=None, stationary=False, t_obs=t_obs),
-                                   np.logical_not(self.merged))
+        stat_mask = np.logical_and.reduce((self.get_source_mask(circular=None,
+                                                                stationary=True,
+                                                                t_obs=t_obs),
+                                           np.logical_not(self.merged),
+                                           which_sources))
+        evol_mask = np.logical_and.reduce((self.get_source_mask(circular=None,
+                                                                stationary=False,
+                                                                t_obs=t_obs),
+                                           np.logical_not(self.merged),
+                                           which_sources))
 
         if stat_mask.any():
             if verbose:
