@@ -575,6 +575,10 @@ class Source():
                   "sources have already merged")
         snr = np.zeros(self.n_sources)
 
+        # by default calculate SNR for every source
+        if which_sources is None:
+            which_sources = np.repeat(True, self.n_sources)
+
         stat_mask = np.logical_and.reduce((self.get_source_mask(circular=None,
                                                                 stationary=True,
                                                                 t_obs=t_obs),
