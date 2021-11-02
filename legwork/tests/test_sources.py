@@ -368,3 +368,14 @@ class Test(unittest.TestCase):
         except ValueError:
             no_worries = False
         self.assertFalse(no_worries)
+
+
+    def test_verification_binaries(self):
+        """simple to test to check if you can instantiate VerificationBinaries"""
+
+        no_worries = True
+        try:
+            source.VerificationBinaries()
+        except ValueError:
+            no_worries = False
+        self.assertTrue(no_worries)
