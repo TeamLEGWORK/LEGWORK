@@ -51,10 +51,6 @@ class Source():
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
 
-    random_missing : `boolean`, default=False
-        Whether to generate random values for any missing parameters (any of position, polarisation and
-        inclination) or just use average values
-
     gw_lum_tol : `float`
         Allowed error on the GW luminosity when calculating SNRs. This is used to calculate maximum harmonics
         needed and transition between 'eccentric' and 'circular'. This variable should be updated using the
@@ -974,8 +970,7 @@ class Source():
             which_sources = np.repeat(True, self.n_sources)
 
         if exclude_merged_sources:
-            which_sources = np.logical_and(which_sources,
-                                           np.logical_not(self.merged))
+            which_sources = np.logical_and(which_sources, np.logical_not(self.merged))
 
         # ensure that the variable is a valid choice
         for var_str in [xstr, ystr]:
