@@ -1045,6 +1045,11 @@ class Source():
             Evolving sources will not be plotted and a warning will be shown instead.
             We are working on implementing this soon!
         """
+        # only allow plotting when an SNR has been calculated
+        if self.snr is None:
+            print("ERROR: No SNR has been calculated yet")
+            return None, None
+
         detectable = self.snr > snr_cutoff
         inspiraling = np.logical_not(self.merged)
 
