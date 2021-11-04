@@ -1006,11 +1006,15 @@ class Source():
             else:
                 kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr], y.unit)
 
+        # work out what the weights are
+        weights = self.weights[which_sources] if self.weights is not None else None
+
         # plot it!
         if ystr is not None:
-            return vis.plot_2D_dist(x=x[which_sources].value, y=y[which_sources].value, **kwargs)
+            return vis.plot_2D_dist(x=x[which_sources].value, y=y[which_sources].value,
+                                    weights=weights, **kwargs)
         else:
-            return vis.plot_1D_dist(x=x[which_sources].value, **kwargs)
+            return vis.plot_1D_dist(x=x[which_sources].value, weights=weights, **kwargs)
 
     def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr,
                            fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
