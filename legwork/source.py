@@ -1082,6 +1082,7 @@ class Source():
             fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb, h_0_2=h_0_2, snr=self.snr[circ_stat],
                                                        weights=weights, snr_cutoff=snr_cutoff,
                                                        fig=fig, ax=ax, show=False,
+                                                       label="Circular/Stationary",
                                                        **self._sc_params, **kwargs)
 
         # plot eccentric and stationary sources
@@ -1092,6 +1093,7 @@ class Source():
             weights = self.weights[ecc_stat] if self.weights is not None else None
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat], weights=weights,
                                                       snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
+                                                      label="Eccentric/Stationary",
                                                       **self._sc_params, **kwargs)
 
         # show warnings for evolving sources
