@@ -1062,8 +1062,9 @@ class Source():
         if circ_stat.any():
             f_orb = self.f_orb[circ_stat]
             h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
+            weights = self.weights[circ_stat] if self.weights is not None else None
             fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb, h_0_2=h_0_2, snr=self.snr[circ_stat],
-                                                       snr_cutoff=snr_cutoff, t_obs=t_obs,
+                                                       weights=weights, snr_cutoff=snr_cutoff, t_obs=t_obs,
                                                        fig=fig, ax=ax, show=False, **kwargs)
 
         # plot eccentric and stationary sources
@@ -1071,7 +1072,8 @@ class Source():
         ecc_stat = np.logical_and.reduce((ecc_stat, detectable, inspiraling))
         if ecc_stat.any():
             f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
-            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat],
+            weights = self.weights[ecc_stat] if self.weights is not None else None
+            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat], weights=weights,
                                                       snr_cutoff=snr_cutoff, t_obs=t_obs, show=show,
                                                       fig=fig, ax=ax, **kwargs)
 
