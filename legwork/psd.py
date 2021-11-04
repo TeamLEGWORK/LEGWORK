@@ -65,7 +65,7 @@ def approximate_response_function(f, fstar):
     R : `float/array`
         response function at each frequency
     """
-    return (3 / 10) / (1 + 0.6 * (f / fstar) ** 2)
+    return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
 
 
 def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_confusion_noise=True,
@@ -115,11 +115,11 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_conf
 
     # single link optical metrology noise (Robson+ Eq. 10)
     def Poms(f):
-        return (1.5e-11) ** 2 * (1 + (2e-3 / f) ** 4)
+        return (1.5e-11)**2 * (1 + (2e-3 / f)**4)
 
     # single test mass acceleration noise (Robson+ Eq. 11)
     def Pacc(f):
-        return (3e-15) ** 2 * (1 + (0.4e-3 / f) ** 2) * (1 + (f / (8e-3)) ** 4)
+        return (3e-15)**2 * (1 + (0.4e-3 / f)**2) * (1 + (f / (8e-3))**4)
 
     # galactic confusion noise (Robson+ Eq. 14)
     def Sc(f, t_obs):
@@ -135,7 +135,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_conf
         # find index of the closest length to inputted observation time
         ind = np.abs(t_obs - lengths).argmin()
 
-        return 9e-45 * f ** (-7 / 3.) * np.exp(-f ** (alpha[ind]) + beta[ind] * f * np.sin(kappa[ind] * f)) \
+        return 9e-45 * f**(-7 / 3.) * np.exp(-f**(alpha[ind]) + beta[ind] * f * np.sin(kappa[ind] * f)) \
             * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
 
     # calculate response function (either exactly or with approximation)
@@ -152,7 +152,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_conf
         cn = np.zeros(len(f)) if isinstance(f, (list, np.ndarray)) else 0.0
 
     # calculate sensitivity curve
-    psd = (1 / (L ** 2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f) ** 4)) / R + cn
+    psd = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
 
     # replace values for bad frequencies (set to extremely high value)
     psd = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), psd, np.inf)
@@ -189,11 +189,11 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
         Effective power strain spectral density
     """
     fstar = const.c / (2 * np.pi * L)
-    Sa = 1e-30 * u.m ** 2 * u.s ** (-4) * u.Hz ** (-1)
-    Sx = 1e-24 * u.m ** 2 * u.Hz ** (-1)
-    psd = 1 / L ** 2 * (4 * Sa / (2 * np.pi * f) ** 4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
-        * (1 + 0.6 * (f / fstar) ** 2)
-    return psd.to(u.Hz ** (-1))
+    Sa = 1e-30 * u.m**2 * u.s**(-4) * u.Hz**(-1)
+    Sx = 1e-24 * u.m**2 * u.Hz**(-1)
+    psd = 1 / L**2 * (4 * Sa / (2 * np.pi * f)**4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
+        * (1 + 0.6 * (f / fstar)**2)
+    return psd.to(u.Hz**(-1))
 
 
 def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 * u.yr, L=None,

@@ -135,7 +135,7 @@ class Test(unittest.TestCase):
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         m_c = utils.chirp_mass(m_1, m_2)
         dist = np.random.uniform(0, 30, n_values) * u.kpc
-        f_orb = 10 ** (np.random.uniform(-5, -4, n_values)) * u.Hz
+        f_orb = 10**(np.random.uniform(-5, -4, n_values)) * u.Hz
         ecc = np.repeat(0.0, n_values)
         incs = np.arccos(np.random.uniform(-1, 1, n_values)) * u.rad
         thetas = np.arcsin(np.random.uniform(-1, 1, n_values)) * u.rad
@@ -163,7 +163,7 @@ class Test(unittest.TestCase):
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         m_c = utils.chirp_mass(m_1, m_2)
         dist = np.random.uniform(0, 30, n_values) * u.kpc
-        f_orb = 10 ** (np.random.uniform(-5, -4, n_values)) * u.Hz
+        f_orb = 10**(np.random.uniform(-5, -4, n_values)) * u.Hz
         ecc = np.repeat(0.0, n_values)
         incs = np.arccos(np.random.uniform(-1, 1, n_values)) * u.rad
         thetas = np.arcsin(np.random.uniform(-1, 1, n_values)) * u.rad

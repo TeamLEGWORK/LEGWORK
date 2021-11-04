@@ -28,7 +28,7 @@ def amplitude_modulation(position, polarisation, inclination):
         modulation to apply to strain from detector response
     """
     theta, phi = position.lat, position.lon
-    a_plus = (1 + np.cos(inclination) ** 2)
+    a_plus = (1 + np.cos(inclination)**2)
     a_cross = 2 * np.cos(inclination)
     term1 = a_plus**2 * utils.F_plus_squared(theta, phi, polarisation)
     term2 = a_cross**2 * utils.F_cross_squared(theta, phi, polarisation)
