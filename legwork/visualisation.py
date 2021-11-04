@@ -329,7 +329,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     return fig, ax
 
 
-def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr,
+def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
                                  fig=None, ax=None, show=True, **kwargs):
     """Overlay circular/stationary sources on the LISA sensitivity curve.
 
@@ -346,6 +346,9 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr
 
     snr : `float/array`
         Signal-to-noise ratio
+
+    weights : `float/array`, optional, default=None
+        Statistical weights for each source, default is equal weights
 
     snr_cutoff : `float`
         SNR above which to plot binaries (default is 0 such that all sources are plotted)
@@ -391,7 +394,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
-    fig, ax = plot_2D_dist(x=f_GW, y=asd, fig=fig, ax=ax, show=False, **kwargs)
+    fig, ax = plot_2D_dist(x=f_GW, y=asd, weights=weights[detectable], fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
     if show:
@@ -400,7 +403,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr
     return fig, ax
 
 
-def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
+def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
                                 fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
 
@@ -414,6 +417,9 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
 
     snr : `float/array`
         Signal-to-noise ratio
+
+    weights : `float/array`, optional, default=None
+        Statistical weights for each source, default is equal weights
 
     snr_cutoff : `float`
         SNR above which to plot binaries (default is 0 such that all sources are plotted)
@@ -455,7 +461,8 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
-    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)), fig=fig, ax=ax, show=False, **kwargs)
+    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)), weights=weights[detectable],
+                           fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
     if show:
