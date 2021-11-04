@@ -1025,8 +1025,7 @@ class Source():
         else:
             return vis.plot_1D_dist(x=x[which_sources].value, weights=weights, **kwargs)
 
-    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr,
-                           fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
+    def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
         """Plot all sources in the class on the sensitivity curve
 
         Parameters
@@ -1034,11 +1033,19 @@ class Source():
         snr_cutoff : `float`
             SNR below which sources will not be plotted (default is to plot all sources)
 
-        t_obs : `float`
-            LISA observation time
+        fig: `matplotlib Figure`
+            A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either
+            to be used
+
+        ax: `matplotlib Axis`
+            An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either
+            to be used
 
         show : `boolean`
             Whether to immediately show the plot
+
+        **kwargs : `various`
+            Keyword arguments to be passed to plotting functions
 
         Returns
         -------
@@ -1073,8 +1080,9 @@ class Source():
             h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
             weights = self.weights[circ_stat] if self.weights is not None else None
             fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb, h_0_2=h_0_2, snr=self.snr[circ_stat],
-                                                       weights=weights, snr_cutoff=snr_cutoff, t_obs=t_obs,
-                                                       fig=fig, ax=ax, show=False, **kwargs)
+                                                       weights=weights, snr_cutoff=snr_cutoff,
+                                                       fig=fig, ax=ax, show=False,
+                                                       **self._sc_params, **kwargs)
 
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
@@ -1083,8 +1091,8 @@ class Source():
             f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
             weights = self.weights[ecc_stat] if self.weights is not None else None
             fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat], weights=weights,
-                                                      snr_cutoff=snr_cutoff, t_obs=t_obs, show=show,
-                                                      fig=fig, ax=ax, **kwargs)
+                                                      snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
+                                                      **self._sc_params, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
