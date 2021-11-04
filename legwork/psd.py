@@ -198,7 +198,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
     return psd.to(u.Hz**(-1))
 
 
-def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 * u.yr, L=None,
+def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr, L=None,
                            approximate_R=False, include_confusion_noise=True,
                            position=None, polarisation=None):
     """Calculates the effective power spectral density for all instruments.
@@ -209,9 +209,9 @@ def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 *
         Frequencies at which to evaluate the sensitivity curve
 
     instrument: {{ `LISA`, `TianQin`, `custom` }}
-        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_function`` to compute PSD.
+        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
 
-    custom_function : `function`
+    custom_psd : `function`
         Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
         even if it ignores some.
 
@@ -250,7 +250,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 *
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                           include_confusion_noise=include_confusion_noise)
     elif instrument == "custom":
-        psd = custom_function(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
+        psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                               include_confusion_noise=include_confusion_noise)
     else:
         raise ValueError("instrument: `{}` not recognised".format(instrument))

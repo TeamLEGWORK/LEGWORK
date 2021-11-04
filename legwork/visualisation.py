@@ -355,9 +355,9 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
         SNR above which to plot binaries (default is 0 such that all sources are plotted)
 
     instrument: {{ `LISA`, `TianQin`, `custom` }}
-        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_function`` to compute PSD.
+        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
 
-    custom_function : `function`
+    custom_psd : `function`
         Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
         even if it ignores some.
 
@@ -446,9 +446,9 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 
         SNR above which to plot binaries (default is 0 such that all sources are plotted)
 
     instrument: {{ `LISA`, `TianQin`, `custom` }}
-        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_function`` to compute PSD.
+        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
 
-    custom_function : `function`
+    custom_psd : `function`
         Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
         even if it ignores some.
 

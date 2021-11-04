@@ -64,7 +64,7 @@ class Test(unittest.TestCase):
                                    include_confusion_noise)
 
         custom = psd.power_spectral_density(frequencies, instrument="custom",
-                                            custom_function=custom_instrument,
+                                            custom_psd=custom_instrument,
                                             L=np.sqrt(3) * 1e5 * u.km)
 
         self.assertTrue(np.all(custom <= tq))
