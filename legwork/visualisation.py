@@ -132,7 +132,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     return fig, ax
 
 
-def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
+def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None, ax=None,
                  xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
     """Plot a 2D distribution of `x` and `y`
@@ -152,6 +152,9 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 
     disttype : `{{ "scatter", "kde" }}`
         Which type of distribution plot to use
+
+    scatter_s : `float`, default=20
+        Scatter point size, passed as ``s`` to a scatter plot and ignored for a KDE
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -214,7 +217,10 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 
     # create whichever plot was requested
     if disttype == "scatter":
-        ax.scatter(x, y, color=color, **plot_args)
+        # change the size of scatter points based on their weights
+        if weights is not None:
+            scatter_s = weights * scatter_s
+        ax.scatter(x, y, s=scatter_s, color=color, **plot_args)
     elif disttype == "kde":
         sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
 
