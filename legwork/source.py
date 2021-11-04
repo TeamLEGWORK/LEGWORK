@@ -51,6 +51,9 @@ class Source():
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
 
+    weights : `float/array`, optional
+        Statistical weights associated with each sample (used for plotted), default is equal weights
+
     gw_lum_tol : `float`
         Allowed error on the GW luminosity when calculating SNRs. This is used to calculate maximum harmonics
         needed and transition between 'eccentric' and 'circular'. This variable should be updated using the
@@ -105,8 +108,8 @@ class Source():
     """
 
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None, position=None, polarisation=None,
-                 inclination=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto", interpolate_sc=True,
-                 sc_params={}):
+                 inclination=None, weights=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto",
+                 interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
             raise ValueError("Either `f_orb` or `a` must be specified")
@@ -154,11 +157,11 @@ class Source():
                 "`{}` must have units".format(unit_args_str[i])
 
         # make sure the inputs are arrays
-        fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, a, ecc)
-        m_1, m_2, dist, f_orb, a, ecc = fixed_args
+        fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, a, ecc, weights)
+        m_1, m_2, dist, f_orb, a, ecc, weights = fixed_args
 
         # ensure all array arguments are the same length
-        array_args = [m_1, m_2, dist, f_orb, a, ecc]
+        array_args = [m_1, m_2, dist, f_orb, a, ecc, weights]
         length_check = np.array([len(arg) != len(array_args[0])
                                  for arg in array_args])
         if length_check.any():
@@ -185,6 +188,7 @@ class Source():
         self.position = position
         self.inclination = inclination
         self.polarisation = polarisation
+        self.weights = weights
         self.n_proc = n_proc
         self.t_merge = None
         self.snr = None
