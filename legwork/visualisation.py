@@ -397,8 +397,8 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument, custom_psd=None, L=L,
-                                         approximate_R=approximate_R,
+        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument,
+                                         custom_psd=custom_psd, L=L, approximate_R=approximate_R,
                                          include_confusion_noise=include_confusion_noise)
 
     # work out which binaries are above the cutoff
@@ -488,8 +488,8 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument, L=L, custom_psd=None,
-                                         approximate_R=approximate_R,
+        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument, L=L,
+                                         custom_psd=custom_psd, approximate_R=approximate_R,
                                          include_confusion_noise=include_confusion_noise)
 
     # work out which binaries are above the cutoff
