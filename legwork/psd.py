@@ -68,7 +68,7 @@ def approximate_response_function(f, fstar):
     return (3 / 10) / (1 + 0.6 * (f / fstar) ** 2)
 
 
-def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_noise=True,
+def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_confusion_noise=True,
              position=None, polarisation=None):
     """Calculates the effective LISA power spectral density sensitivity curve
 
@@ -139,7 +139,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_
             * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
 
     # calculate response function (either exactly or with approximation)
-    fstar = (const.c / (2 * np.pi * L * u.m)).to(u.Hz).value
+    fstar = (const.c / (2 * np.pi * L)).to(u.Hz).value
     if approximate_R:
         R = approximate_response_function(f, fstar)
     else:
