@@ -151,6 +151,8 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_conf
     else:
         cn = np.zeros(len(f)) if isinstance(f, (list, np.ndarray)) else 0.0
 
+    L = L.to(u.m).value
+
     # calculate sensitivity curve
     psd = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
 
