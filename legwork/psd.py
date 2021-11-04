@@ -240,7 +240,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 *
     """
     if instrument == "LISA":
         if L is None:
-            L = 2.5e9
+            L = 2.5e9 * u.m
         psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                        include_confusion_noise=include_confusion_noise,
                        position=position, polarisation=polarisation)
