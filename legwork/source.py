@@ -168,12 +168,12 @@ class Source():
             raise ValueError("All input arrays must have the same length")
 
         default_sc_params = {
-                "instrument": "LISA",
-                "t_obs": 4 * u.yr,
-                "L": 2.5e9,
-                "approximate_R": False,
-                "include_confusion_noise": True
-            }
+            "instrument": "LISA",
+            "t_obs": 4 * u.yr,
+            "L": 2.5e9 * u.m,
+            "approximate_R": False,
+            "include_confusion_noise": True
+        }
         default_sc_params.update(sc_params)
         self._sc_params = default_sc_params
 
@@ -342,8 +342,17 @@ class Source():
         """
         # check whether params have actually changed
         if sc_params != self._sc_params:
+            # ensure all values are filled (leave as defaults if not)
+            default_sc_params = {
+                "instrument": "LISA",
+                "t_obs": 4 * u.yr,
+                "L": 2.5e9 * u.m,
+                "approximate_R": False,
+                "include_confusion_noise": True
+            }
+            default_sc_params.update(self._sc_params)
             # change values and re-interpolate
-            self._sc_params = sc_params
+            self._sc_params = default_sc_params
             self.set_sc()
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
