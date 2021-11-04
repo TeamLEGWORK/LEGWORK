@@ -394,7 +394,8 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
-    fig, ax = plot_2D_dist(x=f_GW, y=asd, weights=weights[detectable], fig=fig, ax=ax, show=False, **kwargs)
+    weights = weights[detectable] if weights is not None else None
+    fig, ax = plot_2D_dist(x=f_GW, y=asd, weights=weights, fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
     if show:
@@ -461,7 +462,8 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
-    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)), weights=weights[detectable],
+    weights = weights[detectable] if weights is not None else None
+    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)), weights=weights,
                            fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
