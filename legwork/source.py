@@ -161,7 +161,7 @@ class Source():
         m_1, m_2, dist, f_orb, a, ecc, weights = fixed_args
 
         # ensure all array arguments are the same length
-        array_args = [m_1, m_2, dist, f_orb, a, ecc, weights]
+        array_args = [m_1, m_2, dist, f_orb, a, ecc]
         length_check = np.array([len(arg) != len(array_args[0])
                                  for arg in array_args])
         if length_check.any():
