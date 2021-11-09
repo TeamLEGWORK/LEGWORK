@@ -50,5 +50,4 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 - allow user to specify weights in `Source` and visualisation functions
 - allow user to customise sensitivity curve in any use of `plot_sources_on_sc`
 - `legwork.__version__` now prints the version number
-
-TODO: demo about verification binaries
+- Add new demo about verification binaries and other miscellaneous docs fixes
