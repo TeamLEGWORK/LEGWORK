@@ -47,4 +47,8 @@ Major version change as we've added a significant enhancement with the new non-a
 ## 0.1.1
 *TW, 5/11/21*
 Small changes to visualisation code and updates to tutorials/demos with the new code
-- TODO
+- allow user to specify weights in `Source` and visualisation functions
+- allow user to customise sensitivity curve in any use of `plot_sources_on_sc`
+- `legwork.__version__` now prints the version number
+
+TODO: demo about verification binaries
