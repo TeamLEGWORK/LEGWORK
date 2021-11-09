@@ -1151,4 +1151,4 @@ class VerificationBinaries(Source):
 
         # also assign the labels and SNR
         self.labels = vbs["label"]
-        self.true_snr = vbs["snr"]
+        self.true_snr = np.array(vbs["snr"])
