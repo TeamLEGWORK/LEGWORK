@@ -213,8 +213,8 @@ class Source():
 
         Each function works as follows
 
-            - Calculate the maximum harmonics required to calculate the SNRs assuming provided toleranc
-            `gw_lum_tol`
+            - Calculate the maximum harmonics required to calculate the SNRs assuming provided tolerance\
+                `gw_lum_tol`
             - Calculate the harmonic with the maximum strain
 
         These are stored at ``self.harmonics_required`` and ``self.max_strain_harmonic`` respectively."""
@@ -939,9 +939,9 @@ class Source():
                               exclude_merged_sources=True, **kwargs):  # pragma: no cover
         """Plot distributions of Source variables. If two variables are specified then produce a 2D
         distribution, otherwise a 1D distribution.
+
         Parameters
         ----------
-
         xstr : `{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a', 'snr' }`
             Which variable to plot on the x axis
 
