@@ -4,5 +4,5 @@ numba >= 0.50'
 scipy >= 1.5.0'
 matplotlib >= 3.3.2'
 seaborn >= 0.11.1'
-schwimmbad
+schwimmbad >= 0.3.2'
 Jinja2==2.11
