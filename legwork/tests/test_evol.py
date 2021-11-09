@@ -238,3 +238,8 @@ class Test(unittest.TestCase):
                                                   c_0))))
 
         self.assertTrue(np.allclose(ecc_evol, ecc_pool, equal_nan=True))
+
+
+# need to use the main name for multiprocessing to work
+if __name__ == '__main__':
+    unittest.main()
