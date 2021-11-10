@@ -9,7 +9,7 @@ from legwork import utils, strain, psd, evol
 import legwork.snr as sn
 import legwork.visualisation as vis
 
-__all__ = ['Source', 'Stationary', 'Evolving']
+__all__ = ['Source', 'Stationary', 'Evolving', 'VerificationBinaries']
 
 
 class Source():
