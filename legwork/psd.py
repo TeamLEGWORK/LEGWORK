@@ -65,10 +65,10 @@ def approximate_response_function(f, fstar):
     R : `float/array`
         response function at each frequency
     """
-    return (3 / 10) / (1 + 0.6 * (f / fstar) ** 2)
+    return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
 
 
-def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_noise=True,
+def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_confusion_noise=True,
              position=None, polarisation=None):
     """Calculates the effective LISA power spectral density sensitivity curve
 
@@ -115,11 +115,11 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_
 
     # single link optical metrology noise (Robson+ Eq. 10)
     def Poms(f):
-        return (1.5e-11) ** 2 * (1 + (2e-3 / f) ** 4)
+        return (1.5e-11)**2 * (1 + (2e-3 / f)**4)
 
     # single test mass acceleration noise (Robson+ Eq. 11)
     def Pacc(f):
-        return (3e-15) ** 2 * (1 + (0.4e-3 / f) ** 2) * (1 + (f / (8e-3)) ** 4)
+        return (3e-15)**2 * (1 + (0.4e-3 / f)**2) * (1 + (f / (8e-3))**4)
 
     # galactic confusion noise (Robson+ Eq. 14)
     def Sc(f, t_obs):
@@ -135,18 +135,15 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_
         # find index of the closest length to inputted observation time
         ind = np.abs(t_obs - lengths).argmin()
 
-        return 9e-45 * f ** (-7 / 3.) * np.exp(-f ** (alpha[ind]) + beta[ind] * f * np.sin(kappa[ind] * f)) \
+        return 9e-45 * f**(-7 / 3.) * np.exp(-f**(alpha[ind]) + beta[ind] * f * np.sin(kappa[ind] * f)) \
             * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
 
     # calculate response function (either exactly or with approximation)
-    fstar = (const.c / (2 * np.pi * L * u.m)).to(u.Hz).value
+    fstar = (const.c / (2 * np.pi * L)).to(u.Hz).value
     if approximate_R:
         R = approximate_response_function(f, fstar)
     else:
         R = load_response_function(f, fstar)
-
-    #if position is not None:
-    #    R *= 0.15
 
     # work out the confusion noise or just set to 0
     if include_confusion_noise:
@@ -154,8 +151,10 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9, approximate_R=False, include_confusion_
     else:
         cn = np.zeros(len(f)) if isinstance(f, (list, np.ndarray)) else 0.0
 
+    L = L.to(u.m).value
+
     # calculate sensitivity curve
-    psd = (1 / (L ** 2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f) ** 4)) / R + cn
+    psd = (1 / (L**2) * (Poms(f) + 4 * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
 
     # replace values for bad frequencies (set to extremely high value)
     psd = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), psd, np.inf)
@@ -192,14 +191,14 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
         Effective power strain spectral density
     """
     fstar = const.c / (2 * np.pi * L)
-    Sa = 1e-30 * u.m ** 2 * u.s ** (-4) * u.Hz ** (-1)
-    Sx = 1e-24 * u.m ** 2 * u.Hz ** (-1)
-    psd = 1 / L ** 2 * (4 * Sa / (2 * np.pi * f) ** 4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
-        * (1 + 0.6 * (f / fstar) ** 2)
-    return psd.to(u.Hz ** (-1))
+    Sa = 1e-30 * u.m**2 * u.s**(-4) * u.Hz**(-1)
+    Sx = 1e-24 * u.m**2 * u.Hz**(-1)
+    psd = 1 / L**2 * (4 * Sa / (2 * np.pi * f)**4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
+        * (1 + 0.6 * (f / fstar)**2)
+    return psd.to(u.Hz**(-1))
 
 
-def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 * u.yr, L=None,
+def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr, L=None,
                            approximate_R=False, include_confusion_noise=True,
                            position=None, polarisation=None):
     """Calculates the effective power spectral density for all instruments.
@@ -210,9 +209,9 @@ def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 *
         Frequencies at which to evaluate the sensitivity curve
 
     instrument: {{ `LISA`, `TianQin`, `custom` }}
-        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_function`` to compute PSD.
+        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
 
-    custom_function : `function`
+    custom_psd : `function`
         Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
         even if it ignores some.
 
@@ -241,7 +240,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 *
     """
     if instrument == "LISA":
         if L is None:
-            L = 2.5e9
+            L = 2.5e9 * u.m
         psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                        include_confusion_noise=include_confusion_noise,
                        position=position, polarisation=polarisation)
@@ -251,7 +250,7 @@ def power_spectral_density(f, instrument="LISA", custom_function=None, t_obs=4 *
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                           include_confusion_noise=include_confusion_noise)
     elif instrument == "custom":
-        psd = custom_function(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
+        psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
                               include_confusion_noise=include_confusion_noise)
     else:
         raise ValueError("instrument: `{}` not recognised".format(instrument))

@@ -132,7 +132,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     return fig, ax
 
 
-def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
+def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None, ax=None,
                  xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
                  show=True, **kwargs):
     """Plot a 2D distribution of `x` and `y`
@@ -152,6 +152,9 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 
     disttype : `{{ "scatter", "kde" }}`
         Which type of distribution plot to use
+
+    scatter_s : `float`, default=20
+        Scatter point size, passed as ``s`` to a scatter plot and ignored for a KDE
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -214,7 +217,10 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None,
 
     # create whichever plot was requested
     if disttype == "scatter":
-        ax.scatter(x, y, color=color, **plot_args)
+        # change the size of scatter points based on their weights
+        if weights is not None:
+            scatter_s = weights * scatter_s
+        ax.scatter(x, y, s=scatter_s, color=color, **plot_args)
     elif disttype == "kde":
         sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
 
@@ -323,8 +329,9 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     return fig, ax
 
 
-def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr,
-                                 fig=None, ax=None, show=True, **kwargs):
+def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
+                                 instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
+                                 include_confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
     """Overlay circular/stationary sources on the LISA sensitivity curve.
 
     Each source is plotted at its gravitational wave frequency (n = 2) such that its height above the curve
@@ -341,11 +348,30 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr
     snr : `float/array`
         Signal-to-noise ratio
 
+    weights : `float/array`, optional, default=None
+        Statistical weights for each source, default is equal weights
+
     snr_cutoff : `float`
         SNR above which to plot binaries (default is 0 such that all sources are plotted)
 
+    instrument: {{ `LISA`, `TianQin`, `custom` }}
+        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
+
+    custom_psd : `function`
+        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
+        even if it ignores some.
+
     t_obs : `float`
-        LISA observation time
+        Observation time (default 4 years)
+
+    L : `float`
+        LISA arm length in metres
+
+    approximate_R : `boolean`
+        Whether to approximate the response function (default: no)
+
+    include_confusion_noise  : `boolean`
+        Whether to include the Galactic confusion noise (default: yes)
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -371,7 +397,9 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs)
+        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument,
+                                         custom_psd=custom_psd, L=L, approximate_R=approximate_R,
+                                         include_confusion_noise=include_confusion_noise)
 
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff
@@ -385,7 +413,8 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
-    fig, ax = plot_2D_dist(x=f_GW, y=asd, fig=fig, ax=ax, show=False, **kwargs)
+    weights = weights[detectable] if weights is not None else None
+    fig, ax = plot_2D_dist(x=f_GW, y=asd, weights=weights, fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
     if show:
@@ -394,8 +423,9 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, snr_cutoff=0, t_obs=4 * u.yr
     return fig, ax
 
 
-def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
-                                fig=None, ax=None, show=True, **kwargs):
+def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
+                                instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
+                                include_confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
 
     Each source is plotted at its max snr harmonic frequency such that that its height above the curve is
@@ -409,8 +439,30 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
     snr : `float/array`
         Signal-to-noise ratio
 
+    weights : `float/array`, optional, default=None
+        Statistical weights for each source, default is equal weights
+
     snr_cutoff : `float`
         SNR above which to plot binaries (default is 0 such that all sources are plotted)
+
+    instrument: {{ `LISA`, `TianQin`, `custom` }}
+        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
+
+    custom_psd : `function`
+        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
+        even if it ignores some.
+
+    t_obs : `float`
+        Observation time (default 4 years)
+
+    L : `float`
+        LISA arm length in metres
+
+    approximate_R : `boolean`
+        Whether to approximate the response function (default: no)
+
+    include_confusion_noise  : `boolean`
+        Whether to include the Galactic confusion noise (default: yes)
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -436,7 +488,9 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
     """
     # create figure if it wasn't provided
     if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs)
+        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument, L=L,
+                                         custom_psd=custom_psd, approximate_R=approximate_R,
+                                         include_confusion_noise=include_confusion_noise)
 
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff
@@ -449,7 +503,9 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, snr_cutoff=0, t_obs=4 * u.yr,
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
-    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)), fig=fig, ax=ax, show=False, **kwargs)
+    weights = weights[detectable] if weights is not None else None
+    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)), weights=weights,
+                           fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
     if show:

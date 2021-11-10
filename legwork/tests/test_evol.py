@@ -208,16 +208,19 @@ class Test(unittest.TestCase):
         m_2 = np.random.uniform(0, 10, n_values) * u.Msun
         f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
         ecc = np.random.uniform(0.0, 0.9, n_values)
-        a_i = utils.get_a_from_f_orb(f_orb, m_1, m_2)
-        beta = utils.beta(m_1=m_1, m_2=m_2)
-        beta, a_i = evol.check_mass_freq_input(beta=beta, m_1=m_1, m_2=m_2,
-                                               a_i=a_i, f_orb_i=f_orb)
+        beta, a_i = evol.check_mass_freq_input(m_1=m_1, m_2=m_2, f_orb_i=f_orb)
         n_step = 100
         c_0 = utils.c_0(a_i=a_i, ecc_i=ecc)
-        t_evol = np.ones(n_values) * u.yr
         timesteps = evol.create_timesteps_array(a_i=a_i, beta=beta, ecc_i=ecc,
-                                                t_evol=t_evol, n_step=n_step,
-                                                )
+                                                t_evol=1 * u.yr, n_step=n_step)
+
+        t_merge = evol.get_t_merge_ecc(ecc_i=ecc, f_orb_i=f_orb, m_1=m_1, m_2=m_2)
+
+        # remove any bad timesteps that would evolve past the merger
+        bad_timesteps = timesteps >= t_merge[:, np.newaxis]
+        timesteps[bad_timesteps] = -1 * u.Gyr
+        previous = timesteps.max(axis=1).repeat(timesteps.shape[1])
+        timesteps[bad_timesteps] = previous.reshape(timesteps.shape)[bad_timesteps]
 
         # get rid of the units for faster integration
         c_0 = c_0.to(u.m).value
@@ -233,8 +236,13 @@ class Test(unittest.TestCase):
         with MultiPool(processes=1) as pool:
             ecc_pool = np.array(list(pool.map(evol.integrate_de_dt,
                                               zip(ecc,
-                                                  timesteps.tolist(),
+                                                  timesteps,
                                                   beta,
                                                   c_0))))
 
         self.assertTrue(np.allclose(ecc_evol, ecc_pool, equal_nan=True))
+
+
+# need to use the main name for multiprocessing to work
+if __name__ == '__main__':
+    unittest.main()

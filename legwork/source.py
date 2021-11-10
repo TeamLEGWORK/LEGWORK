@@ -9,7 +9,7 @@ from legwork import utils, strain, psd, evol
 import legwork.snr as sn
 import legwork.visualisation as vis
 
-__all__ = ['Source', 'Stationary', 'Evolving']
+__all__ = ['Source', 'Stationary', 'Evolving', 'VerificationBinaries']
 
 
 class Source():
@@ -51,9 +51,8 @@ class Source():
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
 
-    random_missing : `boolean`, default=False
-        Whether to generate random values for any missing parameters (any of position, polarisation and
-        inclination) or just use average values
+    weights : `float/array`, optional
+        Statistical weights associated with each sample (used for plotted), default is equal weights
 
     gw_lum_tol : `float`
         Allowed error on the GW luminosity when calculating SNRs. This is used to calculate maximum harmonics
@@ -109,8 +108,8 @@ class Source():
     """
 
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None, position=None, polarisation=None,
-                 inclination=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto", interpolate_sc=True,
-                 sc_params={}):
+                 inclination=None, weights=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto",
+                 interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
             raise ValueError("Either `f_orb` or `a` must be specified")
@@ -158,8 +157,8 @@ class Source():
                 "`{}` must have units".format(unit_args_str[i])
 
         # make sure the inputs are arrays
-        fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, a, ecc)
-        m_1, m_2, dist, f_orb, a, ecc = fixed_args
+        fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, a, ecc, weights)
+        m_1, m_2, dist, f_orb, a, ecc, weights = fixed_args
 
         # ensure all array arguments are the same length
         array_args = [m_1, m_2, dist, f_orb, a, ecc]
@@ -169,12 +168,12 @@ class Source():
             raise ValueError("All input arrays must have the same length")
 
         default_sc_params = {
-                "instrument": "LISA",
-                "t_obs": 4 * u.yr,
-                "L": 2.5e9,
-                "approximate_R": False,
-                "include_confusion_noise": True
-            }
+            "instrument": "LISA",
+            "t_obs": 4 * u.yr,
+            "L": 2.5e9 * u.m,
+            "approximate_R": False,
+            "include_confusion_noise": True
+        }
         default_sc_params.update(sc_params)
         self._sc_params = default_sc_params
 
@@ -189,6 +188,7 @@ class Source():
         self.position = position
         self.inclination = inclination
         self.polarisation = polarisation
+        self.weights = weights
         self.n_proc = n_proc
         self.t_merge = None
         self.snr = None
@@ -213,8 +213,8 @@ class Source():
 
         Each function works as follows
 
-            - Calculate the maximum harmonics required to calculate the SNRs assuming provided toleranc
-            `gw_lum_tol`
+            - Calculate the maximum harmonics required to calculate the SNRs assuming provided tolerance\
+                `gw_lum_tol`
             - Calculate the harmonic with the maximum strain
 
         These are stored at ``self.harmonics_required`` and ``self.max_strain_harmonic`` respectively."""
@@ -342,8 +342,17 @@ class Source():
         """
         # check whether params have actually changed
         if sc_params != self._sc_params:
+            # ensure all values are filled (leave as defaults if not)
+            default_sc_params = {
+                "instrument": "LISA",
+                "t_obs": 4 * u.yr,
+                "L": 2.5e9 * u.m,
+                "approximate_R": False,
+                "include_confusion_noise": True
+            }
+            default_sc_params.update(self._sc_params)
             # change values and re-interpolate
-            self._sc_params = sc_params
+            self._sc_params = default_sc_params
             self.set_sc()
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
@@ -930,9 +939,9 @@ class Source():
                               exclude_merged_sources=True, **kwargs):  # pragma: no cover
         """Plot distributions of Source variables. If two variables are specified then produce a 2D
         distribution, otherwise a 1D distribution.
+
         Parameters
         ----------
-
         xstr : `{ 'm_1', 'm_2', 'm_c', 'ecc', 'dist', 'f_orb', 'f_GW', 'a', 'snr' }`
             Which variable to plot on the x axis
 
@@ -974,8 +983,7 @@ class Source():
             which_sources = np.repeat(True, self.n_sources)
 
         if exclude_merged_sources:
-            which_sources = np.logical_and(which_sources,
-                                           np.logical_not(self.merged))
+            which_sources = np.logical_and(which_sources, np.logical_not(self.merged))
 
         # ensure that the variable is a valid choice
         for var_str in [xstr, ystr]:
@@ -1007,14 +1015,17 @@ class Source():
             else:
                 kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr], y.unit)
 
+        # work out what the weights are
+        weights = self.weights[which_sources] if self.weights is not None else None
+
         # plot it!
         if ystr is not None:
-            return vis.plot_2D_dist(x=x[which_sources].value, y=y[which_sources].value, **kwargs)
+            return vis.plot_2D_dist(x=x[which_sources].value, y=y[which_sources].value,
+                                    weights=weights, **kwargs)
         else:
-            return vis.plot_1D_dist(x=x[which_sources].value, **kwargs)
+            return vis.plot_1D_dist(x=x[which_sources].value, weights=weights, **kwargs)
 
-    def plot_sources_on_sc(self, snr_cutoff=0, t_obs=4 * u.yr,
-                           fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
+    def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
         """Plot all sources in the class on the sensitivity curve
 
         Parameters
@@ -1022,11 +1033,19 @@ class Source():
         snr_cutoff : `float`
             SNR below which sources will not be plotted (default is to plot all sources)
 
-        t_obs : `float`
-            LISA observation time
+        fig: `matplotlib Figure`
+            A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either
+            to be used
+
+        ax: `matplotlib Axis`
+            An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either
+            to be used
 
         show : `boolean`
             Whether to immediately show the plot
+
+        **kwargs : `various`
+            Keyword arguments to be passed to plotting functions
 
         Returns
         -------
@@ -1045,6 +1064,11 @@ class Source():
             Evolving sources will not be plotted and a warning will be shown instead.
             We are working on implementing this soon!
         """
+        # only allow plotting when an SNR has been calculated
+        if self.snr is None:
+            print("ERROR: No SNR has been calculated yet")
+            return None, None
+
         detectable = self.snr > snr_cutoff
         inspiraling = np.logical_not(self.merged)
 
@@ -1054,18 +1078,23 @@ class Source():
         if circ_stat.any():
             f_orb = self.f_orb[circ_stat]
             h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
+            weights = self.weights[circ_stat] if self.weights is not None else None
             fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb, h_0_2=h_0_2, snr=self.snr[circ_stat],
-                                                       snr_cutoff=snr_cutoff, t_obs=t_obs,
-                                                       fig=fig, ax=ax, show=False, **kwargs)
+                                                       weights=weights, snr_cutoff=snr_cutoff,
+                                                       fig=fig, ax=ax, show=False,
+                                                       label="Circular/Stationary",
+                                                       **self._sc_params, **kwargs)
 
         # plot eccentric and stationary sources
         ecc_stat = self.get_source_mask(circular=False, stationary=True)
         ecc_stat = np.logical_and.reduce((ecc_stat, detectable, inspiraling))
         if ecc_stat.any():
             f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
-            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat],
-                                                      snr_cutoff=snr_cutoff, t_obs=t_obs, show=show,
-                                                      fig=fig, ax=ax, **kwargs)
+            weights = self.weights[ecc_stat] if self.weights is not None else None
+            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat], weights=weights,
+                                                      snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
+                                                      label="Eccentric/Stationary",
+                                                      **self._sc_params, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
@@ -1122,4 +1151,4 @@ class VerificationBinaries(Source):
 
         # also assign the labels and SNR
         self.labels = vbs["label"]
-        self.true_snr = vbs["snr"]
+        self.true_snr = np.array(vbs["snr"])

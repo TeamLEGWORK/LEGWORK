@@ -43,3 +43,11 @@ Major version change as we've added a significant enhancement with the new non-a
 - Let users specific inclination, sky position and polarisation in `Source` instantiation
 - Add `VerificationBinaries` class to `Source` module for convenient access to LISA verification binary data from Kupfer+18
 - Change max line length in code from 80 to 110 to increase readability
+
+## 0.1.1
+*TW, 5/11/21*
+Small changes to visualisation code and updates to tutorials/demos with the new code
+- allow user to specify weights in `Source` and visualisation functions
+- allow user to customise sensitivity curve in any use of `plot_sources_on_sc`
+- `legwork.__version__` now prints the version number
+- Add new demo about verification binaries and other miscellaneous docs fixes
