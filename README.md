@@ -14,8 +14,8 @@
     <a href='https://legwork.readthedocs.io/en/latest/?badge=latest'>
         <img src='https://readthedocs.org/projects/legwork/badge/?version=latest' alt='Documentation Status' />
     </a>
-    <a href="mailto:tomjwagg@gmail.com">
-        <img src="https://img.shields.io/badge/email-author-blueviolet.svg?style=flat" alt="Email the author"/>
+    <a href="mailto:tomjwagg@gmail.com?cc=kbreivik@flatironinstitute.org">
+        <img src="https://img.shields.io/badge/contact-authors-blueviolet.svg?style=flat" alt="Email the authors"/>
     </a>
 </h2>
 
