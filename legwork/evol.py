@@ -11,7 +11,7 @@ import astropy.constants as c
 from schwimmbad import MultiPool
 
 __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc', 'get_t_merge_circ', 'get_t_merge_ecc',
-           'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array']
+           't_merge_mandel_fit', 'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array']
 
 @jit
 def de_dt(e, times, beta, c_0):                             # pragma: no cover
@@ -466,11 +466,10 @@ def get_t_merge_circ(beta=None, m_1=None, m_2=None,
 
 
 def t_merge_mandel_fit(ecc_i):
-    """A fit to the Peters 1964 merger time equation (5.14) by Ilya Mandel.
-    Function gives a factor which, when multiplied by the circular merger
-    time, gives the eccentric merger time with 3% errors. We add a simple
-    polynomial correction to reduce these errors to within 0.5%.
-    TODO: Add ArXiv link once posted
+    """A fit to the Peters 1964 merger time equation (5.14) by Ilya Mandel. This function gives a factor
+    which, when multiplied by the circular merger time, gives the eccentric merger time with 3% errors.
+    We add a rudimentary polynomial fit to further reduce these errors to within 0.5%.
+    ADS Link: https://ui.adsabs.harvard.edu/abs/2021RNAAS...5..223M/abstract
 
     Parameters
     ----------
@@ -480,8 +479,7 @@ def t_merge_mandel_fit(ecc_i):
     Returns
     -------
     factor : `float/array`
-        Factor by which to multiply the circular merger timescale by to get
-        the overall merger time.
+        Factor by which to multiply the circular merger timescale by to get the overall merger time.
     """
     coefficients = np.array([-1.20317749e+03, 5.67211219e+03, -1.13935479e+04,
                              1.27306422e+04, -8.66281737e+03,  3.69447796e+03,
