@@ -425,7 +425,6 @@ class Test(unittest.TestCase):
             no_worries = False
         self.assertFalse(no_worries)
 
-
     def test_verification_binaries(self):
         """simple to test to check if you can instantiate VerificationBinaries"""
 
@@ -435,3 +434,27 @@ class Test(unittest.TestCase):
         except ValueError:
             no_worries = False
         self.assertTrue(no_worries)
+
+    def test_updating_sc_params(self):
+        """ ensuring that updating the sc params always works """
+        original_sc_params = {
+            "instrument": "LISA",
+            "t_obs": 4 * u.yr,
+            "L": 2.5e9 * u.m,
+            "approximate_R": False,
+            "confusion_noise": "robson19"
+        }
+
+        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.2, dist=10*u.kpc,
+                                sc_params=original_sc_params)
+
+        sources.update_sc_params({"instrument": "TianQin", "L": np.sqrt(3) * 1e5 * u.km})
+
+        correct_final_sc_params = {
+            "instrument": "TianQin",
+            "t_obs": 4 * u.yr,
+            "L": np.sqrt(3) * 1e5 * u.km,
+            "approximate_R": False,
+            "confusion_noise": "robson19"
+        }
+        self.assertTrue(correct_final_sc_params == sources._sc_params)
