@@ -364,7 +364,7 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None
 
         check = too_close
         check[:, 0] = True
-        if np.all(check):
+        if np.all(check):           # pragma: no cover
             print("WARNING: All timesteps are too close to merger so",
                   "evolution is not possible. Either set `t_before` to a",
                   "smaller time or turn off `avoid_merger`")
