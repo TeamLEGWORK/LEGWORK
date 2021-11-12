@@ -350,7 +350,8 @@ class Source():
                 "approximate_R": False,
                 "confusion_noise": "robson19"
             }
-            default_sc_params.update(self._sc_params)
+            if sc_params is not None:
+                default_sc_params.update(sc_params)
             # change values and re-interpolate
             self._sc_params = default_sc_params
             self.set_sc()
