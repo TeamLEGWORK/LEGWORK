@@ -20,10 +20,8 @@ class Test(unittest.TestCase):
         """check that confusion noise is doing logical things"""
         frequencies = np.logspace(-6, 0, 10000) * u.Hz
 
-        confused = psd.power_spectral_density(frequencies,
-                                              include_confusion_noise=True)
-        lucid = psd.power_spectral_density(frequencies,
-                                           include_confusion_noise=False)
+        confused = psd.power_spectral_density(frequencies, confusion_noise="robson19")
+        lucid = psd.power_spectral_density(frequencies, confusion_noise=None)
 
         # ensure confusion noise only adds to noise
         self.assertTrue(np.all(confused >= lucid))
@@ -58,10 +56,8 @@ class Test(unittest.TestCase):
 
         tq = psd.power_spectral_density(frequencies, instrument="TianQin")
 
-        def custom_instrument(f, t_obs, L, approximate_R,
-                              include_confusion_noise):
-            return psd.tianqin_psd(f, L * 2, t_obs, approximate_R,
-                                   include_confusion_noise)
+        def custom_instrument(f, t_obs, L, approximate_R, confusion_noise):
+            return psd.tianqin_psd(f, L * 2, t_obs, approximate_R, confusion_noise)
 
         custom = psd.power_spectral_density(frequencies, instrument="custom",
                                             custom_psd=custom_instrument,

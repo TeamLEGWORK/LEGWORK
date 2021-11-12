@@ -160,8 +160,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
     return psd / u.Hz
 
 
-def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
-                include_confusion_noise=None):
+def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, confusion_noise=None):
     """Calculates the effective TianQin power spectral density sensitivity curve
 
     Using equations from Huang+20, calculate the effective TianQin power
@@ -176,13 +175,13 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
         Arm length
 
     t_obs : `float`
-        Observation time (ignored)
+        Ignored for this function
 
     approximate_R : `boolean`
-        Whether to approximate the response function (ignored)
+        Ignored for this function
 
-    include_confusion_noise  : `boolean`
-        Whether to include the Galactic confusion noise (ignored)
+    confusion_noise  : `various`
+        Ignored for this function
 
     Returns
     -------
@@ -222,8 +221,10 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    include_confusion_noise  : `boolean`
-        Whether to include the Galactic confusion noise (default: yes)
+    confusion_noise  : `various`
+        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
+        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
 
     Returns
     -------
