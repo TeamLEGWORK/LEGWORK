@@ -68,8 +68,7 @@ def approximate_response_function(f, fstar):
     return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
 
 
-def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_confusion_noise=True,
-             position=None, polarisation=None):
+def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_noise="robson19"):
     """Calculates the effective LISA power spectral density sensitivity curve
 
     Using equations from Robson+19, calculate the effective LISA power spectral
@@ -89,14 +88,10 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_conf
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    include_confusion_noise  : `boolean`
-        Whether to include the Galactic confusion noise (default: yes)
-
-    position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
-
-    polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+    confusion_noise  : `various`
+        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
+        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)` 
 
     Returns
     -------
@@ -145,9 +140,13 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, include_conf
     else:
         R = load_response_function(f, fstar)
 
-    # work out the confusion noise or just set to 0
-    if include_confusion_noise:
+    # use confusion noise from Robson+19
+    if confusion_noise == "robson19":
         cn = Sc(f, t_obs)
+    # use a custom function for the confusion noise
+    elif confusion_noise is not None:
+        cn = confusion_noise(f, t_obs)
+    # don't include any confusion noise
     else:
         cn = np.zeros(len(f)) if isinstance(f, (list, np.ndarray)) else 0.0
 
@@ -199,8 +198,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None,
 
 
 def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr, L=None,
-                           approximate_R=False, include_confusion_noise=True,
-                           position=None, polarisation=None):
+                           approximate_R=False, confusion_noise="robson19"):
     """Calculates the effective power spectral density for all instruments.
 
     Parameters
@@ -227,12 +225,6 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
     include_confusion_noise  : `boolean`
         Whether to include the Galactic confusion noise (default: yes)
 
-    position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
-
-    polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
-
     Returns
     -------
     psd : `float/array`
@@ -241,17 +233,13 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
     if instrument == "LISA":
         if L is None:
             L = 2.5e9 * u.m
-        psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
-                       include_confusion_noise=include_confusion_noise,
-                       position=position, polarisation=polarisation)
+        psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "TianQin":
         if L is None:
             L = np.sqrt(3) * 1e5 * u.km
-        psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
-                          include_confusion_noise=include_confusion_noise)
+        psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "custom":
-        psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R,
-                              include_confusion_noise=include_confusion_noise)
+        psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     else:
         raise ValueError("instrument: `{}` not recognised".format(instrument))
 
