@@ -495,7 +495,7 @@ def t_merge_mandel_fit(ecc_i):
 
 
 def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None,
-                    small_e_tol=1e-2, large_e_tol=1 - 1e-2, exact=True):
+                    small_e_tol=0.15, large_e_tol=1 - 1e-4, exact=True):
     """Computes the merger time for binaries
 
     This function implements Peters (1964) Eq. 5.10, 5.14 and the two unlabelled equations after 5.14
@@ -523,16 +523,16 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
         Secondary mass (required if `beta` is None)
 
     small_e_tol : `float`
-        Eccentricity below which to apply the small e approximation
-        (first unlabelled equation following Eq. 5.14 of Peters 1964)
+        Eccentricity below which to apply the small e approximation (see first unlabelled equation following
+        Eq. 5.14 of Peters 1964), defaults to 0.15 to keep relative error below approximately 2%
 
     large_e_tol : `float`
-        Eccentricity above which to apply the large e approximation
-        (second unlabelled equation following Eq. 5.14 of Peters 1964)
+        Eccentricity above which to apply the large e approximation (see second unlabelled equation following
+        Eq. 5.14 of Peters 1964), defaults to 0.9999 to keep relative error below approximately 2%
 
     exact : `boolean`
-        Whether to calculate the merger time exactly with numerical
-        integration or to instead use a fit
+        Whether to calculate the merger time exactly with numerical integration or to instead use the fit from
+        Mandel 2021 (see :meth:`legwork.evol.t_merge_mandel_fit`)
 
     Returns
     -------
@@ -544,7 +544,6 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
     # shortcut if all binaries are circular
     if np.all(ecc_i == 0.0):
         return get_t_merge_circ(beta=beta, a_i=a_i)
-
 
     @njit
     def peters_5_14(e):                                 # pragma: no cover
@@ -582,7 +581,7 @@ def get_t_merge_ecc(ecc_i, a_i=None, f_orb_i=None, beta=None, m_1=None, m_2=None
         if exact:
             prefac = ((12 / 19) * c0[other_e]**4 / beta[other_e]).to(u.Gyr)
             t_merge[other_e] = prefac * [quad(peters_5_14, 0, ecc_i[other_e][i])[0]
-                                        for i in range(len(ecc_i[other_e]))]
+                                         for i in range(len(ecc_i[other_e]))]
         else:
             t_merge[other_e] = get_t_merge_circ(beta=beta[other_e],
                                                 a_i=a_i[other_e]) \

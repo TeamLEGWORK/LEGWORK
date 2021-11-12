@@ -51,3 +51,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 - allow user to customise sensitivity curve in any use of `plot_sources_on_sc`
 - `legwork.__version__` now prints the version number
 - Add new demo about verification binaries and other miscellaneous docs fixes
+
+## 0.1.2
+*TW 12/11/21*
+- Change default values for `small_e_tol` and `large_e_tol` in `get_t_merge_ecc`
