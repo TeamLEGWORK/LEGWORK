@@ -68,8 +68,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
         h_f_lisa_2 = interpolated_sc(2 * f_orb)
     else:
         h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs, instrument=instrument,
-                                                custom_psd=custom_psd,
-                                                position=position, polarisation=polarisation)
+                                                custom_psd=custom_psd)
     snr = (h_f_src_circ_2 / h_f_lisa_2)**0.5
 
     return snr.decompose()
@@ -162,8 +161,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         h_f_lisa_n_2 = h_f_lisa_n_2.reshape(f_n.shape)
     else:
         h_f_lisa_n_2 = psd.power_spectral_density(f=f_n, t_obs=t_obs,
-                                                  instrument=instrument, custom_psd=custom_psd,
-                                                  position=position, polarisation=polarisation)
+                                                  instrument=instrument, custom_psd=custom_psd)
 
     snr_n_2 = (h_f_src_ecc_2 / h_f_lisa_n_2).decompose()
 
@@ -265,8 +263,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
         h_f_lisa_2 = h_f_lisa_2.reshape(f_orb_evol.shape)
     else:
         h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs,
-                                                instrument=instrument, custom_psd=custom_psd,
-                                                position=position, polarisation=polarisation)
+                                                instrument=instrument, custom_psd=custom_psd)
     h_c_lisa_2 = (2 * f_orb_evol)**2 * h_f_lisa_2
 
     snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1)**0.5
@@ -391,8 +388,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
         h_f_lisa = interpolated_sc(f_n_evol.flatten())
     else:
         h_f_lisa = psd.power_spectral_density(f=f_n_evol.flatten(), t_obs=t_obs,
-                                              instrument=instrument, custom_psd=custom_psd,
-                                              position=position, polarisation=polarisation)
+                                              instrument=instrument, custom_psd=custom_psd)
     h_f_lisa = h_f_lisa.reshape(f_n_evol.shape)
     h_c_lisa_2 = f_n_evol**2 * h_f_lisa
 
