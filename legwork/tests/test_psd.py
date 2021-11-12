@@ -71,3 +71,12 @@ class Test(unittest.TestCase):
         except ValueError:
             all_good = False
         self.assertFalse(all_good)
+
+    def test_custom_confusion_noise(self):
+        """ check that using custom confusion noise works """
+        frequencies = np.logspace(-6, 0, 100) * u.Hz
+
+        regular = psd.power_spectral_density(frequencies, confusion_noise=None)
+        custom = psd.power_spectral_density(frequencies, confusion_noise=lambda f, t: 0)
+
+        self.assertTrue(np.allclose(regular, custom))
