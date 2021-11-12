@@ -55,3 +55,4 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.1.2
 *TW 12/11/21*
 - Change default values for `small_e_tol` and `large_e_tol` in `get_t_merge_ecc`
+- allow users to specify custom confusion noise in sensitivity curves
