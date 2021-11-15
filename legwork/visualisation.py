@@ -331,7 +331,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
 def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
                                  instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
-                                 include_confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
+                                 confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
     """Overlay circular/stationary sources on the LISA sensitivity curve.
 
     Each source is plotted at its gravitational wave frequency (n = 2) such that its height above the curve
@@ -370,8 +370,10 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    include_confusion_noise  : `boolean`
-        Whether to include the Galactic confusion noise (default: yes)
+    confusion_noise  : `various`
+        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
+        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -399,7 +401,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
     if fig is None or ax is None:
         fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument,
                                          custom_psd=custom_psd, L=L, approximate_R=approximate_R,
-                                         include_confusion_noise=include_confusion_noise)
+                                         confusion_noise=confusion_noise)
 
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff
@@ -425,7 +427,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
 
 def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
                                 instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
-                                include_confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
+                                confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
 
     Each source is plotted at its max snr harmonic frequency such that that its height above the curve is
@@ -461,8 +463,10 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    include_confusion_noise  : `boolean`
-        Whether to include the Galactic confusion noise (default: yes)
+    confusion_noise  : `various`
+        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
+        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -490,7 +494,7 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 
     if fig is None or ax is None:
         fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument, L=L,
                                          custom_psd=custom_psd, approximate_R=approximate_R,
-                                         include_confusion_noise=include_confusion_noise)
+                                         confusion_noise=confusion_noise)
 
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff
