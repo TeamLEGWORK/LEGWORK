@@ -1,5 +1,5 @@
 ---
-title: 'LEGWORK: The LISA Evolution and Gravitational Wave Orbit Kit'
+title: 'LEGWORK: A python package for computing the evolution and detectability of stellar-origin gravitational-wave sources with space-based detectors'
 tags:
   - Python
   - astronomy
@@ -42,7 +42,7 @@ bibliography: paper.bib
 
 # Summary
 
-\lw{} is a Python package that is designed to streamline the process of making predictions of LISA detection rates for stellar-origin binaries. \lw{} can evolve binaries from formation until merger, compute their gravitational-wave strains at any point and calculate their signal-to-noise ratios in both LISA and TianQin. Each of these calculations are optimised to rapidly produce results for large collections of sources. \lw{} additionally has a visualisation module for plotting sources on instrument sensitivity curves as well as examining distributions of populations of sources.
+\lw{} (LISA Evolution and Gravitational Wave Orbit Kit) is an open-source Python package for making predictions about stellar-origin gravitational wave sources and their detectability in LISA or other space-based gravitational wave detectors. \lw{} can be used to evolve the orbits of sources due to gravitational wave emission, calculate gravitational wave strains (using post-Newtonian approximations), compute signal-to-noise ratios and visualise the results. It can be applied to a variety of potential sources, including binaries consisting of white dwarfs, neutron stars and black holes. Although we focus on double compact objects, in principle \lw{} can be used for any system with a user-specified orbital evolution, such as those affected by a third object or gas drag. We optimised the package to make it efficient for use in population studies which can contain tens-of-millions of sources. We hope that \lw{} will enable and accelerate future studies triggered by the rapidly growing interest in gravitational wave sources.
 
 # Statement of need
 
