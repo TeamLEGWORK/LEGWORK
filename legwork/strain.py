@@ -11,6 +11,11 @@ def amplitude_modulation(position, polarisation, inclination):
     """Computes the modulation of the strain due to the orbit averaged response of the detector to the
     position, polarisation, and inclination of the source
 
+    Note that since the majority of the calculations in LEGWORK are carried out for the full position,
+    polarisation, and inclination averages, we include a pre-factor of 5/4 on the amplitude modulation
+    to undo the factor of 4/5 which arises from the averaging of :meth:`legwork.utils.F_plus_squared` and
+    :meth:`legwork.utils.F_cross_squared`.
+
     Parameters
     ----------
     position : `SkyCoord/array`, optional
