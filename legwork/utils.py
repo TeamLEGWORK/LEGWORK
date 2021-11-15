@@ -442,8 +442,7 @@ def D_plus_D_cross(theta, phi):
 
 
 def F_plus_squared(theta, phi, psi):
-    """The auto-correlated detector response for the
-    plus polarization
+    """Compute the auto-correlated detector response for the plus polarization
 
     Parameters
     ----------
@@ -459,6 +458,7 @@ def F_plus_squared(theta, phi, psi):
     Returns
     -------
     F_plus_2 : `float/array`
+        Auto-correlated detector response for the plus polarization
     """
 
     term_1 = np.cos(2 * psi)**2 * D_plus_squared(theta, phi)
@@ -471,8 +471,7 @@ def F_plus_squared(theta, phi, psi):
 
 
 def F_cross_squared(theta, phi, psi):
-    """The auto-correlated detector response for the
-    cross polarization
+    """Compute the auto-correlated detector response for the cross polarization
 
     Parameters
     ----------
@@ -488,6 +487,7 @@ def F_cross_squared(theta, phi, psi):
     Returns
     -------
     F_cross_2 : `float/array`
+        Auto-correlated detector response for the cross polarization
     """
 
     term_1 = np.cos(2 * psi)**2 * D_cross_squared(theta, phi)
