@@ -13,6 +13,7 @@ from schwimmbad import MultiPool
 __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc', 'get_t_merge_circ', 'get_t_merge_ecc',
            't_merge_mandel_fit', 'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array']
 
+
 @jit
 def de_dt(e, times, beta, c_0):                             # pragma: no cover
     """Compute eccentricity time derivative

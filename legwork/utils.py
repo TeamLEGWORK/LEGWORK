@@ -82,11 +82,7 @@ def peters_f(e):
 
     Notes
     -----
-    Note that this function represents an infinite sum of g(n, e)
-
-    .. math::
-
-        f(e) = \sum_{n=1}^\infty g(n, e)
+    Note that this function represents an infinite sum of g(n, e) - :meth:`legwork.utils.peters_g`
     """
 
     numerator = 1 + (73/24)*e**2 + (37/96)*e**4
@@ -497,4 +493,3 @@ def F_cross_squared(theta, phi, psi):
     F_cross_2 = (1 / 4) * (term_1 + term_2 + term_3)
 
     return F_cross_2
-

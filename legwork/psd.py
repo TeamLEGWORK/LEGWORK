@@ -91,7 +91,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
     confusion_noise  : `various`
         Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
         `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
-        frequency for a given mission length where it would be called by running `noise(f, t_obs)` 
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
 
     Returns
     -------
