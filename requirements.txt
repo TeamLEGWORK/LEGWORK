@@ -1,6 +1,6 @@
-numpy >= 1.16'
-astropy >= 4.0'
 numba >= 0.50'
+numpy >= 1.16,< 1.20'
+astropy >= 4.0'
 scipy >= 1.5.0'
 matplotlib >= 3.3.2'
 seaborn >= 0.11.1'
