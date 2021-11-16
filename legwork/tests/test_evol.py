@@ -149,16 +149,14 @@ class Test(unittest.TestCase):
         ecc = np.random.uniform(0, 0.95, n_values)
 
         # ensure you get the same value no matter which function you use
-        exact_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
-                                        ecc_i=ecc, exact=True).to(u.yr)
-        fit_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
-                                        ecc_i=ecc, exact=False).to(u.yr)
+        exact_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i, ecc_i=ecc, exact=True).to(u.yr)
+        fit_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i, ecc_i=ecc, exact=False).to(u.yr)
 
         self.assertTrue(np.allclose(exact_time, fit_time, rtol=0.05))
 
         beta = np.random.uniform(10, 50, 1) * u.AU**4 / u.Gyr
         a_i = np.random.uniform(0.01, 0.1, 1) * u.AU
-        ecc = np.random.uniform(0.02, 0.98, 1) # make sure it is in the middle
+        ecc = np.random.uniform(0.02, 0.98, 1)  # make sure it is in the middle
 
         array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
                                           ecc_i=ecc, exact=False).to(u.yr)

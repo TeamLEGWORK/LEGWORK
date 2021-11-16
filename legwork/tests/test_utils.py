@@ -43,9 +43,9 @@ class Test(unittest.TestCase):
 
         result, error = integrate.nquad(
             integrand,
-            [[0, np.pi],      # theta
-             [0, 2 * np.pi],  # phi
-             [0, 2 * np.pi]]) # psi
+            [[0, np.pi],       # theta
+             [0, 2 * np.pi],   # phi
+             [0, 2 * np.pi]])  # psi
 
         self.assertAlmostEqual(result, 3/10)
 
@@ -68,6 +68,3 @@ class Test(unittest.TestCase):
              [0, np.pi / 2]])  # inc
 
         self.assertAlmostEqual(result, 0.12)
-
-
-

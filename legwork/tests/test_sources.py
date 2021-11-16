@@ -1,4 +1,3 @@
-from legwork import evol
 import numpy as np
 import legwork.snr as snr
 import legwork.source as source
@@ -152,7 +151,7 @@ class Test(unittest.TestCase):
         true_strain = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
                                    dist=dist, position=positions,
                                    inclination=incs, polarisation=psis,
-                                   n=[1,2,3])[:, 0, :]
+                                   n=[1, 2, 3])[:, 0, :]
         self.assertTrue(np.all(source_strains == true_strain))
 
     def test_amplitude_modulation_h_c_n(self):
@@ -177,10 +176,8 @@ class Test(unittest.TestCase):
                                 position=positions, inclination=incs,
                                 polarisation=psis, interpolate_g=False)
         source_strains = sources.get_h_c_n([1, 2, 3])
-        true_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
-                                       dist=dist, position=positions,
-                                       inclination=incs, polarisation=psis,
-                                       n=[1,2,3])[:, 0, :]
+        true_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc, dist=dist, position=positions,
+                                   inclination=incs, polarisation=psis, n=[1, 2, 3])[:, 0, :]
         self.assertTrue(np.all(source_strains == true_strain))
 
     def test_stationary_subclass(self):
