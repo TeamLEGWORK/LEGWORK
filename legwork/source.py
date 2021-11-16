@@ -390,11 +390,8 @@ class Source():
         if stationary is None:
             stat_mask = np.repeat(True, self.n_sources)
         elif stationary is True or stationary is False:
-            stat_mask = utils.determine_stationarity(m_c=self.m_c,
-                                                     f_orb_i=self.f_orb,
-                                                     t_evol=t_obs,
-                                                     ecc_i=self.ecc,
-                                                     stat_tol=self.stat_tol)
+            stat_mask = evol.determine_stationarity(m_c=self.m_c,f_orb_i=self.f_orb, t_evol=t_obs,
+                                                    ecc_i=self.ecc, stat_tol=self.stat_tol)
             if stationary is False:
                 stat_mask = np.logical_not(stat_mask)
         else:
