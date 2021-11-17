@@ -56,3 +56,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 *TW 12/11/21*
 - Change default values for `small_e_tol` and `large_e_tol` in `get_t_merge_ecc`
 - allow users to specify custom confusion noise in sensitivity curves
+
+## 0.1.3
+*TW 16/11/21*
+- Move `determine_stationarity` from `utils` to `evol` to avoid cyclical imports

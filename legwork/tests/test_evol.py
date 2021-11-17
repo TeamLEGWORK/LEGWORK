@@ -93,6 +93,23 @@ class Test(unittest.TestCase):
             no_worries = False
         self.assertFalse(no_worries)
 
+        n_vals = 10000
+        f_orb_i = 10**(np.random.uniform(-5, -1, n_vals)) * u.Hz
+        ecc_i = np.zeros(n_vals)
+        m_1 = np.random.uniform(0, 50, n_vals) * u.Msun
+        m_2 = np.random.uniform(0, 50, n_vals) * u.Msun
+
+        # check the function doesn't crash if you don't give the chirp mass
+        evol.determine_stationarity(f_orb_i=f_orb_i, t_evol=4 * u.yr, ecc_i=ecc_i, m_1=m_1, m_2=m_2)
+
+        # check that it *does* crash when no masses supplied
+        no_worries = True
+        try:
+            evol.determine_stationarity(f_orb_i=f_orb_i, t_evol=4 * u.yr, ecc_i=ecc_i)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
     def test_t_merge_special_cases(self):
         """checks that t_merge_ecc operates properly with exactly circular
         binaries and also single sources"""
@@ -132,16 +149,14 @@ class Test(unittest.TestCase):
         ecc = np.random.uniform(0, 0.95, n_values)
 
         # ensure you get the same value no matter which function you use
-        exact_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
-                                        ecc_i=ecc, exact=True).to(u.yr)
-        fit_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
-                                        ecc_i=ecc, exact=False).to(u.yr)
+        exact_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i, ecc_i=ecc, exact=True).to(u.yr)
+        fit_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i, ecc_i=ecc, exact=False).to(u.yr)
 
         self.assertTrue(np.allclose(exact_time, fit_time, rtol=0.05))
 
         beta = np.random.uniform(10, 50, 1) * u.AU**4 / u.Gyr
         a_i = np.random.uniform(0.01, 0.1, 1) * u.AU
-        ecc = np.random.uniform(0.02, 0.98, 1) # make sure it is in the middle
+        ecc = np.random.uniform(0.02, 0.98, 1)  # make sure it is in the middle
 
         array_time = evol.get_t_merge_ecc(beta=beta, a_i=a_i,
                                           ecc_i=ecc, exact=False).to(u.yr)
