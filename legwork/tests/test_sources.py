@@ -452,6 +452,7 @@ class Test(unittest.TestCase):
             "t_obs": 4 * u.yr,
             "L": np.sqrt(3) * 1e5 * u.km,
             "approximate_R": False,
-            "confusion_noise": "robson19"
+            "confusion_noise": "robson19",
+            "custom_psd": None,
         }
         self.assertTrue(correct_final_sc_params == sources._sc_params)
