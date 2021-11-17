@@ -74,9 +74,9 @@ class Source():
         Whether to interpolate the LISA sensitivity curve
 
     sc_params : `dict`
-        Parameters for interpolated sensitivity curve. Include any of ``t_obs``, ``L``, ``approximate_R``
-        and ``confusion_noise``. Default values are: 4 years, 2.5e9, 19.09e-3, False and 'robson19'.
-        This is ignored if ``interpolate_sc`` is False.
+        Parameters for interpolated sensitivity curve. Include any of ``instrument``, ``custom_psd``,
+        ``t_obs``, ``L``, ``approximate_R`` and ``confusion_noise``. Default values are: "LISA", None,
+        4 years, 2.5e9, 19.09e-3, False and 'robson19'.
 
     Attributes
     ----------
@@ -169,6 +169,7 @@ class Source():
 
         default_sc_params = {
             "instrument": "LISA",
+            "custom_psd": None,
             "t_obs": 4 * u.yr,
             "L": 2.5e9 * u.m,
             "approximate_R": False,
@@ -202,8 +203,7 @@ class Source():
 
         # interpolate g(n,e) for more than 100 sources or eccentric populations
         if interpolate_g == "auto":
-            self.set_g(np.logical_or(self.n_sources > 100,
-                                     np.any(self.ecc > 0.9)))
+            self.set_g(np.logical_or(self.n_sources > 100, np.any(self.ecc > 0.9)))
         else:
             self.set_g(interpolate_g)
         self.set_sc()
@@ -345,6 +345,7 @@ class Source():
             # ensure all values are filled (leave as defaults if not)
             default_sc_params = {
                 "instrument": "LISA",
+                "custom_psd": None,
                 "t_obs": 4 * u.yr,
                 "L": 2.5e9 * u.m,
                 "approximate_R": False,
@@ -496,7 +497,7 @@ class Source():
         # return all sources, not just inpsiralling ones
         return h_c_n[which_sources, :]
 
-    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, n_step=100,
+    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, n_step=100,
                 verbose=False, re_interpolate_sc=True, which_sources=None):
         """Computes the SNR for a generic binary. Also records the harmonic with maximum SNR for each
         binary in ``self.max_snr_harmonic``.
@@ -504,14 +505,15 @@ class Source():
         Parameters
         ----------
         t_obs : `array`
-            Observation duration (default: 4 years)
+            Observation duration (default: value from sc_params)
 
         instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
-            Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied. (default: value
+            from sc_params)
 
         custom_psd : `function`
             Custom function for computing the PSD. Must take the same arguments as
-            :meth:`legwork.psd.lisa_psd` even if it ignores some.
+            :meth:`legwork.psd.lisa_psd` even if it ignores some. (default: function from sc_params)
 
         n_step : `int`
             Number of time steps during observation duration
@@ -531,15 +533,22 @@ class Source():
         SNR : `array`
             The signal-to-noise ratio
         """
+        # if no values are provided, use those in sc_params
+        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        instrument = self._sc_params["instrument"] if instrument is None else instrument
+        custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
+
         # if the user interpolated a sensitivity curve with different settings
         if (self.interpolate_sc and self._sc_params is not None
                 and (t_obs != self._sc_params["t_obs"]
-                     or instrument != self._sc_params["instrument"])):  # pragma: no cover
+                     or instrument != self._sc_params["instrument"]
+                     or custom_psd != self._sc_params["custom_psd"])):  # pragma: no cover
 
             # re interpolate the sensitivity curve with new parameters
             if re_interpolate_sc:
                 self._sc_params["t_obs"] = t_obs
                 self._sc_params["instrument"] = instrument
+                self._sc_params["custom_psd"] = custom_psd
 
                 self.set_sc()
 
