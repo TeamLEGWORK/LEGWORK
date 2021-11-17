@@ -60,3 +60,8 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.1.3
 *TW 16/11/21*
 - Move `determine_stationarity` from `utils` to `evol` to avoid cyclical imports
+
+## 0.1.4
+*TW 17/11/21*
+- Add `custom_psd` to the `sc_params` in `Source`
+- Change the default parameters of `Source.get_snr()` to use `sc_params`
