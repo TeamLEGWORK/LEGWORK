@@ -148,7 +148,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
         cn = confusion_noise(f, t_obs)
     # don't include any confusion noise
     else:
-        cn = np.zeros(len(f)) if isinstance(f, (list, np.ndarray)) else 0.0
+        cn = np.zeros(np.shape(f)) if isinstance(f, (list, np.ndarray)) else 0.0
 
     L = L.to(u.m).value
 
