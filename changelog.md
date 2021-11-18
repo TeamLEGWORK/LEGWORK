@@ -65,3 +65,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 *TW 17/11/21*
 - Add `custom_psd` to the `sc_params` in `Source`
 - Change the default parameters of `Source.get_snr()` to use `sc_params`
+
+## 0.1.5
+*KB 18/11/21*
+- Make confusion noise follow shape of supplied frequency even in case of no confusion
