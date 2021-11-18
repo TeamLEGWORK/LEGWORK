@@ -25,44 +25,18 @@
     and visualising the results.
 </p>
 
-# Installation
-## Stable Version
-We recommend that you create a Conda environment for working with LEGWORK.
-You can do this by running
+### Installation
+Put simply? `pip install legwork`! But we recommend creating a conda environment first to ensure everything goes smoothly! Check out the installation instructions [here](https://legwork.readthedocs.io/en/latest/install.html) to learn exactly how to install LEGWORK
 
-    conda create --name legwork numpy scipy astropy numba matplotlib seaborn jupyter ipython
+### Documentation
+All documentation related to LEGWORK can be found [at this link](https://legwork.readthedocs.io/en/latest/)
 
-And then activate the environment by running
-
-    conda activate legwork
-
-Once within the environment, LEGWORK is available for installation on PyPI which lets you install the latest
-stable version using ``pip``. One last dependency is the schwimmbad package which is only available
-on PyPI not conda and therefore also needs to be brought in with ``pip``. So now to complete the installation just run
-
-    pip install schwimmbad legwork
-
-and you should be all set! Check out our [quickstart tutorial](https://legwork.readthedocs.io/en/latest/notebooks/Quickstart.html) to learn some LEGWORK basics.
-
-
-If you see an error about llvmlite of the form "*ERROR: Cannot uninstall 'llvmlite'. It is a distutils installed project and thus we cannot accurately determine which files belong to it which would lead to only a partial uninstall.*" this is due to the nature of the llvmlite and numba packages
-and can be avoided by instead running
-
-    pip install schwimmbad legwork --ignore-installed llvmlite
-
-## Development Version
-The latest development version is available directly from our
-[GitHub Repo](https://github.com/TeamLEGWORK/LEGWORK)
-
-    git clone https://github.com/TeamLEGWORK/LEGWORK
-    cd LEGWORK
-    pip install .
-
-# Documentation
-You can find our documentation [here](https://legwork.readthedocs.io/en/latest/)
-and explore various tutorials as well details on every module and function.
-
-# Development
-The source code is available [here](https://github.com/TeamLEGWORK/LEGWORK)
-on GitHub and if you have an idea for a new feature, notice a bug or something else entirely,
-please [open an issue](https://github.com/TeamLEGWORK/LEGWORK/issues/new) and let us know — we'd love to hear about it!
+### Other quick links
+- **Quickstart** - New to LEGWORK? Try out our quickstart tutorial [here](https://legwork.readthedocs.io/en/latest/notebooks/Quickstart.html)!
+- **Tutorials** - Learn more about what you can do with LEGWORK with our tutorials, found [here](https://legwork.readthedocs.io/en/latest/tutorials.html)!
+- **Citing LEGWORK** - If you're using LEGWORK for a scientific publication please go [here](https://legwork.readthedocs.io/en/latest/cite.html) to see how to cite us!
+- **Demos** - Want to see what LEGWORK is capable of? Check out our demos [here](https://legwork.readthedocs.io/en/latest/demos.html)!
+- **API reference** - Wondering how you should use a particular function? Go [here](https://legwork.readthedocs.io/en/latest/modules.html) to find our full API reference!
+- **Feature requests** - Do you have an idea for adding something to LEGWORK? Create an issue [here](https://github.com/TeamLEGWORK/LEGWORK/issues/new) and let us know! Or, even better, make the change yourself and create a [pull request](https://github.com/TeamLEGWORK/LEGWORK/pulls)!
+- **Bug reporting** - If you see a bug we would love to know about it! Please create an issue [here](https://github.com/TeamLEGWORK/LEGWORK/issues/new)!
+- **Release paper** - The LEGWORK release paper is now [on the ArXiv](https://arxiv.org/abs/2111.08717) and you can also view it directly [in GitHub](https://github.com/TeamLEGWORK/LEGWORK-paper)!
