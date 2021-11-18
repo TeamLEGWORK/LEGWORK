@@ -32,11 +32,11 @@ Put simply? `pip install legwork`! But we recommend creating a conda environment
 All documentation related to LEGWORK can be found [at this link](https://legwork.readthedocs.io/en/latest/)
 
 ### Other quick links
-- **Quickstart** - New to LEGWORK? Try out our quickstart tutorial [here](https://legwork.readthedocs.io/en/latest/notebooks/Quickstart.html)!
-- **Tutorials** - Learn more about what you can do with LEGWORK with our tutorials, found [here](https://legwork.readthedocs.io/en/latest/tutorials.html)!
-- **Citing LEGWORK** - If you're using LEGWORK for a scientific publication please go [here](https://legwork.readthedocs.io/en/latest/cite.html) to see how to cite us!
-- **Demos** - Want to see what LEGWORK is capable of? Check out our demos [here](https://legwork.readthedocs.io/en/latest/demos.html)!
-- **API reference** - Wondering how you should use a particular function? Go [here](https://legwork.readthedocs.io/en/latest/modules.html) to find our full API reference!
-- **Feature requests** - Do you have an idea for adding something to LEGWORK? Create an issue [here](https://github.com/TeamLEGWORK/LEGWORK/issues/new) and let us know! Or, even better, make the change yourself and create a [pull request](https://github.com/TeamLEGWORK/LEGWORK/pulls)!
-- **Bug reporting** - If you see a bug we would love to know about it! Please create an issue [here](https://github.com/TeamLEGWORK/LEGWORK/issues/new)!
-- **Release paper** - The LEGWORK release paper is now [on the ArXiv](https://arxiv.org/abs/2111.08717) and you can also view it directly [in GitHub](https://github.com/TeamLEGWORK/LEGWORK-paper)!
+- [Quickstart](https://legwork.readthedocs.io/en/latest/notebooks/Quickstart.html) - New to LEGWORK? Try out our quickstart tutorial!
+- [Tutorials](https://legwork.readthedocs.io/en/latest/tutorials.html) - Learn more about what you can do with LEGWORK with our tutorials!
+- [Citing LEGWORK](https://legwork.readthedocs.io/en/latest/cite.html) - If you're using LEGWORK for a scientific publication please go follow the link to see how to cite us!
+- [Demos](https://legwork.readthedocs.io/en/latest/demos.html) - Want to see what LEGWORK is capable of? Check out our demos!
+- [API reference](https://legwork.readthedocs.io/en/latest/modules.html) - Wondering how you should use a particular function? Go take a look at our full API reference!
+- [Feature requests](https://github.com/TeamLEGWORK/LEGWORK/issues/new) - Do you have an idea for adding something to LEGWORK? Create an issue [here](https://github.com/TeamLEGWORK/LEGWORK/issues/new) and let us know! Or, even better, make the change yourself and create a [pull request](https://github.com/TeamLEGWORK/LEGWORK/pulls)!
+- [Bug reporting](https://github.com/TeamLEGWORK/LEGWORK/issues/new) - If you see a bug we would love to know about it! Please create an issue [here](https://github.com/TeamLEGWORK/LEGWORK/issues/new)!
+- [Release paper](https://arxiv.org/abs/2111.08717) - The LEGWORK release paper is now on the ArXiv and you can also view it directly [in GitHub](https://github.com/TeamLEGWORK/LEGWORK-paper) if you prefer!
