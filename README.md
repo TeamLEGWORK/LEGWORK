@@ -34,7 +34,7 @@ All documentation related to LEGWORK can be found [at this link](https://legwork
 ### Other quick links
 - [Quickstart](https://legwork.readthedocs.io/en/latest/notebooks/Quickstart.html) - New to LEGWORK? Try out our quickstart tutorial!
 - [Tutorials](https://legwork.readthedocs.io/en/latest/tutorials.html) - Learn more about what you can do with LEGWORK with our tutorials!
-- [Citing LEGWORK](https://legwork.readthedocs.io/en/latest/cite.html) - If you're using LEGWORK for a scientific publication please go follow the link to see how to cite us!
+- [Citing LEGWORK](https://legwork.readthedocs.io/en/latest/cite.html) - If you're using LEGWORK for a scientific publication please follow the link for citation intstructions
 - [Demos](https://legwork.readthedocs.io/en/latest/demos.html) - Want to see what LEGWORK is capable of? Check out our demos!
 - [API reference](https://legwork.readthedocs.io/en/latest/modules.html) - Wondering how you should use a particular function? Go take a look at our full API reference!
 - [Feature requests](https://github.com/TeamLEGWORK/LEGWORK/issues/new) - Do you have an idea for adding something to LEGWORK? Create an issue [here](https://github.com/TeamLEGWORK/LEGWORK/issues/new) and let us know! Or, even better, make the change yourself and create a [pull request](https://github.com/TeamLEGWORK/LEGWORK/pulls)!
