@@ -65,3 +65,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 *TW 17/11/21*
 - Add `custom_psd` to the `sc_params` in `Source`
 - Change the default parameters of `Source.get_snr()` to use `sc_params`
+
+## 0.1.5
+*TW 18/11/21*
+- Add a factor of 10/3 to the TianQin sensitivity curve to make it consistent with LISA (thanks to Yi-Ming Hu for pointing this out!)
