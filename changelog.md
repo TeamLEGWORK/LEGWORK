@@ -69,3 +69,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.1.5
 *KB 18/11/21*
 - Make confusion noise follow shape of supplied frequency even in case of no confusion
+
+## 0.1.6
+*TW 18/11/21*
+- Add a factor of 10/3 to the TianQin sensitivity curve to make it consistent with LISA (thanks to Yi-Ming Hu for pointing this out!)

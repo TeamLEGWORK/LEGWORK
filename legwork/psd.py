@@ -163,8 +163,11 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
 def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, confusion_noise=None):
     """Calculates the effective TianQin power spectral density sensitivity curve
 
-    Using equations from Huang+20, calculate the effective TianQin power
-    spectral density for the sensitivity curve
+    Using Eq. 13 from Huang+20, calculate the effective TianQin PSD for the sensitivity curve
+
+    Note that this function includes an extra factor of 10/3 compared Eq. 13 in Huang+20, since Huang+20
+    absorbs the factor into the waveform but we instead follow the same convention as Robson+19 for
+    consistency and include it in this 'effective' PSD function instead.
 
     Parameters
     ----------
@@ -191,7 +194,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, co
     fstar = const.c / (2 * np.pi * L)
     Sa = 1e-30 * u.m**2 * u.s**(-4) * u.Hz**(-1)
     Sx = 1e-24 * u.m**2 * u.Hz**(-1)
-    psd = 1 / L**2 * (4 * Sa / (2 * np.pi * f)**4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
+    psd = 10 / (3 * L**2) * (4 * Sa / (2 * np.pi * f)**4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
         * (1 + 0.6 * (f / fstar)**2)
     return psd.to(u.Hz**(-1))
 
