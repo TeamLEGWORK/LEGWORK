@@ -14,6 +14,9 @@
     <a href='https://legwork.readthedocs.io/en/latest/?badge=latest'>
         <img src='https://readthedocs.org/projects/legwork/badge/?version=latest' alt='Documentation Status' />
     </a>
+    <a href="https://ascl.net/2111.007">
+        <img src="https://img.shields.io/badge/ascl-2111.007-blue.svg?colorB=262255" alt="ascl:2111.007" />
+    </a>
     <a href="mailto:tomjwagg@gmail.com?cc=kbreivik@flatironinstitute.org">
         <img src="https://img.shields.io/badge/contact-authors-blueviolet.svg?style=flat" alt="Email the authors"/>
     </a>
