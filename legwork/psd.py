@@ -116,23 +116,6 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
     def Pacc(f):
         return (3e-15)**2 * (1 + (0.4e-3 / f)**2) * (1 + (f / (8e-3))**4)
 
-    # galactic confusion noise (Robson+ Eq. 14)
-    def Sc(f, t_obs):
-
-        # parameters from Robson+ 2019 Table 1
-        lengths = np.array([0.5, 1.0, 2.0, 4.0]) * u.yr
-        alpha = [0.133, 0.171, 0.165, 0.138]
-        beta = [243.0, 292.0, 299.0, -221.0]
-        kappa = [482.0, 1020.0, 611.0, 521.0]
-        gamma = [917.0, 1680.0, 1340.0, 1680.0]
-        fk = [2.58e-3, 2.15e-3, 1.73e-3, 1.13e-3]
-
-        # find index of the closest length to inputted observation time
-        ind = np.abs(t_obs - lengths).argmin()
-
-        return 9e-45 * f**(-7 / 3.) * np.exp(-f**(alpha[ind]) + beta[ind] * f * np.sin(kappa[ind] * f)) \
-            * (1 + np.tanh(gamma[ind] * (fk[ind] - f)))
-
     # calculate response function (either exactly or with approximation)
     fstar = (const.c / (2 * np.pi * L)).to(u.Hz).value
     if approximate_R:
@@ -140,15 +123,11 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
     else:
         R = load_response_function(f, fstar)
 
-    # use confusion noise from Robson+19
-    if confusion_noise == "robson19":
-        cn = Sc(f, t_obs)
-    # use a custom function for the confusion noise
-    elif confusion_noise is not None:
-        cn = confusion_noise(f, t_obs)
-    # don't include any confusion noise
+    # get confusion noise
+    if isinstance(confusion_noise, str) or confusion_noise is None:
+        cn = get_confusion_noise(f=f * u.Hz, t_obs=t_obs, model=confusion_noise).value
     else:
-        cn = np.zeros(np.shape(f)) if isinstance(f, (list, np.ndarray)) else 0.0
+        cn = confusion_noise(f, t_obs)
 
     L = L.to(u.m).value
 
@@ -248,3 +227,68 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
         raise ValueError("instrument: `{}` not recognised".format(instrument))
 
     return psd
+
+
+def get_confusion_noise_robson19(f, t_obs=4 * u.yr):
+    # erase the units for speed
+    f = f.to(u.Hz).value
+
+    # parameters from Robson+ 2019 Table 1
+    lengths = np.array([0.5, 1.0, 2.0, 4.0]) * u.yr
+    alpha = [0.133, 0.171, 0.165, 0.138]
+    beta = [243.0, 292.0, 299.0, -221.0]
+    kappa = [482.0, 1020.0, 611.0, 521.0]
+    gamma = [917.0, 1680.0, 1340.0, 1680.0]
+    fk = [2.58e-3, 2.15e-3, 1.73e-3, 1.13e-3]
+
+    # find index of the closest length to inputted observation time
+    ind = np.abs(t_obs - lengths).argmin()
+
+    confusion_noise = 9e-45 * f**(-7 / 3.) * np.exp(-f**(alpha[ind]) + beta[ind]
+                                                    * f * np.sin(kappa[ind] * f))\
+        * (1 + np.tanh(gamma[ind] * (fk[ind] - f))) * u.Hz**(-1/2)
+    return confusion_noise
+
+
+def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
+    # define the mission lengths and corresponding coefficients
+    lengths = np.array([0.5, 1.0, 2.0, 4.0, 5.0]) * u.yr
+    coefficients = np.array([
+        [-18.6, -18.6, -18.6, -18.6, -18.6],
+        [-1.22, -1.13, -1.45, -1.43, -1.51],
+        [0.009, -0.945, 0.315, -0.687, -0.71],
+        [-1.87, -1.02, -1.19, 0.24, -1.13],
+        [0.65, 4.05, -4.48, -0.15, -0.83],
+        [3.6, -4.5, 10.8, -1.8, 13.2],
+        [-4.6, -0.5, -9.4, -3.2, -19.1]
+    ])
+
+    # find the nearest mission length
+    ind = np.abs(t_obs - lengths).argmin()
+
+    # start with no confusion noise and add each coefficient using Huang+20 Table 1
+    confusion_noise = np.zeros_like(f)
+    x = np.log10(f / 1e-3)
+    for i in range(len(coefficients)):
+        xi = x**i
+        ai = coefficients[i][ind]
+        confusion_noise += ai * xi
+    confusion_noise = 10**(confusion_noise) * u.Hz**(-1/2)
+
+    # remove confusion noise outside of TianQin regime (fit doesn't apply outside of regime)
+    confusion_noise[np.logical_or(f < 1e-4, f > 1e0)] = 0.0 * u.Hz**(-1/2)
+
+    return confusion_noise
+
+
+def get_confusion_noise(f, t_obs=4 * u.yr, model="robson19"):
+    if model == "robson19":
+        return get_confusion_noise_robson19(f=f, t_obs=t_obs)
+    elif model == "huang20":
+        return get_confusion_noise_huang20(f=f, t_obs=t_obs)
+    elif model is None:
+        f = f.to(u.Hz).value
+        return np.zeros_like(f) * u.Hz**(-1/2) if isinstance(f, (list, np.ndarray)) else 0.0 * u.Hz**(-1/2)
+    else:
+        raise ValueError("confusion noise model: `{}` not recognised".format(model))
+
