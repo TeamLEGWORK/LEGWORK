@@ -306,6 +306,7 @@ def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
     ind = np.abs(t_obs - lengths).argmin()
 
     # start with no confusion noise and add each coefficient using Huang+20 Table 1
+    f = f.to(u.Hz).value
     confusion_noise = np.zeros_like(f)
     x = np.log10(f / 1e-3)
     for i in range(len(coefficients)):
@@ -340,7 +341,7 @@ def get_confusion_noise_thiele21(f):
         The confusion noise at each frequency
     """
     x = np.log10(f.to(u.Hz).value)
-    confusion_noise = np.poly1d([-223.5, -189.8, -76.8, -14.0, -1.0])(x) * u.Hz**(-1/2)
+    confusion_noise = np.poly1d([-558.5, -575.4, -243.1, -45.8, -3.2])(x) * u.Hz**(-1/2)
     return confusion_noise
 
 
