@@ -311,7 +311,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     # plot the curve and fill if needed
     ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
     if fill:
-        ax.fill_between(frequency_range, 0, noise_amplitude, alpha=alpha, color=color)
+        ax.fill_between(frequency_range, 0 * noise_amplitude.unit, noise_amplitude, alpha=alpha, color=color)
 
     # adjust labels, sizes and frequency limits to plot is flush to the edges
     ax.set_xlabel(r'Frequency [$\rm Hz$]')
