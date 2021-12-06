@@ -73,3 +73,11 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.1.6
 *TW 18/11/21*
 - Add a factor of 10/3 to the TianQin sensitivity curve to make it consistent with LISA (thanks to Yi-Ming Hu for pointing this out!)
+
+## 0.2.0
+*TW 5/12/21*
+- A couple of changes to how confusion noise is handled
+    - End user can now access confusion noise functions directly through `get_confusion_noise`
+    - Added confusion noise fit from Huang+20 to be used with TianQin
+    - Added confusion noise fit from Thiele+21 which is based on a WDWD population with a metallicity dependent binary fraction
+- Bug fix: in `visualisation` avoid mixing floats with Quantities when filling in a sensitivity curve
