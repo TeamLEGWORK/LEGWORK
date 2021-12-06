@@ -230,6 +230,24 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
 
 
 def get_confusion_noise_robson19(f, t_obs=4 * u.yr):
+    """Calculate the confusion noise using the model from Robson+19 Eq. 14 and Table 1
+
+    Also note that this fit is designed based on LISA sensitivity and so it is likely not sensible to apply
+    it to TianQin or other missions.
+
+    Parameters
+    ----------
+    f : `float/array`
+        Frequencies at which to calculate the confusion noise, must have units of frequency
+    t_obs : `float`, optional
+        Mission length, parameters are defined for 0.5, 1, 2 and 4 years, the closest mission length to the
+        one inputted will be used. By default 4 years.
+
+    Returns
+    -------
+    confusion_noise : `float/array`
+        The confusion noise at each frequency
+    """
     # erase the units for speed
     f = f.to(u.Hz).value
 
@@ -251,6 +269,27 @@ def get_confusion_noise_robson19(f, t_obs=4 * u.yr):
 
 
 def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
+    """Calculate the confusion noise using the model from Huang+20 Table II. Note that we set the confusion
+    noise to be exactly 0 outside of the range [1e-4, 1] Hz as the fits are not designed to be used outside
+    of this range.
+
+    Also note that this fit is designed based on TianQin sensitivity and so it is likely not sensible to apply
+    it to LISA or other missions.
+
+    Parameters
+    ----------
+    f : `float/array`
+        Frequencies at which to calculate the confusion noise, must have units of frequency
+    t_obs : `float`, optional
+        Mission length, parameters are defined for 0.5, 1, 2, 4 and 5 years, the closest mission length to the
+        one inputted will be used. By default 4 years.
+
+    Returns
+    -------
+    confusion_noise : `float/array`
+        The confusion noise at each frequency
+    """
+
     # define the mission lengths and corresponding coefficients
     lengths = np.array([0.5, 1.0, 2.0, 4.0, 5.0]) * u.yr
     coefficients = np.array([
@@ -281,7 +320,28 @@ def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
     return confusion_noise
 
 
-def get_confusion_noise(f, t_obs=4 * u.yr, model="robson19"):
+def get_confusion_noise(f, model, t_obs=4 * u.yr):
+    """Calculate the confusion noise for a particular model
+
+    Parameters
+    ----------
+    f : `float/array`
+        Frequencies at which to calculate the confusion noise, must have units of frequency
+    model : str, optional
+        Which model to use for the confusion noise. Must be one of 'robson19', 'huang20' or None.
+    t_obs : `float`, optional
+        Mission length. By default 4 years.
+
+    Returns
+    -------
+    confusion_noise : `float/array`
+        The confusion noise at each frequency.
+
+    Raises
+    ------
+    ValueError
+        When a model other than those defined above is used.
+    """
     if model == "robson19":
         return get_confusion_noise_robson19(f=f, t_obs=t_obs)
     elif model == "huang20":
@@ -291,4 +351,3 @@ def get_confusion_noise(f, t_obs=4 * u.yr, model="robson19"):
         return np.zeros_like(f) * u.Hz**(-1/2) if isinstance(f, (list, np.ndarray)) else 0.0 * u.Hz**(-1/2)
     else:
         raise ValueError("confusion noise model: `{}` not recognised".format(model))
-
