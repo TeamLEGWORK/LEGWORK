@@ -320,6 +320,30 @@ def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
     return confusion_noise
 
 
+def get_confusion_noise_thiele21(f):
+    """Calculate the confusion noise using the model from Thiele+20 Eq. 16 and Table 1. This fit uses a
+    metallicity-dependent binary fraction.
+
+    Note: This fit only applies when the mission length is 4 years.
+
+    Also note that this fit is designed based on TianQin sensitivity and so it is likely not sensible to apply
+    it to LISA or other missions.
+
+    Parameters
+    ----------
+    f : `float/array`
+        Frequencies at which to calculate the confusion noise, must have units of frequency
+
+    Returns
+    -------
+    confusion_noise : `float/array`
+        The confusion noise at each frequency
+    """
+    x = np.log10(f.to(u.Hz).value)
+    confusion_noise = np.poly1d([-223.5, -189.8, -76.8, -14.0, -1.0])(x) * u.Hz**(-1/2)
+    return confusion_noise
+
+
 def get_confusion_noise(f, model, t_obs=4 * u.yr):
     """Calculate the confusion noise for a particular model
 
@@ -346,6 +370,12 @@ def get_confusion_noise(f, model, t_obs=4 * u.yr):
         return get_confusion_noise_robson19(f=f, t_obs=t_obs)
     elif model == "huang20":
         return get_confusion_noise_huang20(f=f, t_obs=t_obs)
+    elif model == "thiele21":
+        if t_obs == 4 * u.yr:
+            return get_confusion_noise_thiele21(f=f)
+        else:
+            error = "Invalid mission length: Thiele+21 confusion noise is only fit for `t_obs=4*u.yr`"
+            raise ValueError(error)
     elif model is None:
         f = f.to(u.Hz).value
         return np.zeros_like(f) * u.Hz**(-1/2) if isinstance(f, (list, np.ndarray)) else 0.0 * u.Hz**(-1/2)
