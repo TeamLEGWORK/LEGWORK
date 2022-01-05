@@ -127,7 +127,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
     if isinstance(confusion_noise, str) or confusion_noise is None:
         cn = get_confusion_noise(f=f * u.Hz, t_obs=t_obs, model=confusion_noise).value
     else:
-        cn = confusion_noise(f, t_obs)
+        cn = confusion_noise(f, t_obs).value
 
     L = L.to(u.m).value
 
@@ -264,7 +264,7 @@ def get_confusion_noise_robson19(f, t_obs=4 * u.yr):
 
     confusion_noise = 9e-45 * f**(-7 / 3.) * np.exp(-f**(alpha[ind]) + beta[ind]
                                                     * f * np.sin(kappa[ind] * f))\
-        * (1 + np.tanh(gamma[ind] * (fk[ind] - f))) * u.Hz**(-1/2)
+        * (1 + np.tanh(gamma[ind] * (fk[ind] - f))) * u.Hz**(-1)
     return confusion_noise
 
 
@@ -313,10 +313,10 @@ def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
         xi = x**i
         ai = coefficients[i][ind]
         confusion_noise += ai * xi
-    confusion_noise = 10**(confusion_noise) * u.Hz**(-1/2)
+    confusion_noise = 10**(confusion_noise) * u.Hz**(-1)
 
     # remove confusion noise outside of TianQin regime (fit doesn't apply outside of regime)
-    confusion_noise[np.logical_or(f < 1e-4, f > 1e0)] = 0.0 * u.Hz**(-1/2)
+    confusion_noise[np.logical_or(f < 1e-4, f > 1e0)] = 0.0 * u.Hz**(-1)
 
     return confusion_noise
 
@@ -378,6 +378,6 @@ def get_confusion_noise(f, model, t_obs=4 * u.yr):
             raise ValueError(error)
     elif model is None:
         f = f.to(u.Hz).value
-        return np.zeros_like(f) * u.Hz**(-1/2) if isinstance(f, (list, np.ndarray)) else 0.0 * u.Hz**(-1/2)
+        return np.zeros_like(f) * u.Hz**(-1) if isinstance(f, (list, np.ndarray)) else 0.0 * u.Hz**(-1)
     else:
         raise ValueError("confusion noise model: `{}` not recognised".format(model))
