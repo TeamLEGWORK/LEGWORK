@@ -76,7 +76,7 @@ class Source():
     sc_params : `dict`
         Parameters for interpolated sensitivity curve. Include any of ``instrument``, ``custom_psd``,
         ``t_obs``, ``L``, ``approximate_R`` and ``confusion_noise``. Default values are: "LISA", None,
-        4 years, 2.5e9, 19.09e-3, False and 'robson19'.
+        4 years, 2.5e9, 19.09e-3, False and 'auto'.
 
     Attributes
     ----------
@@ -173,7 +173,7 @@ class Source():
             "t_obs": 4 * u.yr,
             "L": 2.5e9 * u.m,
             "approximate_R": False,
-            "confusion_noise": 'robson19'
+            "confusion_noise": 'auto'
         }
         default_sc_params.update(sc_params)
         self._sc_params = default_sc_params
@@ -350,7 +350,7 @@ class Source():
                 "t_obs": 4 * u.yr,
                 "L": 2.5e9 * u.m,
                 "approximate_R": False,
-                "confusion_noise": "robson19"
+                "confusion_noise": "auto"
             }
             if sc_params is not None:
                 default_sc_params.update(sc_params)

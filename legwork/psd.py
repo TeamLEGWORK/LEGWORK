@@ -88,7 +88,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    confusion_noise  : `various`
+    confusion_noise : `various`
         Galactic confusion noise. Acceptable inputs are one of the values listed in
         :meth:`legwork.psd.get_confusion_noise` or a custom function that gives the confusion noise at each
         frequency for a given mission length where it would be called by running `noise(f, t_obs)` and return
@@ -140,7 +140,7 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
     return psd / u.Hz
 
 
-def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, confusion_noise=None):
+def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=5 * u.yr, approximate_R=None, confusion_noise="huang20"):
     """Calculates the effective TianQin power spectral density sensitivity curve
 
     Using Eq. 13 from Huang+20, calculate the effective TianQin PSD for the sensitivity curve
@@ -163,7 +163,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, co
     approximate_R : `boolean`
         Ignored for this function
 
-    confusion_noise  : `various`
+    confusion_noise : `various`
         Galactic confusion noise. Acceptable inputs are one of the values listed in
         :meth:`legwork.psd.get_confusion_noise` or a custom function that gives the confusion noise at each
         frequency for a given mission length where it would be called by running `noise(f, t_obs)` and return
@@ -191,7 +191,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, co
 
 
 def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr, L=None,
-                           approximate_R=False, confusion_noise="robson19"):
+                           approximate_R=False, confusion_noise="auto"):
     """Calculates the effective power spectral density for all instruments.
 
     Parameters
@@ -215,10 +215,12 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    confusion_noise  : `various`
-        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
-        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
-        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
+    confusion_noise : `various`
+        Galactic confusion noise. Acceptable inputs are either one of the values listed in
+        :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
+        `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+        confusion noise at each frequency for a given mission length where it would be called by running
+        `noise(f, t_obs)` and return a value with units of inverse Hertz
 
     Returns
     -------
@@ -228,12 +230,18 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
     if instrument == "LISA":
         if L is None:
             L = 2.5e9 * u.m
+        if confusion_noise == "auto":
+            confusion_noise = "robson19"
         psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "TianQin":
         if L is None:
             L = np.sqrt(3) * 1e5 * u.km
+        if confusion_noise == "auto":
+            confusion_noise = "huang20"
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "custom":
+        if confusion_noise == "auto":
+            confusion_noise = "robson19"
         psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     else:
         raise ValueError("instrument: `{}` not recognised".format(instrument))

@@ -439,7 +439,7 @@ class Test(unittest.TestCase):
             "t_obs": 4 * u.yr,
             "L": 2.5e9 * u.m,
             "approximate_R": False,
-            "confusion_noise": "robson19"
+            "confusion_noise": "auto"
         }
 
         sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.2, dist=10*u.kpc,
@@ -452,7 +452,7 @@ class Test(unittest.TestCase):
             "t_obs": 4 * u.yr,
             "L": np.sqrt(3) * 1e5 * u.km,
             "approximate_R": False,
-            "confusion_noise": "robson19",
+            "confusion_noise": "auto",
             "custom_psd": None,
         }
         self.assertTrue(correct_final_sc_params == sources._sc_params)

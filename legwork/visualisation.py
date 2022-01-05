@@ -331,7 +331,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
 def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
                                  instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
-                                 confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
+                                 confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
     """Overlay circular/stationary sources on the LISA sensitivity curve.
 
     Each source is plotted at its gravitational wave frequency (n = 2) such that its height above the curve
@@ -370,10 +370,12 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    confusion_noise  : `various`
-        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
-        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
-        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
+    confusion_noise : `various`
+        Galactic confusion noise. Acceptable inputs are either one of the values listed in
+        :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
+        `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+        confusion noise at each frequency for a given mission length where it would be called by running
+        `noise(f, t_obs)` and return a value with units of inverse Hertz
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -427,7 +429,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
 
 def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
                                 instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
-                                confusion_noise=True, fig=None, ax=None, show=True, **kwargs):
+                                confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
 
     Each source is plotted at its max snr harmonic frequency such that that its height above the curve is
@@ -463,10 +465,12 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
 
-    confusion_noise  : `various`
-        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
-        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
-        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
+    confusion_noise : `various`
+        Galactic confusion noise. Acceptable inputs are either one of the values listed in
+        :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
+        `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+        confusion noise at each frequency for a given mission length where it would be called by running
+        `noise(f, t_obs)` and return a value with units of inverse Hertz
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
