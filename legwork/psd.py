@@ -158,7 +158,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=5 * u.yr, approximate_R=None
         Arm length
 
     t_obs : `float`
-        Observation time (default 4 years)
+        Observation time (default 5 years)
 
     approximate_R : `boolean`
         Ignored for this function
@@ -190,7 +190,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=5 * u.yr, approximate_R=None
     return psd.to(u.Hz**(-1))
 
 
-def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr, L="auto",
+def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs="auto", L="auto",
                            approximate_R=False, confusion_noise="auto"):
     """Calculates the effective power spectral density for all instruments.
 
@@ -207,7 +207,7 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
         even if it ignores some.
 
     t_obs : `float`
-        Observation time (default 4 years)
+        Observation time (default 4 years for LISA and 5 years for TianQin)
 
     L : `float`
         LISA arm length in metres
@@ -228,16 +228,20 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
         Effective power strain spectral density
     """
     if instrument == "LISA":
-        if L == "auto":
-            L = 2.5e9 * u.m
-        if confusion_noise == "auto":
-            confusion_noise = "robson19"
+        # update any auto values to be instrument specific
+        L = 2.5e9 * u.m if L == "auto" else L
+        confusion_noise = "robson19" if confusion_noise == "auto" else confusion_noise
+        t_obs = 4 * u.yr if t_obs == "auto" else t_obs
+
+        # calculate psd
         psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "TianQin":
-        if L == "auto":
-            L = np.sqrt(3) * 1e5 * u.km
-        if confusion_noise == "auto":
-            confusion_noise = "huang20"
+        # update any auto values to be instrument specific
+        L = np.sqrt(3) * 1e5 * u.km if L == "auto" else L
+        confusion_noise = "huang20" if confusion_noise == "auto" else confusion_noise
+        t_obs = 5 * u.yr if t_obs == "auto" else t_obs
+
+        # calculate psd
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "custom":
         psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
@@ -286,7 +290,7 @@ def get_confusion_noise_robson19(f, t_obs=4 * u.yr):
     return confusion_noise
 
 
-def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
+def get_confusion_noise_huang20(f, t_obs=5 * u.yr):
     """Calculate the confusion noise using the model from Huang+20 Table II. Note that we set the confusion
     noise to be exactly 0 outside of the range [1e-4, 1] Hz as the fits are not designed to be used outside
     of this range.
@@ -300,7 +304,7 @@ def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
         Frequencies at which to calculate the confusion noise, must have units of frequency
     t_obs : `float`, optional
         Mission length, parameters are defined for 0.5, 1, 2, 4 and 5 years, the closest mission length to the
-        one inputted will be used. By default 4 years.
+        one inputted will be used. By default 5 years.
 
     Returns
     -------
@@ -363,7 +367,7 @@ def get_confusion_noise_thiele21(f):
     return confusion_noise * u.Hz**(-1)
 
 
-def get_confusion_noise(f, model, t_obs=4 * u.yr):
+def get_confusion_noise(f, model, t_obs="auto"):
     """Calculate the confusion noise for a particular model
 
     Parameters
@@ -373,7 +377,7 @@ def get_confusion_noise(f, model, t_obs=4 * u.yr):
     model : str, optional
         Which model to use for the confusion noise. Must be one of 'robson19', 'huang20', 'thiele21' or None.
     t_obs : `float`, optional
-        Mission length. By default 4 years.
+        Mission length. Default is 4 years for robson19 and thiele21 and 5 years for huang20.
 
     Returns
     -------
@@ -386,11 +390,13 @@ def get_confusion_noise(f, model, t_obs=4 * u.yr):
         When a model other than those defined above is used.
     """
     if model == "robson19":
+        t_obs = 4 * u.yr if t_obs == "auto" else t_obs
         return get_confusion_noise_robson19(f=f, t_obs=t_obs)
     elif model == "huang20":
+        t_obs = 5 * u.yr if t_obs == "auto" else t_obs
         return get_confusion_noise_huang20(f=f, t_obs=t_obs)
     elif model == "thiele21":
-        if t_obs == 4 * u.yr:
+        if t_obs == 4 * u.yr or t_obs == "auto":
             return get_confusion_noise_thiele21(f=f)
         else:
             error = "Invalid mission length: Thiele+21 confusion noise is only fit for `t_obs=4*u.yr`"

@@ -437,7 +437,7 @@ class Test(unittest.TestCase):
         original_sc_params = {
             "instrument": "LISA",
             "custom_psd": None,
-            "t_obs": 4 * u.yr,
+            "t_obs": "auto",
             "L": "auto",
             "approximate_R": False,
             "confusion_noise": "auto"
@@ -450,7 +450,7 @@ class Test(unittest.TestCase):
 
         correct_final_sc_params = {
             "instrument": "TianQin",
-            "t_obs": 4 * u.yr,
+            "t_obs": "auto",
             "L": "auto",
             "approximate_R": False,
             "confusion_noise": "auto",

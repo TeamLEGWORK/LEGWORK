@@ -76,7 +76,7 @@ class Source():
     sc_params : `dict`
         Parameters for interpolated sensitivity curve. Include any of ``instrument``, ``custom_psd``,
         ``t_obs``, ``L``, ``approximate_R`` and ``confusion_noise``. Default values are: "LISA", None,
-        4 years, 2.5e9, 19.09e-3, False and 'auto'.
+        "auto", "auto", False and "auto".
 
     Attributes
     ----------
@@ -170,7 +170,7 @@ class Source():
         default_sc_params = {
             "instrument": "LISA",
             "custom_psd": None,
-            "t_obs": 4 * u.yr,
+            "t_obs": "auto",
             "L": "auto",
             "approximate_R": False,
             "confusion_noise": 'auto'
@@ -347,7 +347,7 @@ class Source():
             default_sc_params = {
                 "instrument": "LISA",
                 "custom_psd": None,
-                "t_obs": 4 * u.yr,
+                "t_obs": "auto",
                 "L": "auto",
                 "approximate_R": False,
                 "confusion_noise": "auto"
@@ -358,7 +358,7 @@ class Source():
             self._sc_params = default_sc_params
             self.set_sc()
 
-    def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
+    def get_source_mask(self, circular=None, stationary=None, t_obs=None):
         """Produce a mask of the sources.
 
         Create a mask based on whether binaries are circular or eccentric and stationary or evolving.
@@ -373,7 +373,7 @@ class Source():
             ``None`` means either, ``True`` means only stationary binaries and ``False`` means only evolving
 
         t_obs : `float`
-            Observation time
+            Observation time, default is value from `self._sc_params`
 
         Returns
         -------
@@ -392,6 +392,9 @@ class Source():
         if stationary is None:
             stat_mask = np.repeat(True, self.n_sources)
         elif stationary is True or stationary is False:
+            t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+            if t_obs == "auto":
+                t_obs = 4 * u.yr if self._sc_params["instrument"] == "LISA" else 5 * u.yr
             stat_mask = evol.determine_stationarity(m_c=self.m_c, f_orb_i=self.f_orb, t_evol=t_obs,
                                                     ecc_i=self.ecc, stat_tol=self.stat_tol)
             if stationary is False:
@@ -603,14 +606,14 @@ class Source():
                                                    verbose=verbose)
         return snr
 
-    def get_snr_stationary(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, which_sources=None,
+    def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, which_sources=None,
                            verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Parameters
         ----------
         t_obs : `array`
-            Observation duration (default: 4 years)
+            Observation duration (default: follow sc_params)
 
         instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
             Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
@@ -632,6 +635,11 @@ class Source():
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        instrument = self._sc_params["instrument"] if instrument is None else instrument
+        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        if t_obs == "auto":
+            t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
@@ -703,14 +711,14 @@ class Source():
 
         return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs, instrument="LISA", custom_psd=None, n_step=100, which_sources=None,
+    def get_snr_evolving(self, t_obs=None, instrument=None, custom_psd=None, n_step=100, which_sources=None,
                          verbose=False):
         """Computes the SNR assuming an evolving binary
 
         Parameters
         ----------
         t_obs : `array`
-            Observation duration (default: 4 years)
+            Observation duration (default: follow sc_params)
 
         instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
             Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
@@ -737,6 +745,11 @@ class Source():
 
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        instrument = self._sc_params["instrument"] if instrument is None else instrument
+        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        if t_obs == "auto":
+            t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
@@ -1125,7 +1138,7 @@ class Source():
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, verbose=False):
+    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, verbose=False):
         self.snr = self.get_snr_stationary(t_obs=t_obs, instrument=instrument, custom_psd=custom_psd,
                                            verbose=verbose)
         return self.snr
@@ -1134,7 +1147,7 @@ class Stationary(Source):
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
-    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, n_step=100, verbose=False):
+    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step, instrument=instrument,
                                          custom_psd=custom_psd, verbose=verbose)
         return self.snr

@@ -329,7 +329,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     return fig, ax
 
 
-def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
+def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs="auto",
                                  instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
                                  confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
     """Overlay circular/stationary sources on the LISA sensitivity curve.
@@ -362,10 +362,10 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
         even if it ignores some.
 
     t_obs : `float`
-        Observation time (default 4 years)
+        Observation time (default "auto")
 
     L : `float`
-        LISA arm length in metres
+        Arm length
 
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)
@@ -427,7 +427,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
     return fig, ax
 
 
-def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
+def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
                                 instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
                                 confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
@@ -457,10 +457,10 @@ def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 
         even if it ignores some.
 
     t_obs : `float`
-        Observation time (default 4 years)
+        Observation time (default auto)
 
     L : `float`
-        LISA arm length in metres
+        Arm length in metres
 
     approximate_R : `boolean`
         Whether to approximate the response function (default: no)

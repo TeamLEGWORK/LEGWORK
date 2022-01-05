@@ -85,4 +85,6 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
     - Added confusion noise fit from Huang+20 to be used with TianQin
     - Added confusion noise fit from Thiele+21 which is based on a WDWD population with a metallicity dependent binary fraction
 - TianQin psd function now include the confusion noise
+- Change defaults used in `source` and `psd`
+    - Often defaults for arm length, observation time and confusion noise were previously LISA related, LEGWORK now automatically works out the defaults based on what instrument is chosen
 - Bug fix: in `visualisation` avoid mixing floats with Quantities when filling in a sensitivity curve
