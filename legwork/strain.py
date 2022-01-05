@@ -22,7 +22,7 @@ def amplitude_modulation(position, polarisation, inclination):
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -76,7 +76,7 @@ def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -172,7 +172,7 @@ def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
