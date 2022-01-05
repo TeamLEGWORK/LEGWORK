@@ -89,9 +89,10 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
         Whether to approximate the response function (default: no)
 
     confusion_noise  : `various`
-        Galactic confusion noise. Acceptable inputs are 'robson19' (the confusion noise from Robson+19),
-        `None` (don't include confusion noise) or a custom function that gives the confusion noise at each
-        frequency for a given mission length where it would be called by running `noise(f, t_obs)`
+        Galactic confusion noise. Acceptable inputs are one of the values listed in
+        :meth:`legwork.psd.get_confusion_noise` or a custom function that gives the confusion noise at each
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)` and return
+        a value with units of inverse Hertz
 
     Returns
     -------
@@ -157,13 +158,16 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, co
         Arm length
 
     t_obs : `float`
-        Ignored for this function
+        Observation time (default 4 years)
 
     approximate_R : `boolean`
         Ignored for this function
 
     confusion_noise  : `various`
-        Ignored for this function
+        Galactic confusion noise. Acceptable inputs are one of the values listed in
+        :meth:`legwork.psd.get_confusion_noise` or a custom function that gives the confusion noise at each
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)` and return
+        a value with units of inverse Hertz
 
     Returns
     -------
@@ -352,7 +356,7 @@ def get_confusion_noise(f, model, t_obs=4 * u.yr):
     f : `float/array`
         Frequencies at which to calculate the confusion noise, must have units of frequency
     model : str, optional
-        Which model to use for the confusion noise. Must be one of 'robson19', 'huang20' or None.
+        Which model to use for the confusion noise. Must be one of 'robson19', 'huang20', 'thiele21' or None.
     t_obs : `float`, optional
         Mission length. By default 4 years.
 
