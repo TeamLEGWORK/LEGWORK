@@ -190,7 +190,7 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=5 * u.yr, approximate_R=None
     return psd.to(u.Hz**(-1))
 
 
-def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr, L=None,
+def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr, L="auto",
                            approximate_R=False, confusion_noise="auto"):
     """Calculates the effective power spectral density for all instruments.
 
@@ -228,20 +228,18 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs=4 * u.yr
         Effective power strain spectral density
     """
     if instrument == "LISA":
-        if L is None:
+        if L == "auto":
             L = 2.5e9 * u.m
         if confusion_noise == "auto":
             confusion_noise = "robson19"
         psd = lisa_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "TianQin":
-        if L is None:
+        if L == "auto":
             L = np.sqrt(3) * 1e5 * u.km
         if confusion_noise == "auto":
             confusion_noise = "huang20"
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "custom":
-        if confusion_noise == "auto":
-            confusion_noise = "robson19"
         psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     else:
         raise ValueError("instrument: `{}` not recognised".format(instrument))

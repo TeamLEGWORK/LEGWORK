@@ -330,7 +330,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
 
 def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
-                                 instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
+                                 instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
                                  confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
     """Overlay circular/stationary sources on the LISA sensitivity curve.
 
@@ -428,7 +428,7 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
 
 
 def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs=4 * u.yr,
-                                instrument="LISA", custom_psd=None, L=2.5e9 * u.m, approximate_R=False,
+                                instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
                                 confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
     """Overlay eccentric/stationary sources on the LISA sensitivity curve.
 

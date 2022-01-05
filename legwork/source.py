@@ -171,7 +171,7 @@ class Source():
             "instrument": "LISA",
             "custom_psd": None,
             "t_obs": 4 * u.yr,
-            "L": 2.5e9 * u.m,
+            "L": "auto",
             "approximate_R": False,
             "confusion_noise": 'auto'
         }
@@ -348,7 +348,7 @@ class Source():
                 "instrument": "LISA",
                 "custom_psd": None,
                 "t_obs": 4 * u.yr,
-                "L": 2.5e9 * u.m,
+                "L": "auto",
                 "approximate_R": False,
                 "confusion_noise": "auto"
             }
