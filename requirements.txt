@@ -1,4 +1,4 @@
-numba >= 0.50'
+numba >= 0.50,< 0.54'
 numpy >= 1.16,< 1.20'
 astropy >= 4.0'
 scipy >= 1.5.0'
