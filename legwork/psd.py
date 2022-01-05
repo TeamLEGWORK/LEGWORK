@@ -179,6 +179,14 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=None, approximate_R=None, co
     Sx = 1e-24 * u.m**2 * u.Hz**(-1)
     psd = 10 / (3 * L**2) * (4 * Sa / (2 * np.pi * f)**4 * (1 + (1e-4 * u.Hz / f)) + Sx) \
         * (1 + 0.6 * (f / fstar)**2)
+
+    # get confusion noise
+    if isinstance(confusion_noise, str) or confusion_noise is None:
+        cn = get_confusion_noise(f=f, t_obs=t_obs, model=confusion_noise)
+    else:
+        cn = confusion_noise(f, t_obs)
+    psd += cn
+
     return psd.to(u.Hz**(-1))
 
 
