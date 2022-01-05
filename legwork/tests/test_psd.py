@@ -85,6 +85,13 @@ class Test(unittest.TestCase):
 
         self.assertTrue(np.allclose(regular, custom))
 
+        # same for TianQin
+        regular = psd.power_spectral_density(frequencies, instrument="TianQin", confusion_noise=None)
+        custom = psd.power_spectral_density(frequencies, instrument="TianQin",
+                                            confusion_noise=lambda f, t: 0 * u.Hz**(-1))
+
+        self.assertTrue(np.allclose(regular, custom))
+
     def test_bad_confusion_noise_input(self):
         """ check that errors are thrown in the right places """
         f = np.logspace(-4, 0, 100) * u.Hz
