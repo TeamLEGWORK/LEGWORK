@@ -1,3 +1,6 @@
+# This workflow automatically uploads the package to PyPi every time we create a new release on GitHub
+# Based on this guide: https://www.caktusgroup.com/blog/2021/02/11/automating-pypi-releases/
+
 name: Upload Python Package to PyPi
 
 on:
