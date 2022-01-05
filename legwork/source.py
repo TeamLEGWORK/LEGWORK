@@ -209,15 +209,16 @@ class Source():
         self.set_sc()
 
     def create_harmonics_functions(self):
-        """Create two harmonics related functions
+        """Create two harmonics related functions as methods for the Source class
 
-        Each function works as follows
+        The first function is stored at ``self.harmonics_required(ecc)``. This calculates the index of the
+        highest harmonic required to calculate the SNR of a system with eccentricity `ecc` assuming the
+        provided tolerance `gw_lum_tol`. This is equivalent to the total number of harmonics required since,
+        when calculating SNR, harmonics in the range [1, harmonics_required(ecc)] are used. Note that the
+        value returned by the function slightly conservative as we apply `ceil` to the interpolation result.
 
-            - Calculate the maximum harmonics required to calculate the SNRs assuming provided tolerance\
-                `gw_lum_tol`
-            - Calculate the harmonic with the maximum strain
-
-        These are stored at ``self.harmonics_required`` and ``self.max_strain_harmonic`` respectively."""
+        The second function is stored at ``self.max_strain_harmonic(ecc)``. This calculates the harmonic with
+        the maximum strain for a system with eccentricity `ecc`."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="legwork", resource="harmonics.npz") as path:
