@@ -325,12 +325,13 @@ def get_confusion_noise_huang20(f, t_obs=4 * u.yr):
         xi = x**i
         ai = coefficients[i][ind]
         confusion_noise += ai * xi
-    confusion_noise = 10**(confusion_noise) * u.Hz**(-1)
+    confusion_noise = 10**(confusion_noise) * u.Hz**(-1/2)
 
     # remove confusion noise outside of TianQin regime (fit doesn't apply outside of regime)
-    confusion_noise[np.logical_or(f < 1e-4, f > 1e0)] = 0.0 * u.Hz**(-1)
+    confusion_noise[np.logical_or(f < 1e-4, f > 1e0)] = 0.0 * u.Hz**(-1/2)
 
-    return confusion_noise
+    # square the result as Huang+20 given the sensitivity not psd
+    return confusion_noise**2
 
 
 def get_confusion_noise_thiele21(f):
