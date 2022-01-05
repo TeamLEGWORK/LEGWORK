@@ -79,6 +79,24 @@ class Test(unittest.TestCase):
         frequencies = np.logspace(-6, 0, 100) * u.Hz
 
         regular = psd.power_spectral_density(frequencies, confusion_noise=None)
-        custom = psd.power_spectral_density(frequencies, confusion_noise=lambda f, t: 0)
+        custom = psd.power_spectral_density(frequencies, confusion_noise=lambda f, t: 0 * u.Hz**(-1))
 
         self.assertTrue(np.allclose(regular, custom))
+
+    def test_bad_confusion_noise_input(self):
+        """ check that errors are thrown in the right places """
+        f = np.logspace(-4, 0, 100) * u.Hz
+
+        no_worries = True
+        try:
+            psd.get_confusion_noise(f, model="thiele21", t_obs=10 * u.yr)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        no_worries = True
+        try:
+            psd.get_confusion_noise(f, model="some_nonsense_model", t_obs=10 * u.yr)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
