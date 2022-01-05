@@ -31,6 +31,8 @@
 ### Installation
 Put simply? `pip install legwork`! But we recommend creating a conda environment first to ensure everything goes smoothly! Check out the installation instructions [here](https://legwork.readthedocs.io/en/latest/install.html) to learn exactly how to install LEGWORK
 
+LEGWORK has a couple of dependencies: `numpy`, `astropy`, `numba`, `scipy`, `schwimmbad`, `matplotlib` and `seaborn` (see [requirements.txt](requirements.txt) for the exact version requirements). These will be installed automatically if you follow the installation instructions!
+
 ### Documentation
 All documentation related to LEGWORK can be found [at this link](https://legwork.readthedocs.io/en/latest/)
 
