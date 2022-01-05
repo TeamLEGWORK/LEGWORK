@@ -325,10 +325,7 @@ def get_confusion_noise_thiele21(f):
     """Calculate the confusion noise using the model from Thiele+20 Eq. 16 and Table 1. This fit uses a
     metallicity-dependent binary fraction.
 
-    Note: This fit only applies when the mission length is 4 years.
-
-    Also note that this fit is designed based on TianQin sensitivity and so it is likely not sensible to apply
-    it to LISA or other missions.
+    Note: This fit only applies to LISA and only when the mission length is 4 years.
 
     Parameters
     ----------
@@ -341,8 +338,10 @@ def get_confusion_noise_thiele21(f):
         The confusion noise at each frequency
     """
     x = np.log10(f.to(u.Hz).value)
-    confusion_noise = np.poly1d([-558.5, -575.4, -243.1, -45.8, -3.2])(x) * u.Hz**(-1/2)
-    return confusion_noise
+    t_obs = 4 * u.yr
+    coefficients = [-540.315450, -554.061115, -233.748834, -44.021504, -3.112634]
+    confusion_noise = 10**np.poly1d(coefficients[::-1])(x) * t_obs.to(u.s).value
+    return confusion_noise * u.Hz**(-1)
 
 
 def get_confusion_noise(f, model, t_obs=4 * u.yr):
