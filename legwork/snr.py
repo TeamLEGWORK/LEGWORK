@@ -30,7 +30,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -105,7 +105,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -208,7 +208,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -308,7 +308,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
