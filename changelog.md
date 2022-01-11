@@ -81,3 +81,4 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.2.1
 *TW 11/01/21*
 - [Issue [#64](https://github.com/TeamLEGWORK/LEGWORK/issues/64)] Remove "auto" option from `interpolate_g` in favour of interpolating by default warning the user if they don't have many samples
+- [Issue [#76](https://github.com/TeamLEGWORK/LEGWORK/issues/76)] Make it so that `strain.h_0_n` returns as unitless (same as `source.Source.get_h_0_n`). Same for `snr` functions.
