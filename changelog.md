@@ -78,6 +78,17 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 *TW 05/01/21*
 - Link GitHub releases to Zenodo
 
+## 0.2.0
+*TW 05/01/21*
+- A couple of changes to how confusion noise is handled
+    - End user can now access confusion noise functions directly through `get_confusion_noise`
+    - Added confusion noise fit from Huang+20 to be used with TianQin
+    - Added confusion noise fit from Thiele+21 which is based on a WDWD population with a metallicity dependent binary fraction
+- TianQin psd function now include the confusion noise
+- Change defaults used in `source` and `psd`
+    - Often defaults for arm length, observation time and confusion noise were previously LISA related, LEGWORK now automatically works out the defaults based on what instrument is chosen
+- Bug fix: in `visualisation` avoid mixing floats with Quantities when filling in a sensitivity curve
+
 ## 0.2.1
 *TW 11/01/21*
 - [Issue [#64](https://github.com/TeamLEGWORK/LEGWORK/issues/64)] Remove "auto" option from `interpolate_g` in favour of interpolating by default warning the user if they don't have many samples
