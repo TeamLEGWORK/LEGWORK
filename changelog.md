@@ -77,3 +77,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.1.7
 *TW 05/01/21*
 - Link GitHub releases to Zenodo
+
+## 0.2.1
+*TW 11/01/21*
+- [Issue [#64](https://github.com/TeamLEGWORK/LEGWORK/issues/64)] Remove "auto" option from `interpolate_g` in favour of interpolating by default warning the user if they don't have many samples
