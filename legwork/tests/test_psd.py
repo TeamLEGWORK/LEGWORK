@@ -20,16 +20,18 @@ class Test(unittest.TestCase):
         """check that confusion noise is doing logical things"""
         frequencies = np.logspace(-6, 0, 10000) * u.Hz
 
-        confused = psd.power_spectral_density(frequencies, confusion_noise="robson19")
-        lucid = psd.power_spectral_density(frequencies, confusion_noise=None)
+        models = ["robson19", "huang20", "thiele21"]
+        instruments = ["LISA", "TianQin", "LISA"]
+        for model, instrument in zip(models, instruments):
+            confused = psd.get_confusion_noise(frequencies, model=model)
+            lucid = psd.get_confusion_noise(frequencies, model=None)
 
-        # ensure confusion noise only adds to noise
-        self.assertTrue(np.all(confused >= lucid))
+            # ensure confusion noise only adds to noise
+            self.assertTrue(np.all(confused >= lucid))
 
-        # ensure that it doesn't affect things at low or high frequency
-        safe = np.logical_or(frequencies < 1e-4 * u.Hz,
-                             frequencies > 1e-2 * u.Hz)
-        self.assertTrue(np.allclose(confused[safe], lucid[safe]))
+            # ensure that it doesn't affect things at low or high frequency
+            safe = np.logical_or(frequencies < 1e-4 * u.Hz, frequencies > 1e-2 * u.Hz)
+            self.assertTrue(np.allclose(confused[safe], lucid[safe]))
 
     def test_mission_length_effect(self):
         """check that increasing the mission length isn't changing
@@ -61,7 +63,9 @@ class Test(unittest.TestCase):
 
         custom = psd.power_spectral_density(frequencies, instrument="custom",
                                             custom_psd=custom_instrument,
-                                            L=np.sqrt(3) * 1e5 * u.km)
+                                            L=np.sqrt(3) * 1e5 * u.km,
+                                            confusion_noise="huang20",
+                                            t_obs=5 * u.yr)
 
         self.assertTrue(np.all(custom <= tq))
 
@@ -77,6 +81,31 @@ class Test(unittest.TestCase):
         frequencies = np.logspace(-6, 0, 100) * u.Hz
 
         regular = psd.power_spectral_density(frequencies, confusion_noise=None)
-        custom = psd.power_spectral_density(frequencies, confusion_noise=lambda f, t: 0)
+        custom = psd.power_spectral_density(frequencies, confusion_noise=lambda f, t: 0 * u.Hz**(-1))
 
         self.assertTrue(np.allclose(regular, custom))
+
+        # same for TianQin
+        regular = psd.power_spectral_density(frequencies, instrument="TianQin", confusion_noise=None)
+        custom = psd.power_spectral_density(frequencies, instrument="TianQin",
+                                            confusion_noise=lambda f, t: 0 * u.Hz**(-1))
+
+        self.assertTrue(np.allclose(regular, custom))
+
+    def test_bad_confusion_noise_input(self):
+        """ check that errors are thrown in the right places """
+        f = np.logspace(-4, 0, 100) * u.Hz
+
+        no_worries = True
+        try:
+            psd.get_confusion_noise(f, model="thiele21", t_obs=10 * u.yr)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
+
+        no_worries = True
+        try:
+            psd.get_confusion_noise(f, model="some_nonsense_model", t_obs=10 * u.yr)
+        except ValueError:
+            no_worries = False
+        self.assertFalse(no_worries)
