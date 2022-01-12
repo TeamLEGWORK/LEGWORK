@@ -201,9 +201,10 @@ class Source():
 
         # warn the user that interpolation might not be necessary if they have a small number of sources
         if interpolate_g and self.n_sources <= 1000:
-            print("WARNING: Setting `interpolate_g=True` for a small number of sources may be slower than\
-                    computing directly. The exact runtime depends on the eccentricity of your sources so we\
-                    recommend trying your sample with `interpolate_g=False` to check which is faster.")
+            warning = "WARNING: Setting `interpolate_g=True` for a small number of sources may be slower than"
+            warning += " computing directly. The exact runtime depends on the eccentricity of your sources so"
+            warning += " we recommend trying your sample with `interpolate_g=False` to check which is faster."
+            print(warning)
 
         self.set_g(interpolate_g)
         self.set_sc()
