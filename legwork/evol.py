@@ -138,10 +138,11 @@ def create_timesteps_array(a_i, beta, ecc_i=None, t_evol=None, n_step=100, times
         Defaults to 100.
 
     timesteps : `float/array`
-        Array of exact timesteps to take when evolving each binary. Must be monotonically increasing and
+        Array of exact timesteps to output when evolving each binary. Must be monotonically increasing and
         start with t=0. Either supply a 1D array to use for every binary or a 2D array that has a different
         array of timesteps for each binary. ``timesteps`` is used in place of ``t_evol`` and ``n_steps``
-        and takes precedence over them.
+        and takes precedence over them. Note that these are *not* the timesteps that will be taken whilst
+        the sources are evolved since these are determined adaptively during the integration by scipy's odeint
 
     Returns
     -------
@@ -185,10 +186,11 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None, m_2=
         Defaults to 100.
 
     timesteps : `float/array`
-        Array of exact timesteps to take when evolving each binary. Must be monotonically increasing and
+        Array of exact timesteps to output when evolving each binary. Must be monotonically increasing and
         start with t=0. Either supply a 1D array to use for every binary or a 2D array that has a different
         array of timesteps for each binary. ``timesteps`` is used in place of ``t_evol`` and ``n_steps``
-        and takes precedence over them.
+        and takes precedence over them. Note that these are *not* the timesteps that will be taken whilst
+        the sources are evolved since these are determined adaptively during the integration by scipy's odeint
 
     beta : `float/array`
         Constant defined in Peters and Mathews (1964) Eq. 5.9. See :meth:`legwork.utils.beta`
