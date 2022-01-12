@@ -363,6 +363,12 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None
             t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
                                       beta=beta, exact=exact_t_merge).to(u.Gyr)
 
+        # warn the user if they are evolving past the merger
+        if np.any(timesteps > t_merge):
+            print("WARNING: Some timesteps are past the merger of the source and this may produce erroneous",
+                  "results in combination with `avoid_merger=True`. Only evolve sources until their merger",
+                  "or set `avoid_merger=False`.")
+
         # make a mask for any timesteps that are too close to the merger
         too_close = timesteps >= t_merge[:, np.newaxis] - t_before
 
