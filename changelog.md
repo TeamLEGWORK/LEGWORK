@@ -56,3 +56,45 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 *TW 12/11/21*
 - Change default values for `small_e_tol` and `large_e_tol` in `get_t_merge_ecc`
 - allow users to specify custom confusion noise in sensitivity curves
+
+## 0.1.3
+*TW 16/11/21*
+- Move `determine_stationarity` from `utils` to `evol` to avoid cyclical imports
+
+## 0.1.4
+*TW 17/11/21*
+- Add `custom_psd` to the `sc_params` in `Source`
+- Change the default parameters of `Source.get_snr()` to use `sc_params`
+
+## 0.1.5
+*KB 18/11/21*
+- Make confusion noise follow shape of supplied frequency even in case of no confusion
+
+## 0.1.6
+*TW 18/11/21*
+- Add a factor of 10/3 to the TianQin sensitivity curve to make it consistent with LISA (thanks to Yi-Ming Hu for pointing this out!)
+
+## 0.1.7
+*TW 05/01/21*
+- Link GitHub releases to Zenodo
+
+## 0.2.0
+*TW 05/01/21*
+- A couple of changes to how confusion noise is handled
+    - End user can now access confusion noise functions directly through `get_confusion_noise`
+    - Added confusion noise fit from Huang+20 to be used with TianQin
+    - Added confusion noise fit from Thiele+21 which is based on a WDWD population with a metallicity dependent binary fraction
+- TianQin psd function now include the confusion noise
+- Change defaults used in `source` and `psd`
+    - Often defaults for arm length, observation time and confusion noise were previously LISA related, LEGWORK now automatically works out the defaults based on what instrument is chosen
+- Bug fix: in `visualisation` avoid mixing floats with Quantities when filling in a sensitivity curve
+
+## 0.2.1
+*TW 11/01/22*
+- [Issue [#64](https://github.com/TeamLEGWORK/LEGWORK/issues/64)] Remove "auto" option from `interpolate_g` in favour of interpolating by default warning the user if they don't have many samples
+- [Issue [#76](https://github.com/TeamLEGWORK/LEGWORK/issues/76)] Make it so that `strain.h_0_n` returns as unitless (same as `source.Source.get_h_0_n`). Same for `snr` functions.
+- Fixed an issue introduced in 0.2.0 where automated observation times didn't work in `visualisation.plot_sources_on_sc_circ_stat`
+- [Issue [#78](https://github.com/TeamLEGWORK/LEGWORK/issues/78)] Add a warning for when people are evolving past the merger with `avoid_merger=True`
+
+*KB 13/01/22*
+- [Issues [#79](https://github.com/TeamLEGWORK/LEGWORK/issues/79), [#80](https://github.com/TeamLEGWORK/LEGWORK/issues/80)] Add discussion of limitiations and scope of legwork snr calculations

@@ -46,7 +46,7 @@ class Source():
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -64,19 +64,17 @@ class Source():
         Fractional change in frequency over mission length above which a binary should be considered to be
         stationary
 
-    interpolate_g : `boolean` or 'auto'
-        Whether to interpolate the g(n,e) function from Peters (1964). If
-        'auto' is inputted then LEGWORK will decide whether it is
-        necessary to interpolate g(n,e) based on the number of sources and
-        their eccentricity.
+    interpolate_g : `boolean`
+        Whether to interpolate the g(n,e) function from Peters (1964). This results in a faster runtime for
+        large collections of sources.
 
     interpolate_sc : `boolean`
         Whether to interpolate the LISA sensitivity curve
 
     sc_params : `dict`
-        Parameters for interpolated sensitivity curve. Include any of ``t_obs``, ``L``, ``approximate_R``
-        and ``confusion_noise``. Default values are: 4 years, 2.5e9, 19.09e-3, False and 'robson19'.
-        This is ignored if ``interpolate_sc`` is False.
+        Parameters for interpolated sensitivity curve. Include any of ``instrument``, ``custom_psd``,
+        ``t_obs``, ``L``, ``approximate_R`` and ``confusion_noise``. Default values are: "LISA", None,
+        "auto", "auto", False and "auto".
 
     Attributes
     ----------
@@ -108,7 +106,7 @@ class Source():
     """
 
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None, position=None, polarisation=None,
-                 inclination=None, weights=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto",
+                 inclination=None, weights=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
@@ -169,10 +167,11 @@ class Source():
 
         default_sc_params = {
             "instrument": "LISA",
-            "t_obs": 4 * u.yr,
-            "L": 2.5e9 * u.m,
+            "custom_psd": None,
+            "t_obs": "auto",
+            "L": "auto",
             "approximate_R": False,
-            "confusion_noise": 'robson19'
+            "confusion_noise": 'auto'
         }
         default_sc_params.update(sc_params)
         self._sc_params = default_sc_params
@@ -200,24 +199,26 @@ class Source():
 
         self.update_gw_lum_tol(gw_lum_tol)
 
-        # interpolate g(n,e) for more than 100 sources or eccentric populations
-        if interpolate_g == "auto":
-            self.set_g(np.logical_or(self.n_sources > 100,
-                                     np.any(self.ecc > 0.9)))
-        else:
-            self.set_g(interpolate_g)
+        # warn the user that interpolation might not be necessary if they have a small number of sources
+        if interpolate_g and self.n_sources <= 1000:
+            print("WARNING: Setting `interpolate_g=True` for a small number of sources may be slower than",
+                  "computing directly. The exact runtime depends on the eccentricity of your sources so",
+                  "we recommend trying your sample with `interpolate_g=False` to check which is faster.")
+
+        self.set_g(interpolate_g)
         self.set_sc()
 
     def create_harmonics_functions(self):
-        """Create two harmonics related functions
+        """Create two harmonics related functions as methods for the Source class
 
-        Each function works as follows
+        The first function is stored at ``self.harmonics_required(ecc)``. This calculates the index of the
+        highest harmonic required to calculate the SNR of a system with eccentricity `ecc` assuming the
+        provided tolerance `gw_lum_tol`. This is equivalent to the total number of harmonics required since,
+        when calculating SNR, harmonics in the range [1, harmonics_required(ecc)] are used. Note that the
+        value returned by the function slightly conservative as we apply `ceil` to the interpolation result.
 
-            - Calculate the maximum harmonics required to calculate the SNRs assuming provided tolerance\
-                `gw_lum_tol`
-            - Calculate the harmonic with the maximum strain
-
-        These are stored at ``self.harmonics_required`` and ``self.max_strain_harmonic`` respectively."""
+        The second function is stored at ``self.max_strain_harmonic(ecc)``. This calculates the harmonic with
+        the maximum strain for a system with eccentricity `ecc`."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
         with resources.path(package="legwork", resource="harmonics.npz") as path:
@@ -345,10 +346,11 @@ class Source():
             # ensure all values are filled (leave as defaults if not)
             default_sc_params = {
                 "instrument": "LISA",
-                "t_obs": 4 * u.yr,
-                "L": 2.5e9 * u.m,
+                "custom_psd": None,
+                "t_obs": "auto",
+                "L": "auto",
                 "approximate_R": False,
-                "confusion_noise": "robson19"
+                "confusion_noise": "auto"
             }
             if sc_params is not None:
                 default_sc_params.update(sc_params)
@@ -356,7 +358,7 @@ class Source():
             self._sc_params = default_sc_params
             self.set_sc()
 
-    def get_source_mask(self, circular=None, stationary=None, t_obs=4 * u.yr):
+    def get_source_mask(self, circular=None, stationary=None, t_obs=None):
         """Produce a mask of the sources.
 
         Create a mask based on whether binaries are circular or eccentric and stationary or evolving.
@@ -371,7 +373,7 @@ class Source():
             ``None`` means either, ``True`` means only stationary binaries and ``False`` means only evolving
 
         t_obs : `float`
-            Observation time
+            Observation time, default is value from `self._sc_params`
 
         Returns
         -------
@@ -390,11 +392,11 @@ class Source():
         if stationary is None:
             stat_mask = np.repeat(True, self.n_sources)
         elif stationary is True or stationary is False:
-            stat_mask = utils.determine_stationarity(m_c=self.m_c,
-                                                     f_orb_i=self.f_orb,
-                                                     t_evol=t_obs,
-                                                     ecc_i=self.ecc,
-                                                     stat_tol=self.stat_tol)
+            t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+            if t_obs == "auto":
+                t_obs = 4 * u.yr if self._sc_params["instrument"] == "LISA" else 5 * u.yr
+            stat_mask = evol.determine_stationarity(m_c=self.m_c, f_orb_i=self.f_orb, t_evol=t_obs,
+                                                    ecc_i=self.ecc, stat_tol=self.stat_tol)
             if stationary is False:
                 stat_mask = np.logical_not(stat_mask)
         else:
@@ -499,7 +501,7 @@ class Source():
         # return all sources, not just inpsiralling ones
         return h_c_n[which_sources, :]
 
-    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, n_step=100,
+    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, n_step=100,
                 verbose=False, re_interpolate_sc=True, which_sources=None):
         """Computes the SNR for a generic binary. Also records the harmonic with maximum SNR for each
         binary in ``self.max_snr_harmonic``.
@@ -507,14 +509,15 @@ class Source():
         Parameters
         ----------
         t_obs : `array`
-            Observation duration (default: 4 years)
+            Observation duration (default: value from sc_params)
 
         instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
-            Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
+            Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied. (default: value
+            from sc_params)
 
         custom_psd : `function`
             Custom function for computing the PSD. Must take the same arguments as
-            :meth:`legwork.psd.lisa_psd` even if it ignores some.
+            :meth:`legwork.psd.lisa_psd` even if it ignores some. (default: function from sc_params)
 
         n_step : `int`
             Number of time steps during observation duration
@@ -534,15 +537,22 @@ class Source():
         SNR : `array`
             The signal-to-noise ratio
         """
+        # if no values are provided, use those in sc_params
+        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        instrument = self._sc_params["instrument"] if instrument is None else instrument
+        custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
+
         # if the user interpolated a sensitivity curve with different settings
         if (self.interpolate_sc and self._sc_params is not None
                 and (t_obs != self._sc_params["t_obs"]
-                     or instrument != self._sc_params["instrument"])):  # pragma: no cover
+                     or instrument != self._sc_params["instrument"]
+                     or custom_psd != self._sc_params["custom_psd"])):  # pragma: no cover
 
             # re interpolate the sensitivity curve with new parameters
             if re_interpolate_sc:
                 self._sc_params["t_obs"] = t_obs
                 self._sc_params["instrument"] = instrument
+                self._sc_params["custom_psd"] = custom_psd
 
                 self.set_sc()
 
@@ -596,14 +606,14 @@ class Source():
                                                    verbose=verbose)
         return snr
 
-    def get_snr_stationary(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, which_sources=None,
+    def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, which_sources=None,
                            verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Parameters
         ----------
         t_obs : `array`
-            Observation duration (default: 4 years)
+            Observation duration (default: follow sc_params)
 
         instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
             Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
@@ -625,6 +635,11 @@ class Source():
         """
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        instrument = self._sc_params["instrument"] if instrument is None else instrument
+        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        if t_obs == "auto":
+            t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
@@ -696,14 +711,14 @@ class Source():
 
         return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs, instrument="LISA", custom_psd=None, n_step=100, which_sources=None,
+    def get_snr_evolving(self, t_obs=None, instrument=None, custom_psd=None, n_step=100, which_sources=None,
                          verbose=False):
         """Computes the SNR assuming an evolving binary
 
         Parameters
         ----------
         t_obs : `array`
-            Observation duration (default: 4 years)
+            Observation duration (default: follow sc_params)
 
         instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
             Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
@@ -730,6 +745,11 @@ class Source():
 
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
+
+        instrument = self._sc_params["instrument"] if instrument is None else instrument
+        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        if t_obs == "auto":
+            t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
@@ -1118,7 +1138,7 @@ class Source():
 class Stationary(Source):
     """Subclass for sources that are stationary"""
 
-    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, verbose=False):
+    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, verbose=False):
         self.snr = self.get_snr_stationary(t_obs=t_obs, instrument=instrument, custom_psd=custom_psd,
                                            verbose=verbose)
         return self.snr
@@ -1127,7 +1147,7 @@ class Stationary(Source):
 class Evolving(Source):
     """Subclass for sources that are evolving"""
 
-    def get_snr(self, t_obs=4 * u.yr, instrument="LISA", custom_psd=None, n_step=100, verbose=False):
+    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, n_step=100, verbose=False):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step, instrument=instrument,
                                          custom_psd=custom_psd, verbose=verbose)
         return self.snr

@@ -1,0 +1,15 @@
+# every time a new comment is made on an issue then check whether /remind is used and if so create a reminder
+
+name: 'create reminder'
+
+on:
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  reminder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: check for reminder
+        uses: agrc/create-reminder-action@v1

@@ -11,7 +11,8 @@ import astropy.constants as c
 from schwimmbad import MultiPool
 
 __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc', 'get_t_merge_circ', 'get_t_merge_ecc',
-           't_merge_mandel_fit', 'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array']
+           't_merge_mandel_fit', 'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array',
+           'determine_stationarity']
 
 
 @jit
@@ -137,10 +138,11 @@ def create_timesteps_array(a_i, beta, ecc_i=None, t_evol=None, n_step=100, times
         Defaults to 100.
 
     timesteps : `float/array`
-        Array of exact timesteps to take when evolving each binary. Must be monotonically increasing and
+        Array of exact timesteps to output when evolving each binary. Must be monotonically increasing and
         start with t=0. Either supply a 1D array to use for every binary or a 2D array that has a different
         array of timesteps for each binary. ``timesteps`` is used in place of ``t_evol`` and ``n_steps``
-        and takes precedence over them.
+        and takes precedence over them. Note that these are *not* the timesteps that will be taken whilst
+        the sources are evolved since these are determined adaptively during the integration by scipy's odeint
 
     Returns
     -------
@@ -184,10 +186,11 @@ def evol_circ(t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None, m_2=
         Defaults to 100.
 
     timesteps : `float/array`
-        Array of exact timesteps to take when evolving each binary. Must be monotonically increasing and
+        Array of exact timesteps to output when evolving each binary. Must be monotonically increasing and
         start with t=0. Either supply a 1D array to use for every binary or a 2D array that has a different
         array of timesteps for each binary. ``timesteps`` is used in place of ``t_evol`` and ``n_steps``
-        and takes precedence over them.
+        and takes precedence over them. Note that these are *not* the timesteps that will be taken whilst
+        the sources are evolved since these are determined adaptively during the integration by scipy's odeint
 
     beta : `float/array`
         Constant defined in Peters and Mathews (1964) Eq. 5.9. See :meth:`legwork.utils.beta`
@@ -359,6 +362,12 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None
             # calculate the merger time
             t_merge = get_t_merge_ecc(ecc_i=ecc_i, a_i=a_i,
                                       beta=beta, exact=exact_t_merge).to(u.Gyr)
+
+        # warn the user if they are evolving past the merger
+        if np.any(timesteps > t_merge[:, np.newaxis]):
+            print("WARNING: Some timesteps are past the merger of the source and this may produce erroneous",
+                  "results in combination with `avoid_merger=True`. Only evolve sources until their merger",
+                  "or set `avoid_merger=False`.")
 
         # make a mask for any timesteps that are too close to the merger
         too_close = timesteps >= t_merge[:, np.newaxis] - t_before
@@ -648,3 +657,53 @@ def evolve_f_orb_circ(f_orb_i, m_c, t_evol, ecc_i=0.0, merge_f=1e9 * u.Hz):
     # fill in the values for binaries that are still inspiraling
     f_orb_f[inspiral] = np.power(inner_part[inspiral], -3/8)
     return f_orb_f
+
+
+def determine_stationarity(f_orb_i, t_evol, ecc_i, m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
+    """Determine whether a binary is stationary
+
+    Check how much a binary's orbital frequency changes over ``t_evol`` time. This function provides a
+    conservative estimate in that some binaries that are stationary may be marked as evolving. This is
+    because the eccentricity also evolves but only use the initial value. Solving this in full would
+    require the same amount of time as assuming the binary is evolving.
+
+    Parameters
+    ----------
+    forb_i : `float/array`
+        Initial orbital frequency
+
+    t_evol : `float`
+        Time over which the frequency evolves
+
+    ecc : `float/array`
+        Initial eccentricity
+
+    m_1 : `float/array`
+        Primary mass (required if ``m_c`` is None)
+
+    m_2 : `float/array`
+        Secondary mass (required if ``m_c`` is None)
+
+    m_c : `float/array`
+        Chirp mass (overrides `m_1` and `m_2`)
+
+    stat_tol : `float`
+        Fractional change in frequency above which we do not consider a binary to be stationary
+
+    Returns
+    -------
+    stationary : `bool/array`
+        Mask of whether each binary is stationary
+    """
+    # calculate chirp mass if necessary
+    if m_c is None:
+        if m_1 is None or m_1 is None:
+            raise ValueError("`m_1` and `m_2` are required if `m_c` is None")
+        m_c = utils.chirp_mass(m_1, m_2)
+
+    # calculate the final frequency
+    f_orb_f = evolve_f_orb_circ(f_orb_i=f_orb_i, m_c=m_c, t_evol=t_evol, ecc_i=ecc_i)
+
+    # check the stationary criterion
+    stationary = (f_orb_f - f_orb_i) / f_orb_i <= stat_tol
+    return stationary

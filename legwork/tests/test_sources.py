@@ -1,4 +1,3 @@
-from legwork import evol
 import numpy as np
 import legwork.snr as snr
 import legwork.source as source
@@ -152,7 +151,7 @@ class Test(unittest.TestCase):
         true_strain = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
                                    dist=dist, position=positions,
                                    inclination=incs, polarisation=psis,
-                                   n=[1,2,3])[:, 0, :]
+                                   n=[1, 2, 3])[:, 0, :]
         self.assertTrue(np.all(source_strains == true_strain))
 
     def test_amplitude_modulation_h_c_n(self):
@@ -177,10 +176,8 @@ class Test(unittest.TestCase):
                                 position=positions, inclination=incs,
                                 polarisation=psis, interpolate_g=False)
         source_strains = sources.get_h_c_n([1, 2, 3])
-        true_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc,
-                                       dist=dist, position=positions,
-                                       inclination=incs, polarisation=psis,
-                                       n=[1,2,3])[:, 0, :]
+        true_strain = strain.h_c_n(m_c=m_c, f_orb=f_orb, ecc=ecc, dist=dist, position=positions,
+                                   inclination=incs, polarisation=psis, n=[1, 2, 3])[:, 0, :]
         self.assertTrue(np.all(source_strains == true_strain))
 
     def test_stationary_subclass(self):
@@ -439,22 +436,24 @@ class Test(unittest.TestCase):
         """ ensuring that updating the sc params always works """
         original_sc_params = {
             "instrument": "LISA",
-            "t_obs": 4 * u.yr,
-            "L": 2.5e9 * u.m,
+            "custom_psd": None,
+            "t_obs": "auto",
+            "L": "auto",
             "approximate_R": False,
-            "confusion_noise": "robson19"
+            "confusion_noise": "auto"
         }
 
         sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.2, dist=10*u.kpc,
                                 sc_params=original_sc_params)
 
-        sources.update_sc_params({"instrument": "TianQin", "L": np.sqrt(3) * 1e5 * u.km})
+        sources.update_sc_params({"instrument": "TianQin"})
 
         correct_final_sc_params = {
             "instrument": "TianQin",
-            "t_obs": 4 * u.yr,
-            "L": np.sqrt(3) * 1e5 * u.km,
+            "t_obs": "auto",
+            "L": "auto",
             "approximate_R": False,
-            "confusion_noise": "robson19"
+            "confusion_noise": "auto",
+            "custom_psd": None,
         }
         self.assertTrue(correct_final_sc_params == sources._sc_params)

@@ -6,8 +6,21 @@ name: Test LEGWORK
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'legwork/**'
+      - 'requirements.txt'
+      - 'setup.cfg'
+      - 'setup.py'
+      - 'pyproject.toml'
+    
   pull_request:
     branches: [ main ]
+    paths:
+      - 'legwork/**'
+      - 'requirements.txt'
+      - 'setup.cfg'
+      - 'setup.py'
+      - 'pyproject.toml'
 
 jobs:
   build:

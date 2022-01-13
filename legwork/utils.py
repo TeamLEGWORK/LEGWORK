@@ -4,10 +4,9 @@ from scipy.special import jv
 from astropy import constants as c
 from astropy import units as u
 import numpy as np
-import legwork.evol as evol
 
 __all__ = ['chirp_mass', 'peters_g', 'peters_f', 'get_a_from_f_orb', 'get_f_orb_from_a', 'get_a_from_ecc',
-           'beta', 'c_0', 'determine_stationarity', 'fn_dot', 'ensure_array', 'D_plus_squared',
+           'beta', 'c_0', 'fn_dot', 'ensure_array', 'D_plus_squared',
            'D_cross_squared', 'D_plus_D_cross', 'F_plus_squared', 'F_cross_squared']
 
 
@@ -230,56 +229,6 @@ def get_a_from_ecc(ecc, c_0):
         a = a.to(u.AU)
 
     return a
-
-
-def determine_stationarity(f_orb_i, t_evol, ecc_i, m_1=None, m_2=None, m_c=None, stat_tol=1e-2):
-    """Determine whether a binary is stationary
-
-    Check how much a binary's orbital frequency changes over ``t_evol`` time. This function provides a
-    conservative estimate in that some binaries that are stationary may be marked as evolving. This is
-    because the eccentricity also evolves but only use the initial value. Solving this in full would
-    require the same amount of time as assuming the binary is evolving.
-
-    Parameters
-    ----------
-    forb_i : `float/array`
-        Initial orbital frequency
-
-    t_evol : `float`
-        Time over which the frequency evolves
-
-    ecc : `float/array`
-        Initial eccentricity
-
-    m_1 : `float/array`
-        Primary mass (required if ``m_c`` is None)
-
-    m_2 : `float/array`
-        Secondary mass (required if ``m_c`` is None)
-
-    m_c : `float/array`
-        Chirp mass (overrides `m_1` and `m_2`)
-
-    stat_tol : `float`
-        Fractional change in frequency above which we do not consider a binary to be stationary
-
-    Returns
-    -------
-    stationary : `bool/array`
-        Mask of whether each binary is stationary
-    """
-    # calculate chirp mass if necessary
-    if m_c is None:
-        if m_1 is None or m_1 is None:
-            raise ValueError("`m_1` and `m_2` are required if `m_c` is None")
-        m_c = chirp_mass(m_1, m_2)
-
-    # calculate the final frequency
-    f_orb_f = evol.evolve_f_orb_circ(f_orb_i=f_orb_i, m_c=m_c, t_evol=t_evol, ecc_i=ecc_i)
-
-    # check the stationary criterion
-    stationary = (f_orb_f - f_orb_i) / f_orb_i <= stat_tol
-    return stationary
 
 
 def fn_dot(m_c, f_orb, e, n):

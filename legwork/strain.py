@@ -22,7 +22,7 @@ def amplitude_modulation(position, polarisation, inclination):
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -76,7 +76,7 @@ def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -138,7 +138,7 @@ def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         amp_mod = amp_mod[..., np.newaxis, np.newaxis]
         h_0 = amp_mod**0.5 * h_0
 
-    return h_0.decompose()
+    return h_0.decompose().value
 
 
 def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclination=None, interpolated_g=None):
@@ -172,7 +172,7 @@ def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
 
     polarisation : `float/array`, optional
-        GW polarisation of the source. Must have astropy angular units.
+        GW polarisation angle of the source. Must have astropy angular units.
 
     inclination : `float/array`, optional
         Inclination of the source. Must have astropy angular units.
@@ -234,4 +234,4 @@ def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         amp_mod = amp_mod[..., np.newaxis, np.newaxis]
         h_c = amp_mod**0.5 * h_c
 
-    return h_c.decompose()
+    return h_c.decompose().value
