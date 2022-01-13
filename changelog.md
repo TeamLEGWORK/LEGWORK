@@ -95,5 +95,6 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 - [Issue [#76](https://github.com/TeamLEGWORK/LEGWORK/issues/76)] Make it so that `strain.h_0_n` returns as unitless (same as `source.Source.get_h_0_n`). Same for `snr` functions.
 - Fixed an issue introduced in 0.2.0 where automated observation times didn't work in `visualisation.plot_sources_on_sc_circ_stat`
 - [Issue [#78](https://github.com/TeamLEGWORK/LEGWORK/issues/78)] Add a warning for when people are evolving past the merger with `avoid_merger=True`
+
 *KB 13/01/22*
 - [Issues [#79](https://github.com/TeamLEGWORK/LEGWORK/issues/79), [#80](https://github.com/TeamLEGWORK/LEGWORK/issues/80)] Add discussion of limitiations and scope of legwork snr calculations
