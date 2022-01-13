@@ -411,6 +411,10 @@ def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, 
         print("ERROR: There are no binaries above provided `snr_cutoff`")
         return fig, ax
 
+    # convert auto observation times
+    if t_obs == "auto":
+        t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
+
     # calculate the GW frequency and ASD for detectable binaries
     f_GW = f_orb[detectable] * 2
     asd = ((1/4 * t_obs)**(1/2) * h_0_2[detectable]).to(u.Hz**(-1/2))
