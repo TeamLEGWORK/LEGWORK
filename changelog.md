@@ -88,3 +88,13 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 - Change defaults used in `source` and `psd`
     - Often defaults for arm length, observation time and confusion noise were previously LISA related, LEGWORK now automatically works out the defaults based on what instrument is chosen
 - Bug fix: in `visualisation` avoid mixing floats with Quantities when filling in a sensitivity curve
+
+## 0.2.1
+*TW 11/01/22*
+- [Issue [#64](https://github.com/TeamLEGWORK/LEGWORK/issues/64)] Remove "auto" option from `interpolate_g` in favour of interpolating by default warning the user if they don't have many samples
+- [Issue [#76](https://github.com/TeamLEGWORK/LEGWORK/issues/76)] Make it so that `strain.h_0_n` returns as unitless (same as `source.Source.get_h_0_n`). Same for `snr` functions.
+- Fixed an issue introduced in 0.2.0 where automated observation times didn't work in `visualisation.plot_sources_on_sc_circ_stat`
+- [Issue [#78](https://github.com/TeamLEGWORK/LEGWORK/issues/78)] Add a warning for when people are evolving past the merger with `avoid_merger=True`
+
+*KB 13/01/22*
+- [Issues [#79](https://github.com/TeamLEGWORK/LEGWORK/issues/79), [#80](https://github.com/TeamLEGWORK/LEGWORK/issues/80)] Add discussion of limitiations and scope of legwork snr calculations

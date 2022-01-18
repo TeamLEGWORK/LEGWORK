@@ -64,11 +64,9 @@ class Source():
         Fractional change in frequency over mission length above which a binary should be considered to be
         stationary
 
-    interpolate_g : `boolean` or 'auto'
-        Whether to interpolate the g(n,e) function from Peters (1964). If
-        'auto' is inputted then LEGWORK will decide whether it is
-        necessary to interpolate g(n,e) based on the number of sources and
-        their eccentricity.
+    interpolate_g : `boolean`
+        Whether to interpolate the g(n,e) function from Peters (1964). This results in a faster runtime for
+        large collections of sources.
 
     interpolate_sc : `boolean`
         Whether to interpolate the LISA sensitivity curve
@@ -108,7 +106,7 @@ class Source():
     """
 
     def __init__(self, m_1, m_2, ecc, dist, n_proc=1, f_orb=None, a=None, position=None, polarisation=None,
-                 inclination=None, weights=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g="auto",
+                 inclination=None, weights=None, gw_lum_tol=0.05, stat_tol=1e-2, interpolate_g=True,
                  interpolate_sc=True, sc_params={}):
         # ensure that either a frequency or semi-major axis is supplied
         if f_orb is None and a is None:
@@ -201,11 +199,13 @@ class Source():
 
         self.update_gw_lum_tol(gw_lum_tol)
 
-        # interpolate g(n,e) for more than 100 sources or eccentric populations
-        if interpolate_g == "auto":
-            self.set_g(np.logical_or(self.n_sources > 100, np.any(self.ecc > 0.9)))
-        else:
-            self.set_g(interpolate_g)
+        # warn the user that interpolation might not be necessary if they have a small number of sources
+        if interpolate_g and self.n_sources <= 1000:
+            print("WARNING: Setting `interpolate_g=True` for a small number of sources may be slower than",
+                  "computing directly. The exact runtime depends on the eccentricity of your sources so",
+                  "we recommend trying your sample with `interpolate_g=False` to check which is faster.")
+
+        self.set_g(interpolate_g)
         self.set_sc()
 
     def create_harmonics_functions(self):
