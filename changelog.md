@@ -98,3 +98,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 
 *KB 13/01/22*
 - [Issues [#79](https://github.com/TeamLEGWORK/LEGWORK/issues/79), [#80](https://github.com/TeamLEGWORK/LEGWORK/issues/80)] Add discussion of limitiations and scope of legwork snr calculations
+
+##0.2.2
+*KB 18/01/22*
+- [Issues [#68](https://github.com/TeamLEGWORK/LEGWORK/issues/68), [#84](https://github.com/TeamLEGWORK/LEGWORK/issues/84)] Removes upper bound on version limits for numpy and numba
