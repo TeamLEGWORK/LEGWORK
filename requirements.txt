@@ -1,5 +1,5 @@
 numba >= 0.50'
-numpy >= 1.16,'
+numpy >= 1.16'
 astropy >= 4.0'
 scipy >= 1.5.0'
 matplotlib >= 3.3.2'
