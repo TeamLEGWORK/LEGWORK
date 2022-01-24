@@ -106,6 +106,8 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
 
     # create whichever plot was requested
     if disttype == "hist":
+        if isinstance(x, u.quantity.Quantity):
+            x = x.value
         ax.hist(x, weights=weights, color=color, **plot_args)
     elif disttype == "kde":
         sns.kdeplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
