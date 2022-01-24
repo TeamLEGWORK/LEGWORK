@@ -3,6 +3,7 @@ import seaborn as sns
 import numpy as np
 import astropy.units as u
 import legwork.psd as psd
+from astropy.visualization import quantity_support
 
 # set the default font and fontsize
 plt.rc('font', family='serif')
@@ -105,14 +106,13 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
         plot_args[key] = value
 
     # create whichever plot was requested
-    if disttype == "hist":
-        if isinstance(x, u.quantity.Quantity):
-            x = x.value
-        ax.hist(x, weights=weights, color=color, **plot_args)
-    elif disttype == "kde":
-        sns.kdeplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
-    elif disttype == "ecdf":
-        sns.ecdfplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
+    with quantity_support():
+        if disttype == "hist":
+                ax.hist(x, weights=weights, color=color, **plot_args)
+        elif disttype == "kde":
+            sns.kdeplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
+        elif disttype == "ecdf":
+            sns.ecdfplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
 
     # update axis labels
     if xlabel is not None:
@@ -218,13 +218,15 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
         plot_args[key] = value
 
     # create whichever plot was requested
-    if disttype == "scatter":
-        # change the size of scatter points based on their weights
-        if weights is not None:
-            scatter_s = weights * scatter_s
-        ax.scatter(x, y, s=scatter_s, color=color, **plot_args)
-    elif disttype == "kde":
-        sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
+    with quantity_support():
+        if disttype == "scatter":
+            # change the size of scatter points based on their weights
+            if weights is not None:
+                scatter_s = weights * scatter_s
+
+            ax.scatter(x, y, s=scatter_s, color=color, **plot_args)
+        elif disttype == "kde":
+            sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
 
     # update axis labels
     if xlabel is not None:
@@ -311,9 +313,11 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
         raise ValueError("y_quantity must be one of 'ASD' or 'h_c'")
 
     # plot the curve and fill if needed
-    ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
-    if fill:
-        ax.fill_between(frequency_range, 0 * noise_amplitude.unit, noise_amplitude, alpha=alpha, color=color)
+    with quantity_support():
+        ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
+        if fill:
+            ax.fill_between(frequency_range, np.zeros_like(noise_amplitude), noise_amplitude,
+                            alpha=alpha, color=color)
 
     # adjust labels, sizes and frequency limits to plot is flush to the edges
     ax.set_xlabel(r'Frequency [$\rm Hz$]')
