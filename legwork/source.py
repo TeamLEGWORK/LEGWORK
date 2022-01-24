@@ -1041,10 +1041,10 @@ class Source():
 
         # plot it!
         if ystr is not None:
-            return vis.plot_2D_dist(x=x[which_sources].value, y=y[which_sources].value,
+            return vis.plot_2D_dist(x=x[which_sources], y=y[which_sources],
                                     weights=weights, **kwargs)
         else:
-            return vis.plot_1D_dist(x=x[which_sources].value, weights=weights, **kwargs)
+            return vis.plot_1D_dist(x=x[which_sources], weights=weights, **kwargs)
 
     def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
         """Plot all sources in the class on the sensitivity curve
