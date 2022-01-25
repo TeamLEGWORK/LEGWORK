@@ -111,7 +111,10 @@ todo_include_todos = True
 nbsphinx_prolog = """
 {% set docname = env.doc2path(env.docname, base=None) %}
 .. note:: This tutorial was generated from a Jupyter notebook that can be
-          downloaded `here <https://github.com/TeamLEGWORK/LEGWORK/tree/main/docs/{{ docname }}>`_.
+          `downloaded here <https://github.com/TeamLEGWORK/LEGWORK/tree/main/docs/{{ docname }}>`_.
+          If you'd like to reproduce the results in the notebook, or make changes to the code, we recommend
+          downloading this notebook and running it with Jupyter as certain cells (mostly those that change
+          plot styles) are excluded from the tutorials.
 """
 nbsphinx_prompt_width = "0"
 
