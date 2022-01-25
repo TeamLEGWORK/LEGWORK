@@ -10,7 +10,7 @@ Installation
 
         .. code-block:: bash
 
-            conda create --name legwork numpy scipy astropy numba matplotlib seaborn jupyter ipython
+            conda create --name legwork
 
         And then activate the environment by running
 
@@ -19,14 +19,11 @@ Installation
             conda activate legwork
 
         Once within the environment, LEGWORK is available for installation on PyPI which lets you install the latest
-        stable version using ``pip``. One last dependency is the schwimmbad package which is only available
-        on PyPI not conda and therefore also needs to be brought in with ``pip``. So now to complete the installation just run
+        stable version using ``pip``. So now to complete the installation just run the following and LEGWORK, as well as its dependencies, will be installed
 
         .. code-block:: bash
 
-            pip install schwimmbad legwork
-
-        and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
+            pip install legwork
 
         .. tip::
 
@@ -35,15 +32,51 @@ Installation
 
             .. code-block:: bash
 
-                pip install schwimmbad legwork --ignore-installed llvmlite
+                pip install legwork --ignore-installed llvmlite
+
+        Finally, if you also want to work with the notebooks in the tutorials and/or demos you'll also need to run this
+
+        .. code-block:: bash
+
+            conda install jupyter ipython
+
+        and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
 
     .. tab:: Development (from GitHub)
+        
+        .. warning::
+
+            We don't guarantee that there won't be mistakes or bugs in the development version, use at your own risk!
 
         The latest development version is available directly from our `GitHub Repo
-        <https://github.com/TeamLEGWORK/LEGWORK>`_:
+        <https://github.com/TeamLEGWORK/LEGWORK>`_. To start, clone the repository onto your machine:
 
         .. code-block:: bash
         
             git clone https://github.com/TeamLEGWORK/LEGWORK
             cd LEGWORK
+
+        Next, we recommend that you create a Conda environment for working with LEGWORK.
+        You can do this by running
+
+        .. code-block:: bash
+
+            conda create --name legwork
+
+        And then activate the environment by running
+
+        .. code-block:: bash
+
+            conda activate legwork
+
+        At this point, all that's left to do is install LEGWORK!
+
+        .. code-block:: bash
+
             pip install .
+
+        Keep in mind that if you want to work with the notebooks in the tutorials/demos you'll also need to run the following
+
+        .. code-block:: bash
+
+            conda install jupyter ipython
