@@ -102,3 +102,8 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.2.2
 *KB 18/01/22*
 - [Issues [#68](https://github.com/TeamLEGWORK/LEGWORK/issues/68), [#84](https://github.com/TeamLEGWORK/LEGWORK/issues/84)] Removes upper bound on version limits for numpy and numba
+
+## 0.2.3
+*TW 23/01/22*
+- [Issue [#75](https://github.com/TeamLEGWORK/LEGWORK/issues/75)] Fix mixing quantities with floats when plotting
+- [Issue [#86](https://github.com/TeamLEGWORK/LEGWORK/issues/86)] Clarify how notebooks should be run and update the installation instructions

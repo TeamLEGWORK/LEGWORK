@@ -140,3 +140,4 @@ cython_debug/
 .DS_Store
 docs/api
 local_tests/
+.vscode/
