@@ -8,7 +8,8 @@ from scipy.interpolate import splev, splrep
 from importlib import resources
 
 __all__ = ['load_response_function', 'approximate_response_function', 'power_spectral_density',
-           'lisa_psd', 'tianqin_psd']
+           'lisa_psd', 'tianqin_psd', 'get_confusion_noise', 'get_confusion_noise_robson19',
+           'get_confusion_noise_huang20', 'get_confusion_noise_thiele21']
 
 
 def load_response_function(f, fstar=19.09e-3):
