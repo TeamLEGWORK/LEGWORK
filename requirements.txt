@@ -1,3 +1,4 @@
+# NOTE: If you change requirements here, remember to also update the instructions in docs/install.rst
 numba >= 0.50'
 numpy >= 1.16'
 astropy >= 4.0'
