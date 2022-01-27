@@ -10,7 +10,7 @@ Installation
 
         .. code-block:: bash
 
-            conda create --name legwork
+            conda create --name legwork numba>=0.50 numpy>=1.16 astropy>=4.0 scipy>=1.5.0 matplotlib>=3.3.2 seaborn>=0.11.1
 
         And then activate the environment by running
 
@@ -61,7 +61,7 @@ Installation
 
         .. code-block:: bash
 
-            conda create --name legwork
+            conda create --name legwork numba>=0.50 numpy>=1.16 astropy>=4.0 scipy>=1.5.0 matplotlib>=3.3.2 seaborn>=0.11.1
 
         And then activate the environment by running
 
