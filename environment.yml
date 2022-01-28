@@ -1,3 +1,7 @@
+# NOTE: any changes in the requirements must also be reflected in
+#   - setup.cfg
+#   - requirements.txt
+#   - install.rst
 name: legwork
 channels:
   - defaults
