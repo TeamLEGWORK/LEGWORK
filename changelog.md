@@ -111,3 +111,10 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.2.4
 *TW 27/01/22*
 - Make dependencies in setup.cfg match requirements.txt!
+
+## 0.2.5
+*TW 27/01/22*
+- [Issue [#89](https://github.com/TeamLEGWORK/LEGWORK/issues/89)]
+    - Created environment.yml for the package
+    - Updated installation instructions to match
+- [Issue [#90](https://github.com/TeamLEGWORK/LEGWORK/issues/90)] Added all psd functions to __all__

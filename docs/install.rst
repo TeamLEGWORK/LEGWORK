@@ -3,44 +3,37 @@ Installation
 
 .. tabs::
 
-    .. tab:: Stable (from PyPI)
+    .. tab:: Stable (with conda)
 
-        We recommend that you create a Conda environment for working with LEGWORK.
-        You can do this by running
+        This is our recommend installation method! Follow the steps below to start using ``LEGWORK``!
 
-        .. code-block:: bash
+        #. :download:`Download the environment.yml file from our repository <https://raw.githubusercontent.com/TeamLEGWORK/LEGWORK/main/environment.yml>`
+        #. Create a new conda environment using this file
 
-            conda create --name legwork
+            .. code-block:: bash
 
-        And then activate the environment by running
+                conda env create -f path/to/environment.yml
 
-        .. code-block:: bash
+        #. Activate the environment by running
 
-            conda activate legwork
+            .. code-block:: bash
 
-        Once within the environment, LEGWORK is available for installation on PyPI which lets you install the latest
-        stable version using ``pip``. So now to complete the installation just run the following and LEGWORK, as well as its dependencies, will be installed
+                conda activate legwork
+
+        and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
+        Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
+
+    .. tab:: Stable (without conda)
+
+        We don't recommend installing ``LEGWORK`` without a conda environment but if you prefer to do it this
+        way then all you need to do is run
 
         .. code-block:: bash
 
             pip install legwork
 
-        .. tip::
-
-            If you see an error about llvmlite of the form "*ERROR: Cannot uninstall 'llvmlite'. It is a distutils installed project and thus we cannot accurately determine which files belong to it which would lead to only a partial uninstall.*" this is due to the nature of the llvmlite and numba packages
-            and can be avoided by instead running
-
-            .. code-block:: bash
-
-                pip install legwork --ignore-installed llvmlite
-
-        Finally, if you also want to work with the notebooks in the tutorials and/or demos you'll also need to run this
-
-        .. code-block:: bash
-
-            conda install jupyter ipython
-
         and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
+        Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
 
     .. tab:: Development (from GitHub)
         
@@ -61,7 +54,7 @@ Installation
 
         .. code-block:: bash
 
-            conda create --name legwork
+            conda create --name legwork "python>=3.7" pip "numba>=0.50" "numpy>=1.16" "astropy>=4.0" "scipy>=1.5.0" "matplotlib>=3.3.2" "seaborn>=0.11.1" "schwimmbad>=0.3.2" -c conda-forge -c defaults
 
         And then activate the environment by running
 
@@ -75,8 +68,5 @@ Installation
 
             pip install .
 
-        Keep in mind that if you want to work with the notebooks in the tutorials/demos you'll also need to run the following
-
-        .. code-block:: bash
-
-            conda install jupyter ipython
+        and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
+        Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
