@@ -20,13 +20,8 @@ Installation
 
                 conda activate legwork
 
-        #. [optional] If you also want to work with the notebooks in the tutorials and/or demos you'll also need to run this
-
-            .. code-block:: bash
-
-                conda install jupyter ipython
-
         and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
+        Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
 
     .. tab:: Stable (without conda)
 
@@ -36,6 +31,9 @@ Installation
         .. code-block:: bash
 
             pip install legwork
+
+        and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
+        Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
 
     .. tab:: Development (from GitHub)
         
@@ -70,8 +68,5 @@ Installation
 
             pip install .
 
-        Keep in mind that if you want to work with the notebooks in the tutorials/demos you'll also need to run the following
-
-        .. code-block:: bash
-
-            conda install jupyter ipython
+        and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
+        Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
