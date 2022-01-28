@@ -107,3 +107,8 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 *TW 23/01/22*
 - [Issue [#75](https://github.com/TeamLEGWORK/LEGWORK/issues/75)] Fix mixing quantities with floats when plotting
 - [Issue [#86](https://github.com/TeamLEGWORK/LEGWORK/issues/86)] Clarify how notebooks should be run and update the installation instructions
+
+## 0.2.5
+*TW 27/01/22*
+- [Issue [#89](https://github.com/TeamLEGWORK/LEGWORK/issues/89)] Change conda environment command back to include exact packages
+- [Issue [#90](https://github.com/TeamLEGWORK/LEGWORK/issues/90)] Added all psd functions to __all__
