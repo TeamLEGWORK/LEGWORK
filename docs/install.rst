@@ -7,7 +7,7 @@ Installation
 
         This is our recommend installation method! Follow the steps below to start using ``LEGWORK``!
 
-        #. :download:`Download the environment.yml file from our repository <https://raw.githubusercontent.com/TomWagg/LEGWORK/docs/environment.yml>`
+        #. :download:`Download the environment.yml file from our repository <https://raw.githubusercontent.com/TeamLEGWORK/LEGWORK/main/environment.yml>`
         #. Create a new conda environment using this file
 
             .. code-block:: bash
