@@ -1,14 +1,20 @@
 {
+    "title": "LEGWORK: A python package for computing the evolution and detectability of stellar-origin gravitational-wave sources with space-based detectors",
     "creators": [
         {
             "name": "Tom Wagg",
-            "affiliation": "University of Washington; Center for Astrophysics | Harvard & Smithsonian; Max-Planck-Institut für Astrophysik",
+            "affiliation": "University of Washington; Center for Astrophysics | Harvard & Smithsonian; Max Planck Institute for Astrophysics: Garching",
             "orcid": "0000-0001-6147-5761"
         },
         {
             "name": "Katelyn Breivik",
             "affiliation": "Center for Computational Astrophysics, Flatiron Institute",
             "orcid": "0000-0001-5228-6598"
+        },
+        {
+            "name": "Selma E. de Mink",
+            "affiliation": "Max Planck Institute for Astrophysics: Garching",
+            "orcid": "0000-0001-9336-2825"
         }
     ]
 }
