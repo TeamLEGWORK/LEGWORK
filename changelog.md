@@ -118,3 +118,7 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
     - Created environment.yml for the package
     - Updated installation instructions to match
 - [Issue [#90](https://github.com/TeamLEGWORK/LEGWORK/issues/90)] Added all psd functions to __all__
+
+## 0.3.0
+*TW 01/02/22*
+- New major version of LEGWORK after several updates during the JOSS review (see 0.2.0-0.2.5)
