@@ -36,7 +36,7 @@ affiliations:
 date: 10 November 2021
 bibliography: paper.bib
 aas-doi: 10.3847/1538-4365/ac5c52
-aas-journal: Astrophysical Journal
+aas-journal: Astrophysical Journal Supplement Series
 ---
 
 \newcommand{\unit}[1]{\, \mathrm{#1}}
