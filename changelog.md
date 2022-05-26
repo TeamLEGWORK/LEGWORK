@@ -127,3 +127,4 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 *TW 26/05/22*
 - Bug fix: LISA noise wasn't calculated correctly, fixed to match Robson+19 Eq. 12. Thanks to Kevin Burdge for
 helping us to notice this!
+- [Issues [#94](https://github.com/TeamLEGWORK/LEGWORK/issues/94)] Fix condition

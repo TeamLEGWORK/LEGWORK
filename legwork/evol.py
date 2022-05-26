@@ -697,7 +697,7 @@ def determine_stationarity(f_orb_i, t_evol, ecc_i, m_1=None, m_2=None, m_c=None,
     """
     # calculate chirp mass if necessary
     if m_c is None:
-        if m_1 is None or m_1 is None:
+        if m_1 is None or m_2 is None:
             raise ValueError("`m_1` and `m_2` are required if `m_c` is None")
         m_c = utils.chirp_mass(m_1, m_2)
 
