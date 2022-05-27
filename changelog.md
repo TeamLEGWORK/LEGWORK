@@ -122,3 +122,9 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 ## 0.3.0
 *TW 01/02/22*
 - New major version of LEGWORK after several updates during the JOSS review (see 0.2.0-0.2.5)
+
+## 0.3.1
+*TW 26/05/22*
+- Bug fix: LISA noise wasn't calculated correctly, fixed to match Robson+19 Eq. 12. Thanks to Kevin Burdge for
+helping us to notice this!
+- [Issues [#94](https://github.com/TeamLEGWORK/LEGWORK/issues/94)] Fix condition
