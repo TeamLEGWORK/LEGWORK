@@ -133,7 +133,8 @@ def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_no
 
     L = L.to(u.m).value
 
-    # calculate sensitivity curve (Robson+19 Eq. 12)
+    # calculate sensitivity curve (Robson+19 Eq. 12). Note the factor near Pacc is 2(1 + cos^2(f/f*))
+    # not just 4, as in Robson Eq.1, since that's an approximation for low frequencies
     psd = (1 / (L**2) * (Poms(f) + 2 * (1 + np.cos(f / fstar)**2) * Pacc(f) / (2 * np.pi * f)**4)) / R + cn
 
     # replace values for bad frequencies (set to extremely high value)
