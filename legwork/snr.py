@@ -75,7 +75,6 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
 
 
 def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
-                       position=None, polarisation=None, inclination=None,
                        interpolated_g=None, interpolated_sc=None,
                        ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
                        instrument="LISA", custom_psd=None):
@@ -147,8 +146,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
 
     # calculate source signal
     h_0_ecc_n_2 = strain.h_0_n(m_c=m_c, f_orb=f_orb, ecc=ecc, n=n_range, dist=dist,
-                               position=position, polarisation=polarisation,
-                               inclination=inclination, interpolated_g=interpolated_g)**2
+                               interpolated_g=interpolated_g)**2
 
     # reshape the output since only one timestep
     h_0_ecc_n_2 = h_0_ecc_n_2.reshape(len(m_c), harmonics_required)
@@ -178,8 +176,7 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         return snr.decompose().value
 
 
-def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
-                      position=None, polarisation=None, inclination=None, t_merge=None,
+def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
                       interpolated_g=None, interpolated_sc=None,
                       instrument="LISA", custom_psd=None):
     """Computes SNR for circular and stationary sources
@@ -203,15 +200,6 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
 
     n_step : `int`
         Number of time steps during observation duration
-
-    position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
-
-    polarisation : `float/array`, optional
-        GW polarisation angle of the source. Must have astropy angular units.
-
-    inclination : `float/array`, optional
-        Inclination of the source. Must have astropy angular units.
 
     t_merge : `float/array`
         Time until merger
@@ -271,8 +259,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step,
     return snr.decompose().value
 
 
-def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_step,
-                     position=None, polarisation=None, inclination=None, t_merge=None,
+def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_step, t_merge=None,
                      interpolated_g=None, interpolated_sc=None, n_proc=1,
                      ret_max_snr_harmonic=False, ret_snr2_by_harmonic=False,
                      instrument="LISA", custom_psd=None):
@@ -303,15 +290,6 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
 
     t_obs : `float`
         Total duration of the observation
-
-    position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
-
-    polarisation : `float/array`, optional
-        GW polarisation angle of the source. Must have astropy angular units.
-
-    inclination : `float/array`, optional
-        Inclination of the source. Must have astropy angular units.
 
     n_step : `int`
         Number of time steps during observation duration
@@ -380,7 +358,6 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
 
     # calculate the characteristic strain
     h_c_n_2 = strain.h_c_n(m_c=m_c, f_orb=f_orb_evol, ecc=e_evol, n=harms, dist=dist,
-                           position=position, polarisation=polarisation, inclination=inclination,
                            interpolated_g=interpolated_g)**2
 
     # calculate the characteristic noise power
