@@ -128,3 +128,9 @@ Small changes to visualisation code and updates to tutorials/demos with the new 
 - Bug fix: LISA noise wasn't calculated correctly, fixed to match Robson+19 Eq. 12. Thanks to Kevin Burdge for
 helping us to notice this!
 - [Issues [#94](https://github.com/TeamLEGWORK/LEGWORK/issues/94)] Fix condition
+
+## 0.4.0
+*TW 15/06/22*
+- Bug fix: snr class variable was not updated when sources have merged
+- Non-averaged SNR calculations are only applicable for circular/stationary sources so removed option for other sources
+- Amplitude modulation for non-averaged SNR changed to match Babak+21 *this significantly changes the SNR of sources with specific positions/polarisations/inclinations*

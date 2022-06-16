@@ -9,12 +9,16 @@ __all__ = ['amplitude_modulation', 'h_0_n', 'h_c_n']
 
 def amplitude_modulation(position, polarisation, inclination):
     """Computes the modulation of the strain due to the orbit averaged response of the detector to the
-    position, polarisation, and inclination of the source
+    position, polarisation, and inclination of the source using Cornish+03 Eq.42 and Babak+21.
 
     Note that since the majority of the calculations in LEGWORK are carried out for the full position,
     polarisation, and inclination averages, we include a pre-factor of 5/4 on the amplitude modulation
     to undo the factor of 4/5 which arises from the averaging of :meth:`legwork.utils.F_plus_squared` and
     :meth:`legwork.utils.F_cross_squared`.
+
+    Additionally, note that this function does not include the factor of 1/2 from the Cornish+03 paper in
+    order to remain in the frequency domain. More recent papers (e.g. Babak+21) define the strain as
+    h(f)~A(f)*e^(2*i*psi(f)) and so the inner product is 1 instead of 1/2 as in Cornish+03.
 
     Parameters
     ----------
@@ -33,14 +37,16 @@ def amplitude_modulation(position, polarisation, inclination):
         modulation to apply to strain from detector response
     """
     theta, phi = position.lat, position.lon
-    a_plus = (1 + np.cos(inclination)**2)
-    a_cross = 2 * np.cos(inclination)
+
+    # a_plus/a_cross as defined in Robson+19 Eq.15 and Babak+21 Eq. 67
+    a_plus = (1 + np.cos(inclination)**2) / 2
+    a_cross = np.cos(inclination)
     term1 = a_plus**2 * utils.F_plus_squared(theta, phi, polarisation)
     term2 = a_cross**2 * utils.F_cross_squared(theta, phi, polarisation)
 
     # The modulation first undoes the averaging with the 5/4 factor
-    # This is because the full averaged response is 4/5
-    modulation = 5/4 * 1/2 * (term1 + term2)
+    # This is because the full averaged response is 4/5 (e.g. see Robson+19 Eq.16)
+    modulation = 5/4 * (term1 + term2)
 
     return modulation
 

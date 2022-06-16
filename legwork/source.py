@@ -604,6 +604,7 @@ class Source():
                                                    which_sources=evol_mask,
                                                    n_step=n_step,
                                                    verbose=verbose)
+        self.snr = snr
         return snr
 
     def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, which_sources=None,
@@ -679,12 +680,6 @@ class Source():
                 harm_mask = np.logical_and(harmonics_required > lower, harmonics_required <= upper)
                 match = np.logical_and(harm_mask, e_mask)
 
-                # only apply the mask to the position, polarization and inclination
-                # if they are provided
-                position = self.position[match] if self.position is not None else None
-                polarisation = self.polarisation[match] if self.position is not None else None
-                inclination = self.inclination[match] if self.position is not None else None
-
                 if match.any():
                     snr[match], msh[match] = sn.snr_ecc_stationary(m_c=self.m_c[match],
                                                                    f_orb=self.f_orb[match],
@@ -696,10 +691,7 @@ class Source():
                                                                    interpolated_sc=self.sc,
                                                                    ret_max_snr_harmonic=True,
                                                                    instrument=instrument,
-                                                                   custom_psd=custom_psd,
-                                                                   position=position,
-                                                                   polarisation=polarisation,
-                                                                   inclination=inclination)
+                                                                   custom_psd=custom_psd)
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
@@ -755,12 +747,6 @@ class Source():
         e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
         c_mask = np.logical_and(self.ecc <= self.ecc_tol, insp_sources)
 
-        # only apply the mask to the position, polarization and inclination
-        # if they are provided
-        position = self.position[c_mask] if self.position is not None else None
-        polarisation = self.polarisation[c_mask] if self.position is not None else None
-        inclination = self.inclination[c_mask] if self.position is not None else None
-
         # default to n = 2 for max snr harmonic
         msh = np.repeat(2, self.n_sources)
 
@@ -778,10 +764,7 @@ class Source():
                                                interpolated_g=self.g,
                                                interpolated_sc=self.sc,
                                                instrument=instrument,
-                                               custom_psd=custom_psd,
-                                               position=position,
-                                               polarisation=polarisation,
-                                               inclination=inclination)
+                                               custom_psd=custom_psd)
         if e_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(len(snr[e_mask])))
@@ -790,11 +773,6 @@ class Source():
             for lower, upper in harmonic_groups:
                 harm_mask = np.logical_and(harmonics_required > lower, harmonics_required <= upper)
                 match = np.logical_and(harm_mask, e_mask)
-                # only apply the mask to the position, polarization and inclination
-                # if they are provided
-                position = self.position[match] if self.position is not None else None
-                polarisation = self.polarisation[match] if self.position is not None else None
-                inclination = self.inclination[match] if self.position is not None else None
 
                 if match.any():
                     t_merge = None if self.t_merge is None else self.t_merge[match]
@@ -811,10 +789,7 @@ class Source():
                                                                  n_proc=self.n_proc,
                                                                  ret_max_snr_harmonic=True,
                                                                  instrument=instrument,
-                                                                 custom_psd=custom_psd,
-                                                                 position=position,
-                                                                 polarisation=polarisation,
-                                                                 inclination=inclination)
+                                                                 custom_psd=custom_psd)
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
