@@ -9,7 +9,7 @@ __all__ = ['amplitude_modulation', 'h_0_n', 'h_c_n']
 
 def amplitude_modulation(position, polarisation, inclination):
     """Computes the modulation of the strain due to the orbit averaged response of the detector to the
-    position, polarisation, and inclination of the source using Cornish+03 Eq.42
+    position, polarisation, and inclination of the source using Cornish+03 Eq.42 and Babak+21.
 
     Note that since the majority of the calculations in LEGWORK are carried out for the full position,
     polarisation, and inclination averages, we include a pre-factor of 5/4 on the amplitude modulation
@@ -17,8 +17,8 @@ def amplitude_modulation(position, polarisation, inclination):
     :meth:`legwork.utils.F_cross_squared`.
 
     Additionally, note that this function does not include the factor of 1/2 from the Cornish+03 paper in
-    order to remain in the frequency domain. More recent papers define the strain as h(f)~A(f)*e^(2*i*psi(f))
-    and so the inner product is 1 instead of 1/2 as in Cornish+03.
+    order to remain in the frequency domain. More recent papers (e.g. Babak+21) define the strain as
+    h(f)~A(f)*e^(2*i*psi(f)) and so the inner product is 1 instead of 1/2 as in Cornish+03.
 
     Parameters
     ----------
