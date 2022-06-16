@@ -604,6 +604,7 @@ class Source():
                                                    which_sources=evol_mask,
                                                    n_step=n_step,
                                                    verbose=verbose)
+        self.snr = snr
         return snr
 
     def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, which_sources=None,
