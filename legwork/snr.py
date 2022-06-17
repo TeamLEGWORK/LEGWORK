@@ -100,15 +100,6 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
     harmonics_required : `integer`
         Maximum integer harmonic to compute
 
-    position : `SkyCoord/array`, optional
-        Sky position of source. Must be specified using Astropy's :class:`astropy.coordinates.SkyCoord` class.
-
-    polarisation : `float/array`, optional
-        GW polarisation angle of the source. Must have astropy angular units.
-
-    inclination : `float/array`, optional
-        Inclination of the source. Must have astropy angular units.
-
     interpolated_g : `function`
         A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
         The code assumes that the function returns the output sorted as with the interp2d returned functions
