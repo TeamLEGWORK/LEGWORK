@@ -1047,7 +1047,8 @@ class Source():
         else:
             return vis.plot_1D_dist(x=x[which_sources], weights=weights, **kwargs)
 
-    def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
+    def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True,
+                           label="Stationary sources", **kwargs):  # pragma: no cover
         """Plot all sources in the class on the sensitivity curve
 
         Parameters
@@ -1065,6 +1066,9 @@ class Source():
 
         show : `boolean`
             Whether to immediately show the plot
+
+        label : `str`
+            Label to use for the plotted points
 
         **kwargs : `various`
             Keyword arguments to be passed to plotting functions
@@ -1094,29 +1098,15 @@ class Source():
         detectable = self.snr > snr_cutoff
         inspiraling = np.logical_not(self.merged)
 
-        # plot circular and stationary sources
-        circ_stat = self.get_source_mask(circular=True, stationary=True)
-        circ_stat = np.logical_and.reduce((circ_stat, detectable, inspiraling))
-        if circ_stat.any():
-            f_orb = self.f_orb[circ_stat]
-            h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
-            weights = self.weights[circ_stat] if self.weights is not None else None
-            fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb, h_0_2=h_0_2, snr=self.snr[circ_stat],
-                                                       weights=weights, snr_cutoff=snr_cutoff,
-                                                       fig=fig, ax=ax, show=False,
-                                                       label="Circular/Stationary",
-                                                       **self._sc_params, **kwargs)
-
-        # plot eccentric and stationary sources
-        ecc_stat = self.get_source_mask(circular=False, stationary=True)
-        ecc_stat = np.logical_and.reduce((ecc_stat, detectable, inspiraling))
-        if ecc_stat.any():
-            f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
-            weights = self.weights[ecc_stat] if self.weights is not None else None
-            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat], weights=weights,
-                                                      snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
-                                                      label="Eccentric/Stationary",
-                                                      **self._sc_params, **kwargs)
+        # plot stationary sources
+        stat = self.get_source_mask(stationary=True)
+        stat = np.logical_and.reduce((stat, detectable, inspiraling))
+        if stat.any():
+            f_dom = self.f_orb[stat] * self.max_snr_harmonic[stat]
+            weights = self.weights[stat] if self.weights is not None else None
+            fig, ax = vis.plot_sources_on_sc(f_dom=f_dom, snr=self.snr[stat], weights=weights,
+                                             snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
+                                             label=label, **self._sc_params, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)

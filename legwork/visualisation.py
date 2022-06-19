@@ -19,7 +19,7 @@ params = {'figure.figsize': (12, 8),
 plt.rcParams.update(params)
 
 __all__ = ['plot_1D_dist', 'plot_2D_dist', 'plot_sensitivity_curve',
-           'plot_sources_on_sc_circ_stat', 'plot_sources_on_sc_ecc_stat']
+           'plot_sources_on_sc']
 
 
 def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax=None, show=True,
@@ -368,120 +368,21 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     return fig, ax
 
 
-def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs="auto",
-                                 instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
-                                 confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
-    """Overlay circular/stationary sources on the LISA sensitivity curve.
-
-    Each source is plotted at its gravitational wave frequency (n = 2) such that its height above the curve
-    is equal to it signal-to-noise ratio.
-
-    Parameters
-    ----------
-    f_orb : `float/array`
-        Orbital frequency
-
-    h_0_2 : `float/array`
-        Strain amplitude of the n = 2 harmonic
-
-    snr : `float/array`
-        Signal-to-noise ratio
-
-    weights : `float/array`, optional, default=None
-        Statistical weights for each source, default is equal weights
-
-    snr_cutoff : `float`
-        SNR above which to plot binaries (default is 0 such that all sources are plotted)
-
-    instrument: {{ `LISA`, `TianQin`, `custom` }}
-        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
-
-    custom_psd : `function`
-        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
-        even if it ignores some.
-
-    t_obs : `float`
-        Observation time (default "auto")
-
-    L : `float`
-        Arm length
-
-    approximate_R : `boolean`
-        Whether to approximate the response function (default: no)
-
-    confusion_noise : `various`
-        Galactic confusion noise. Acceptable inputs are either one of the values listed in
-        :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
-        `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
-        confusion noise at each frequency for a given mission length where it would be called by running
-        `noise(f, t_obs)` and return a value with units of inverse Hertz
-
-    fig: `matplotlib Figure`
-        A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
-
-    ax: `matplotlib Axis`
-        An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
-
-    show : `boolean`
-        Whether to immediately show the plot or only return the Figure and Axis
-
-    **kwargs : `various`
-        This function is a wrapper on :func:`legwork.visualisation.plot_2D_dist` and each kwarg is passed
-        directly to this function. For example, you can write `disttype="kde"` for a kde density plot
-        instead of a scatter plot.
-
-    Returns
-    -------
-    fig : `matplotlib Figure`
-        The figure on which the distribution is plotted
-
-    ax : `matplotlib Axis`
-        The axis on which the distribution is plotted
-    """
-    # create figure if it wasn't provided
-    if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument,
-                                         custom_psd=custom_psd, L=L, approximate_R=approximate_R,
-                                         confusion_noise=confusion_noise)
-
-    # work out which binaries are above the cutoff
-    detectable = snr > snr_cutoff
-    if not detectable.any():
-        print("ERROR: There are no binaries above provided `snr_cutoff`")
-        return fig, ax
-
-    # convert auto observation times
-    if t_obs == "auto":
-        t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
-
-    # calculate the GW frequency and ASD for detectable binaries
-    f_GW = f_orb[detectable] * 2
-    asd = ((1/4 * t_obs)**(1/2) * h_0_2[detectable]).to(u.Hz**(-1/2))
-
-    # plot either a scatter or density plot of the detectable binaries
-    ylims = ax.get_ylim()
-    weights = weights[detectable] if weights is not None else None
-    fig, ax = plot_2D_dist(x=f_GW, y=asd, weights=weights, fig=fig, ax=ax, show=False, **kwargs)
-    ax.set_ylim(ylims)
-
-    if show:
-        plt.show()
-
-    return fig, ax
-
-
-def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
-                                instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
-                                confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
-    """Overlay eccentric/stationary sources on the LISA sensitivity curve.
+def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
+                       instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
+                       confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
+    """Overlay *stationary* sources on the LISA sensitivity curve.
 
     Each source is plotted at its max snr harmonic frequency such that that its height above the curve is
-    equal to it signal-to-noise ratio.
+    equal to it signal-to-noise ratio. For circular sources this is frequency is simply twice the orbital
+    frequency.
 
     Parameters
     ----------
     f_dom : `float/array`
-        Dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic with the maximum snr)
+        Dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic with the maximum snr). You may
+        find the :meth:`legwork.source.Source.max_snr_harmonic` attribute useful (which gets populated) after
+        :meth:`legwork.source.Source.get_snr`.
 
     snr : `float/array`
         Signal-to-noise ratio
