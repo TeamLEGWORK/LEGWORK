@@ -23,7 +23,7 @@ __all__ = ['plot_1D_dist', 'plot_2D_dist', 'plot_sensitivity_curve',
 
 
 def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax=None, show=True,
-                 xlabel=None, ylabel=None, xlim=None, ylim=None, color=None, **kwargs):
+                 figsize=(10, 7), xlabel=None, ylabel=None, xlim=None, ylim=None, color=None, **kwargs):
     """Plot a 1D distribution of ``x``.
 
     This function is a wrapper for :func:`matplotlib.pyplot.hist`, :func:`seaborn.kdeplot`
@@ -51,6 +51,9 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
 
     show : `boolean`
         Whether to immediately show the plot or only return the Figure and Axis
+
+    figsize : `tuple`
+        Tuple with size for the x- and y-axis if creating a new figure (i.e. ignored when fig/ax is not None)
 
     xlabel : `string`
         Label for the x axis, passed to Axes.set_xlabel()
@@ -90,7 +93,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
     """
     # create new figure and axes is either weren't provided
     if fig is None or ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
 
     # change default kwargs for matplotlib.hist
     hist_args = {"bins": "fd", "density": True}
@@ -145,7 +148,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
     return fig, ax
 
 
-def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show=True,
+def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show=True, figsize=(12, 7),
                  xlabel=None, ylabel=None, xlim=None, ylim=None, log_scale=False,
                  color=None, scatter_s=20, **kwargs):
     """Plot a 2D distribution of `x` and `y`
@@ -174,6 +177,9 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show
 
     show : `boolean`
         Whether to immediately show the plot or only return the Figure and Axis
+
+    figsize : `tuple`
+        Tuple with size for the x- and y-axis if creating a new figure (i.e. ignored when fig/ax is not None)
 
     xlabel : `string`
         Label for the x axis, passed to Axes.set_xlabel()
@@ -217,7 +223,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show
     """
     # create new figure and axes is either weren't provided
     if fig is None or ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
 
     # change default kwargs for matplotlib.scatter
     scatter_args = {}
