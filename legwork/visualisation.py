@@ -22,9 +22,9 @@ __all__ = ['plot_1D_dist', 'plot_2D_dist', 'plot_sensitivity_curve',
            'plot_sources_on_sc_circ_stat', 'plot_sources_on_sc_ecc_stat']
 
 
-def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=None, ylabel=None,
-                 xlim=None, ylim=None, color=None, show=True, **kwargs):
-    """plot a 1D distribution of ``x``.
+def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax=None, show=True,
+                 xlabel=None, ylabel=None, xlim=None, ylim=None, color=None, **kwargs):
+    """Plot a 1D distribution of ``x``.
 
     This function is a wrapper for :func:`matplotlib.pyplot.hist`, :func:`seaborn.kdeplot`
     and :func:`seaborn.ecdfplot`.
@@ -40,11 +40,17 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     disttype : `{{ "hist", "kde", "ecdf" }}`
         Which type of distribution plot to use
 
+    log_scale : `bool`
+        Whether to use a log scale for ``x``
+
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
 
     ax: `matplotlib Axis`
         An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
+
+    show : `boolean`
+        Whether to immediately show the plot or only return the Figure and Axis
 
     xlabel : `string`
         Label for the x axis, passed to Axes.set_xlabel()
@@ -61,9 +67,6 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     color : `string or tuple`
         Colour to use for the plot, see https://matplotlib.org/tutorials/colors/colors.html for details on
         how to specify a colour
-
-    show : `boolean`
-        Whether to immediately show the plot or only return the Figure and Axis
 
     **kwargs : `(if disttype=="hist")`
         Include values for any of `bins, range, density, cumulative, bottom, histtype, align, orientation,
@@ -90,7 +93,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
         fig, ax = plt.subplots()
 
     # change default kwargs for matplotlib.hist
-    hist_args = {"bins": "auto", "density": True}
+    hist_args = {"bins": "fd", "density": True}
 
     # change default kwargs for seaborn.kdeplot
     kde_args = {"gridsize": 200, "legend": True}
@@ -108,11 +111,19 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     # create whichever plot was requested
     with quantity_support():
         if disttype == "hist":
+            if log_scale:
+                # remove units before taking a log!
+                if isinstance(x, u.quantity.Quantity):
+                    x = x.value
+
+                # apply log to variable and limits
+                x = np.log10(x)
+                xlim = np.log10(xlim)
             ax.hist(x, weights=weights, color=color, **plot_args)
         elif disttype == "kde":
-            sns.kdeplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
+            sns.kdeplot(x=x, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
         elif disttype == "ecdf":
-            sns.ecdfplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
+            sns.ecdfplot(x=x, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
 
     # update axis labels
     if xlabel is not None:
