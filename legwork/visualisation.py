@@ -282,7 +282,8 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show
 
 
 def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=None, show=True,
-                           color="#18068b", fill=True, alpha=0.2, linewidth=1, label=None, **kwargs):
+                           figsize=(10, 7), color="#18068b", fill=True, alpha=0.2, linewidth=1, label=None,
+                           **kwargs):
     """Plot the LISA sensitivity curve
 
     Parameters
@@ -301,6 +302,9 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
     show : `boolean`
         Whether to immediately show the plot or only return the Figure and Axis
+
+    figsize : `tuple`
+        Tuple with size for the x- and y-axis if creating a new figure (i.e. ignored when fig/ax is not None)
 
     color : `string or tuple`
         Colour to use for the curve, see https://matplotlib.org/tutorials/colors/colors.html for details on
@@ -334,7 +338,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
         frequency_range = np.logspace(-5, 0, 1000) * u.Hz
 
     if fig is None or ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
 
     # work out what the noise amplitude should be
     PSD = psd.power_spectral_density(f=frequency_range, **kwargs)
