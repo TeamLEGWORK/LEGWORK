@@ -1161,6 +1161,7 @@ class VerificationBinaries(Source):
                          f_orb=vbs["f_GW"].to(u.Hz) / 2, ecc=np.zeros(len(vbs["m_1"])),
                          position=position, inclination=vbs["i"], interpolate_g=False)
 
-        # also assign the labels and SNR
+        # also assign the labels, SNR and max snr harmonics
         self.labels = vbs["label"]
         self.true_snr = np.array(vbs["snr"])
+        self.max_snr_harmonic = np.repeat(2, self.n_sources).astype(int)
