@@ -1029,9 +1029,9 @@ class Source():
         # create the y label if it wasn't provided and ystr was
         if ystr is not None and "ylabel" not in kwargs.keys():
             if ystr in unitless:
-                kwargs["ylabel"] = labels[ystr]
+                kwargs["ylabel"] = labels[ystr] + ", " + latex_labels[ystr]
             else:
-                kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr], y.unit)
+                kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr] + ", " + latex_labels[ystr], y.unit)
         elif "ylabel" not in kwargs.keys():
             if log_scale[0]:
                 kwargs["ylabel"] = r"$\mathrm{d}N/\mathrm{d}(\log_{10}($" + latex_labels[xstr] + "))"
