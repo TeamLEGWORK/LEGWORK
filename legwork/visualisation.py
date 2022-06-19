@@ -227,6 +227,10 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show
     if fig is None or ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 
+    # expand log_scale
+    if isinstance(log_scale, bool):
+        log_scale = (log_scale, log_scale)
+
     # change default kwargs for matplotlib.scatter
     scatter_args = {}
 
@@ -250,15 +254,10 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show
             ax.scatter(x, y, s=scatter_s, color=color, **plot_args)
 
             # apply log scaling to the respective axes
-            if isinstance(log_scale, bool):
-                if log_scale:
-                    ax.set_xscale("log")
-                    ax.set_yscale("log")
-            else:
-                if log_scale[0]:
-                    ax.set_xscale("log")
-                if log_scale[1]:
-                    ax.set_yscale("log")
+            if log_scale[0]:
+                ax.set_xscale("log")
+            if log_scale[1]:
+                ax.set_yscale("log")
         elif disttype == "kde":
             sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
 
