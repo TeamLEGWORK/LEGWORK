@@ -41,7 +41,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
         Which type of distribution plot to use
 
     log_scale : `bool`
-        Whether to use a log scale for ``x``
+        Whether to plot `log10(x)` instead of `x`
 
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
@@ -119,9 +119,8 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
                 if isinstance(x, u.quantity.Quantity):
                     x = x.value
 
-                # apply log to variable and limits
+                # apply log to variable
                 x = np.log10(x)
-                xlim = np.log10(xlim)
             ax.hist(x, weights=weights, color=color, **plot_args)
         elif disttype == "kde":
             sns.kdeplot(x=x, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
@@ -136,7 +135,10 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
 
     # update axis limits
     if xlim is not None:
-        ax.set_xlim(xlim)
+        if disttype == "hist" and log_scale:
+            ax.set_xlim(np.log10(xlim))
+        else:
+            ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
 
