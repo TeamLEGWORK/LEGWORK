@@ -145,9 +145,9 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
     return fig, ax
 
 
-def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None, ax=None,
-                 xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
-                 show=True, **kwargs):
+def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show=True,
+                 xlabel=None, ylabel=None, xlim=None, ylim=None, log_scale=False,
+                 color=None, scatter_s=20, **kwargs):
     """Plot a 2D distribution of `x` and `y`
 
     This function is a wrapper for :func:`matplotlib.pyplot.scatter` and :func:`seaborn.kdeplot`.
@@ -166,14 +166,14 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
     disttype : `{{ "scatter", "kde" }}`
         Which type of distribution plot to use
 
-    scatter_s : `float`, default=20
-        Scatter point size, passed as ``s`` to a scatter plot and ignored for a KDE
-
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
 
     ax: `matplotlib Axis`
         An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
+
+    show : `boolean`
+        Whether to immediately show the plot or only return the Figure and Axis
 
     xlabel : `string`
         Label for the x axis, passed to Axes.set_xlabel()
@@ -187,12 +187,16 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
     ylim : `tuple`
         Lower and upper limits for the u axis, passed to Axes.set_ylim()
 
+    log_scale : `bool or tuple of bools`
+        Whether to use a log scale for the axes. A single `bool` is applied to both axes, a tuple is applied
+        to the x- and y-axis respectively.
+
+    scatter_s : `float`, default=20
+        Scatter point size, passed as ``s`` to a scatter plot and ignored for a KDE
+
     color : `string or tuple`
         Colour to use for the plot, see https://matplotlib.org/tutorials/colors/colors.html for details on how
         to specify a colour
-
-    show : `boolean`
-        Whether to immediately show the plot or only return the Figure and Axis
 
     **kwargs : `(if disttype=="scatter")`
         Input any of `s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths, edgecolors` or more.
@@ -236,8 +240,19 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
                 scatter_s = weights * scatter_s
 
             ax.scatter(x, y, s=scatter_s, color=color, **plot_args)
+
+            # apply log scaling to the respective axes
+            if isinstance(log_scale, bool):
+                if log_scale:
+                    ax.set_xscale("log")
+                    ax.set_yscale("log")
+            else:
+                if log_scale[0]:
+                    ax.set_xscale("log")
+                if log_scale[1]:
+                    ax.set_yscale("log")
         elif disttype == "kde":
-            sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
+            sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
 
     # update axis labels
     if xlabel is not None:
