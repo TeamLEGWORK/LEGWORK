@@ -932,7 +932,7 @@ class Source():
                 self.t_merge = np.maximum(0 * u.Gyr, self.t_merge - t_evol)
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
-                              exclude_merged_sources=True, **kwargs):  # pragma: no cover
+                              exclude_merged_sources=True, log_scale=False, **kwargs):  # pragma: no cover
         """Plot distributions of Source variables. If two variables are specified then produce a 2D
         distribution, otherwise a 1D distribution.
 
@@ -950,6 +950,11 @@ class Source():
         exclude_merged_sources : `boolean`
             Whether to exclude merged sources in distributions (default is
             True)
+
+        log_scale : `bool or tuple of bools`
+            Whether to use a log scale for the axes. For a 1D plot, only a bool can be supplied and it applies
+            to the x-axis. For a 2D plot, a single `bool` is applied to both axes, a tuple is applied to the
+            x- and y-axis respectively.
 
         **kwargs : `various`
             When only ``xstr`` is provided, the kwargs are the same as
@@ -973,6 +978,9 @@ class Source():
         labels = {"m_1": "Primary Mass", "m_2": "Secondary Mass", "m_c": "Chirp Mass", "ecc": "Eccentricity",
                   "dist": "Distance", "f_orb": "Orbital Frequency", "f_GW": "Gravitational Wave Frequency",
                   "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
+        latex_labels = {"m_1": r"$m_1$", "m_2": r"$m_2$", "m_c": r"$\mathcal{M}_c$", "ecc": r"$e$",
+                        "dist": r"$D$", "f_orb": r"$f_{\rm orb}$", "f_GW": r"$f_{\rm GW}$",
+                        "a": r"$a$", "snr": r"$\rho$"}
         unitless = set(["ecc", "snr"])
 
         if which_sources is None:
@@ -997,12 +1005,26 @@ class Source():
             if y is None:
                 raise ValueError("y variable (`{}`)".format(ystr), "must be not be None")
 
+        # expand log_scale into tuple if necessary and set in kwargs
+        kwargs["log_scale"] = log_scale
+        if isinstance(log_scale, bool):
+            log_scale = (log_scale, log_scale)
+
         # create the x label if it wasn't provided
         if "xlabel" not in kwargs.keys():
-            if xstr in unitless:
-                kwargs["xlabel"] = labels[xstr]
+            kwargs["xlabel"] = labels[xstr]
+            disttype = "hist" if "disttype" not in kwargs.keys() else kwargs["disttype"]
+            if log_scale[0] and disttype == "hist" and ystr is None:
+                if xstr in unitless:
+                    kwargs["xlabel"] += r", $\log_{10} ($" + latex_labels[xstr] + ")"
+                else:
+                    kwargs["xlabel"] += r", $\log_{10} ($" + r"{} / {:latex})".format(latex_labels[xstr],
+                                                                                      x.unit)
             else:
-                kwargs["xlabel"] = r"{} [{:latex}]".format(labels[xstr], x.unit)
+                if xstr in unitless:
+                    kwargs["xlabel"] += ", " + latex_labels[xstr]
+                else:
+                    kwargs["xlabel"] += ", " + latex_labels[xstr] + r" [{:latex}]".format(x.unit)
 
         # create the y label if it wasn't provided and ystr was
         if ystr is not None and "ylabel" not in kwargs.keys():
@@ -1010,6 +1032,11 @@ class Source():
                 kwargs["ylabel"] = labels[ystr]
             else:
                 kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr], y.unit)
+        elif "ylabel" not in kwargs.keys():
+            if log_scale[0]:
+                kwargs["ylabel"] = r"$\mathrm{d}N/\mathrm{d}(\log_{10}($" + latex_labels[xstr] + "))"
+            else:
+                kwargs["ylabel"] = r"$\mathrm{d}N/\mathrm{d}$" + latex_labels[xstr]
 
         # work out what the weights are
         weights = self.weights[which_sources] if self.weights is not None else None
