@@ -1,6 +1,6 @@
 <p align="center">
     <img width="500", src="https://raw.githubusercontent.com/TeamLEGWORK/LEGWORK/main/docs/images/legwork.png#gh-light-mode-only">
-    <img width="500", src="https://raw.githubusercontent.com/TeamLEGWORK/LEGWORK/main/docs/images/legwork.png#gh-dark-mode-only">
+    <img width="500", src="https://raw.githubusercontent.com/TeamLEGWORK/LEGWORK/main/docs/images/legwork-darkmode.png#gh-dark-mode-only">
 </p>
 
 <h2 align="center">
