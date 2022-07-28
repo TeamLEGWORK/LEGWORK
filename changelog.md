@@ -134,3 +134,7 @@ helping us to notice this!
 - Bug fix: snr class variable was not updated when sources have merged
 - Non-averaged SNR calculations are only applicable for circular/stationary sources so removed option for other sources
 - Amplitude modulation for non-averaged SNR changed to match Babak+21 *this significantly changes the SNR of sources with specific positions/polarisations/inclinations*
+
+## 0.4.2
+*TW 27/077/22*
+- [Issues [#101](https://github.com/TeamLEGWORK/LEGWORK/issues/101)] Unhide cells that change plot styles in demos so no errors are thrown
