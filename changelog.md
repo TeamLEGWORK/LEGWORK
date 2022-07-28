@@ -134,3 +134,10 @@ helping us to notice this!
 - Bug fix: snr class variable was not updated when sources have merged
 - Non-averaged SNR calculations are only applicable for circular/stationary sources so removed option for other sources
 - Amplitude modulation for non-averaged SNR changed to match Babak+21 *this significantly changes the SNR of sources with specific positions/polarisations/inclinations*
+
+## 0.4.3
+*TW 27/06/22*
+- [Issues [#102](https://github.com/TeamLEGWORK/LEGWORK/issues/102)] Make SNR functions notice when you change confusion noise
+    - `Source.get_snr()` now takes all `sc_params` as arguments for re-interpolation etc
+    - `Source.get_snr_stationary` and `Source.get_snr_evolving` have the same parameters added as above
+    - All functions in `snr` now take `**kwargs` that are passed directly to `psd.power_spectral_density` for maximum flexibility 
