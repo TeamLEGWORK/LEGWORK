@@ -9,7 +9,7 @@ __all__ = ['snr_circ_stationary', 'snr_ecc_stationary',
 
 
 def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=None, inclination=None,
-                        interpolated_g=None, interpolated_sc=None, instrument="LISA", custom_psd=None):
+                        interpolated_g=None, interpolated_sc=None, **kwargs):
     """Computes SNR for circular and stationary sources
 
     Parameters
@@ -45,12 +45,9 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
         Default is None and uses exact values. Note: take care to ensure that your interpolated function has
         the same LISA observation time as ``t_obs`` and uses the same instrument.
 
-    instrument : `{{ 'LISA', 'TianQin', 'custom' }}`
-        Instrument to observe with. If 'custom' then ``custom_psd`` must be supplied.
-
-    custom_psd : `function`
-        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
-        even if it ignores some.
+    **kwargs : `various`
+        Keyword args are passed to :meth:`legwork.psd.power_spectral_density`, see those docs for details on
+        possible arguments.
 
     Returns
     -------
@@ -67,8 +64,7 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
     if interpolated_sc is not None:
         h_f_lisa_2 = interpolated_sc(2 * f_orb)
     else:
-        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs, instrument=instrument,
-                                                custom_psd=custom_psd)
+        h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb, t_obs=t_obs, **kwargs)
     snr = (h_f_src_circ_2 / h_f_lisa_2)**0.5
 
     return snr.decompose().value
