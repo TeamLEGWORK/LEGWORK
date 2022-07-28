@@ -637,7 +637,7 @@ class Source():
         return snr
 
     def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
-                           confusion_noise=None, which_sources=None, verbose=False):
+                           confusion_noise=None, re_interpolate_sc=True, which_sources=None, verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Parameters
@@ -665,6 +665,10 @@ class Source():
             confusion noise at each frequency for a given mission length where it would be called by running
             `noise(f, t_obs)` and return a value with units of inverse Hertz
 
+        re_interpolate_sc : `boolean`
+            Whether to re-interpolate the sensitivity curve if the observation time or instrument
+            changes. If False, warning will instead be given
+
         which_sources : `bool/array`
             Mask on which sources to consider stationary and calculate (default is all sources in Class)
 
@@ -687,6 +691,34 @@ class Source():
         L = self._sc_params["L"] if L is None else L
         approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
         confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
+
+        # if the user interpolated a sensitivity curve with different settings
+        if (self.interpolate_sc and self._sc_params is not None
+                and (t_obs != self._sc_params["t_obs"]
+                     or instrument != self._sc_params["instrument"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or L != self._sc_params["L"]
+                     or approximate_R != self._sc_params["approximate_R"]
+                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
+
+            # re interpolate the sensitivity curve with new parameters
+            if re_interpolate_sc:
+                self._sc_params["t_obs"] = t_obs
+                self._sc_params["instrument"] = instrument
+                self._sc_params["custom_psd"] = custom_psd
+                self._sc_params["L"] = L
+                self._sc_params["approximate_R"] = approximate_R
+                self._sc_params["confusion_noise"] = confusion_noise
+
+                self.set_sc()
+
+            # otherwise warn the user that they are making a mistake
+            else:
+                print("WARNING: Current `sc_params` are different from what was passed to this function.",
+                      "Either set `re_interpolate_sc=True` to re-interpolate the sensitivity curve on the",
+                      "fly or update your `sc_params` with Source.update_sc_params() to make sure your",
+                      "interpolated curve matches")
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
@@ -750,7 +782,8 @@ class Source():
         return snr[which_sources]
 
     def get_snr_evolving(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
-                         confusion_noise=None, n_step=100, which_sources=None, verbose=False):
+                         confusion_noise=None, re_interpolate_sc=True, n_step=100, which_sources=None,
+                         verbose=False):
         """Computes the SNR assuming an evolving binary
 
         Parameters
@@ -777,6 +810,10 @@ class Source():
             `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
             confusion noise at each frequency for a given mission length where it would be called by running
             `noise(f, t_obs)` and return a value with units of inverse Hertz
+
+        re_interpolate_sc : `boolean`
+            Whether to re-interpolate the sensitivity curve if the observation time or instrument
+            changes. If False, warning will instead be given
 
         n_step : `int`
             Number of time steps during observation duration
@@ -805,6 +842,34 @@ class Source():
         L = self._sc_params["L"] if L is None else L
         approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
         confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
+
+        # if the user interpolated a sensitivity curve with different settings
+        if (self.interpolate_sc and self._sc_params is not None
+                and (t_obs != self._sc_params["t_obs"]
+                     or instrument != self._sc_params["instrument"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or L != self._sc_params["L"]
+                     or approximate_R != self._sc_params["approximate_R"]
+                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
+
+            # re interpolate the sensitivity curve with new parameters
+            if re_interpolate_sc:
+                self._sc_params["t_obs"] = t_obs
+                self._sc_params["instrument"] = instrument
+                self._sc_params["custom_psd"] = custom_psd
+                self._sc_params["L"] = L
+                self._sc_params["approximate_R"] = approximate_R
+                self._sc_params["confusion_noise"] = confusion_noise
+
+                self.set_sc()
+
+            # otherwise warn the user that they are making a mistake
+            else:
+                print("WARNING: Current `sc_params` are different from what was passed to this function.",
+                      "Either set `re_interpolate_sc=True` to re-interpolate the sensitivity curve on the",
+                      "fly or update your `sc_params` with Source.update_sc_params() to make sure your",
+                      "interpolated curve matches")
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
