@@ -746,6 +746,9 @@ class Source():
                                                  interpolated_sc=self.sc,
                                                  instrument=instrument,
                                                  custom_psd=custom_psd,
+                                                 L=L,
+                                                 approximate_R=approximate_R,
+                                                 confusion_noise=confusion_noise,
                                                  position=position,
                                                  polarisation=polarisation,
                                                  inclination=inclination)
@@ -769,7 +772,10 @@ class Source():
                                                                    interpolated_sc=self.sc,
                                                                    ret_max_snr_harmonic=True,
                                                                    instrument=instrument,
-                                                                   custom_psd=custom_psd)
+                                                                   custom_psd=custom_psd,
+                                                                   L=L,
+                                                                   approximate_R=approximate_R,
+                                                                   confusion_noise=confusion_noise,)
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
@@ -892,7 +898,10 @@ class Source():
                                                interpolated_g=self.g,
                                                interpolated_sc=self.sc,
                                                instrument=instrument,
-                                               custom_psd=custom_psd)
+                                               custom_psd=custom_psd,
+                                               L=L,
+                                               approximate_R=approximate_R,
+                                               confusion_noise=confusion_noise,)
         if e_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(len(snr[e_mask])))
@@ -917,7 +926,10 @@ class Source():
                                                                  n_proc=self.n_proc,
                                                                  ret_max_snr_harmonic=True,
                                                                  instrument=instrument,
-                                                                 custom_psd=custom_psd)
+                                                                 custom_psd=custom_psd,
+                                                                 L=L,
+                                                                 approximate_R=approximate_R,
+                                                                 confusion_noise=confusion_noise)
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
