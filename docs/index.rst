@@ -34,4 +34,5 @@ Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK d
     Derivations <notebooks/Derivations.ipynb>
     Limitations and Scope <limitations>
     GitHub <https://github.com/TeamLEGWORK/LEGWORK>
-    Submit an issue <https://github.com/TeamLEGWORK/LEGWORK/issues/new>
+    Submit an issue <https://github.com/TeamLEGWORK/LEGWORK/issues/new/choose>
+    LEGWORK Paper <https://raw.githubusercontent.com/TeamLEGWORK/LEGWORK-paper/main-pdf/ms.pdf>
