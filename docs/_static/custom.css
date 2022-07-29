@@ -73,3 +73,19 @@ a.copybtn > img {
 .o-tooltip--left:hover:after {
     transition-delay: 0.2s;
 }
+
+
+/* Hack the table of contents to have extra padding and a line */
+.wy-menu > ul:nth-last-child(2) {
+    margin-bottom: 0.3em;
+}
+.wy-menu > ul:last-child {
+    margin-top: 0.3em;
+}
+.wy-menu > ul:last-child::before {
+    content: "";
+    border-top: 1px solid #484848;
+    width: 100%;
+    display: block;
+    padding-bottom: 0.3em;
+}
