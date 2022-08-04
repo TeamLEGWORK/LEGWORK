@@ -135,6 +135,19 @@ helping us to notice this!
 - Non-averaged SNR calculations are only applicable for circular/stationary sources so removed option for other sources
 - Amplitude modulation for non-averaged SNR changed to match Babak+21 *this significantly changes the SNR of sources with specific positions/polarisations/inclinations*
 
+## 0.4.1
+- [Issue [#98](https://github.com/TeamLEGWORK/LEGWORK/issues/98)] `log_scale` can now be used throughout plots
+    - This additionally changes what the x and y labels are set to in `Source.plot_source_variables` :D
+- [Issue [#99](https://github.com/TeamLEGWORK/LEGWORK/issues/99)] `y_label` now automatically worked out for
+1D plots from `Source.plot_source_variables`
+- Replaced two functions `visualisation.plot_sources_on_sc_circ_stat` and `visualisation.plot_sources_on_sc_ecc_stat` with a simpler `visualisation.plot_sources_on_sc` since there was no point in
+having two when we could just set `f_dom=2 f_orb`
+- Fix demos to account for recent changes
+
+## 0.4.2
+*TW 27/07/22*
+- [Issues [#101](https://github.com/TeamLEGWORK/LEGWORK/issues/101)] Unhide cells that change plot styles in demos so no errors are thrown
+
 ## 0.4.3
 *TW 27/06/22*
 - [Issues [#102](https://github.com/TeamLEGWORK/LEGWORK/issues/102)] Make SNR functions notice when you change confusion noise
