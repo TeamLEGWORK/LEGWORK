@@ -145,5 +145,12 @@ having two when we could just set `f_dom=2 f_orb`
 - Fix demos to account for recent changes
 
 ## 0.4.2
-*TW 27/077/22*
+*TW 27/07/22*
 - [Issues [#101](https://github.com/TeamLEGWORK/LEGWORK/issues/101)] Unhide cells that change plot styles in demos so no errors are thrown
+
+## 0.4.3
+*TW 27/06/22*
+- [Issues [#102](https://github.com/TeamLEGWORK/LEGWORK/issues/102)] Make SNR functions notice when you change confusion noise
+    - `Source.get_snr()` now takes all `sc_params` as arguments for re-interpolation etc
+    - `Source.get_snr_stationary` and `Source.get_snr_evolving` have the same parameters added as above
+    - All functions in `snr` now take `**kwargs` that are passed directly to `psd.power_spectral_density` for maximum flexibility 

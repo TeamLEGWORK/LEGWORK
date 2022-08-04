@@ -501,8 +501,8 @@ class Source():
         # return all sources, not just inpsiralling ones
         return h_c_n[which_sources, :]
 
-    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, n_step=100,
-                verbose=False, re_interpolate_sc=True, which_sources=None):
+    def get_snr(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
+                confusion_noise=None, n_step=100, verbose=False, re_interpolate_sc=True, which_sources=None):
         """Computes the SNR for a generic binary. Also records the harmonic with maximum SNR for each
         binary in ``self.max_snr_harmonic``.
 
@@ -518,6 +518,19 @@ class Source():
         custom_psd : `function`
             Custom function for computing the PSD. Must take the same arguments as
             :meth:`legwork.psd.lisa_psd` even if it ignores some. (default: function from sc_params)
+
+        L : `float`
+            LISA arm length in metres
+
+        approximate_R : `boolean`
+            Whether to approximate the response function (default: no)
+
+        confusion_noise : `various`
+            Galactic confusion noise. Acceptable inputs are either one of the values listed in
+            :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
+            `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+            confusion noise at each frequency for a given mission length where it would be called by running
+            `noise(f, t_obs)` and return a value with units of inverse Hertz
 
         n_step : `int`
             Number of time steps during observation duration
@@ -541,18 +554,28 @@ class Source():
         t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
         instrument = self._sc_params["instrument"] if instrument is None else instrument
         custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
+        L = self._sc_params["L"] if L is None else L
+        approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
+        confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
 
         # if the user interpolated a sensitivity curve with different settings
         if (self.interpolate_sc and self._sc_params is not None
                 and (t_obs != self._sc_params["t_obs"]
                      or instrument != self._sc_params["instrument"]
-                     or custom_psd != self._sc_params["custom_psd"])):  # pragma: no cover
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or L != self._sc_params["L"]
+                     or approximate_R != self._sc_params["approximate_R"]
+                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
 
             # re interpolate the sensitivity curve with new parameters
             if re_interpolate_sc:
                 self._sc_params["t_obs"] = t_obs
                 self._sc_params["instrument"] = instrument
                 self._sc_params["custom_psd"] = custom_psd
+                self._sc_params["L"] = L
+                self._sc_params["approximate_R"] = approximate_R
+                self._sc_params["confusion_noise"] = confusion_noise
 
                 self.set_sc()
 
@@ -592,6 +615,9 @@ class Source():
             snr[stat_mask] = self.get_snr_stationary(t_obs=t_obs,
                                                      instrument=instrument,
                                                      custom_psd=custom_psd,
+                                                     L=L,
+                                                     approximate_R=approximate_R,
+                                                     confusion_noise=confusion_noise,
                                                      which_sources=stat_mask,
                                                      verbose=verbose)
         if evol_mask.any():
@@ -601,14 +627,17 @@ class Source():
             snr[evol_mask] = self.get_snr_evolving(t_obs=t_obs,
                                                    instrument=instrument,
                                                    custom_psd=custom_psd,
+                                                   L=L,
+                                                   approximate_R=approximate_R,
+                                                   confusion_noise=confusion_noise,
                                                    which_sources=evol_mask,
                                                    n_step=n_step,
                                                    verbose=verbose)
         self.snr = snr
         return snr
 
-    def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, which_sources=None,
-                           verbose=False):
+    def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
+                           confusion_noise=None, re_interpolate_sc=True, which_sources=None, verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Parameters
@@ -622,6 +651,23 @@ class Source():
         custom_psd : `function`
             Custom function for computing the PSD. Must take the same arguments as
             :meth:`legwork.psd.lisa_psd` even if it ignores some.
+
+        L : `float`
+            LISA arm length in metres
+
+        approximate_R : `boolean`
+            Whether to approximate the response function (default: no)
+
+        confusion_noise : `various`
+            Galactic confusion noise. Acceptable inputs are either one of the values listed in
+            :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
+            `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+            confusion noise at each frequency for a given mission length where it would be called by running
+            `noise(f, t_obs)` and return a value with units of inverse Hertz
+
+        re_interpolate_sc : `boolean`
+            Whether to re-interpolate the sensitivity curve if the observation time or instrument
+            changes. If False, warning will instead be given
 
         which_sources : `bool/array`
             Mask on which sources to consider stationary and calculate (default is all sources in Class)
@@ -641,6 +687,38 @@ class Source():
         t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
         if t_obs == "auto":
             t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
+        custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
+        L = self._sc_params["L"] if L is None else L
+        approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
+        confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
+
+        # if the user interpolated a sensitivity curve with different settings
+        if (self.interpolate_sc and self._sc_params is not None
+                and (t_obs != self._sc_params["t_obs"]
+                     or instrument != self._sc_params["instrument"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or L != self._sc_params["L"]
+                     or approximate_R != self._sc_params["approximate_R"]
+                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
+
+            # re interpolate the sensitivity curve with new parameters
+            if re_interpolate_sc:
+                self._sc_params["t_obs"] = t_obs
+                self._sc_params["instrument"] = instrument
+                self._sc_params["custom_psd"] = custom_psd
+                self._sc_params["L"] = L
+                self._sc_params["approximate_R"] = approximate_R
+                self._sc_params["confusion_noise"] = confusion_noise
+
+                self.set_sc()
+
+            # otherwise warn the user that they are making a mistake
+            else:
+                print("WARNING: Current `sc_params` are different from what was passed to this function.",
+                      "Either set `re_interpolate_sc=True` to re-interpolate the sensitivity curve on the",
+                      "fly or update your `sc_params` with Source.update_sc_params() to make sure your",
+                      "interpolated curve matches")
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
@@ -668,6 +746,9 @@ class Source():
                                                  interpolated_sc=self.sc,
                                                  instrument=instrument,
                                                  custom_psd=custom_psd,
+                                                 L=L,
+                                                 approximate_R=approximate_R,
+                                                 confusion_noise=confusion_noise,
                                                  position=position,
                                                  polarisation=polarisation,
                                                  inclination=inclination)
@@ -691,7 +772,10 @@ class Source():
                                                                    interpolated_sc=self.sc,
                                                                    ret_max_snr_harmonic=True,
                                                                    instrument=instrument,
-                                                                   custom_psd=custom_psd)
+                                                                   custom_psd=custom_psd,
+                                                                   L=L,
+                                                                   approximate_R=approximate_R,
+                                                                   confusion_noise=confusion_noise,)
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
@@ -703,7 +787,8 @@ class Source():
 
         return snr[which_sources]
 
-    def get_snr_evolving(self, t_obs=None, instrument=None, custom_psd=None, n_step=100, which_sources=None,
+    def get_snr_evolving(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
+                         confusion_noise=None, re_interpolate_sc=True, n_step=100, which_sources=None,
                          verbose=False):
         """Computes the SNR assuming an evolving binary
 
@@ -718,6 +803,23 @@ class Source():
         custom_psd : `function`
             Custom function for computing the PSD. Must take the same arguments as
             :meth:`legwork.psd.lisa_psd` even if it ignores some.
+
+        L : `float`
+            LISA arm length in metres
+
+        approximate_R : `boolean`
+            Whether to approximate the response function (default: no)
+
+        confusion_noise : `various`
+            Galactic confusion noise. Acceptable inputs are either one of the values listed in
+            :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
+            `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+            confusion noise at each frequency for a given mission length where it would be called by running
+            `noise(f, t_obs)` and return a value with units of inverse Hertz
+
+        re_interpolate_sc : `boolean`
+            Whether to re-interpolate the sensitivity curve if the observation time or instrument
+            changes. If False, warning will instead be given
 
         n_step : `int`
             Number of time steps during observation duration
@@ -742,6 +844,38 @@ class Source():
         t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
         if t_obs == "auto":
             t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
+        custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
+        L = self._sc_params["L"] if L is None else L
+        approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
+        confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
+
+        # if the user interpolated a sensitivity curve with different settings
+        if (self.interpolate_sc and self._sc_params is not None
+                and (t_obs != self._sc_params["t_obs"]
+                     or instrument != self._sc_params["instrument"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or custom_psd != self._sc_params["custom_psd"]
+                     or L != self._sc_params["L"]
+                     or approximate_R != self._sc_params["approximate_R"]
+                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
+
+            # re interpolate the sensitivity curve with new parameters
+            if re_interpolate_sc:
+                self._sc_params["t_obs"] = t_obs
+                self._sc_params["instrument"] = instrument
+                self._sc_params["custom_psd"] = custom_psd
+                self._sc_params["L"] = L
+                self._sc_params["approximate_R"] = approximate_R
+                self._sc_params["confusion_noise"] = confusion_noise
+
+                self.set_sc()
+
+            # otherwise warn the user that they are making a mistake
+            else:
+                print("WARNING: Current `sc_params` are different from what was passed to this function.",
+                      "Either set `re_interpolate_sc=True` to re-interpolate the sensitivity curve on the",
+                      "fly or update your `sc_params` with Source.update_sc_params() to make sure your",
+                      "interpolated curve matches")
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
@@ -764,7 +898,10 @@ class Source():
                                                interpolated_g=self.g,
                                                interpolated_sc=self.sc,
                                                instrument=instrument,
-                                               custom_psd=custom_psd)
+                                               custom_psd=custom_psd,
+                                               L=L,
+                                               approximate_R=approximate_R,
+                                               confusion_noise=confusion_noise,)
         if e_mask.any():
             if verbose:
                 print("\t\t{} sources are evolving and eccentric".format(len(snr[e_mask])))
@@ -789,7 +926,10 @@ class Source():
                                                                  n_proc=self.n_proc,
                                                                  ret_max_snr_harmonic=True,
                                                                  instrument=instrument,
-                                                                 custom_psd=custom_psd)
+                                                                 custom_psd=custom_psd,
+                                                                 L=L,
+                                                                 approximate_R=approximate_R,
+                                                                 confusion_noise=confusion_noise)
 
         if self.max_snr_harmonic is None:
             self.max_snr_harmonic = np.zeros(self.n_sources).astype(int)
