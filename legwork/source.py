@@ -932,7 +932,7 @@ class Source():
                 self.t_merge = np.maximum(0 * u.Gyr, self.t_merge - t_evol)
 
     def plot_source_variables(self, xstr, ystr=None, which_sources=None,
-                              exclude_merged_sources=True, **kwargs):  # pragma: no cover
+                              exclude_merged_sources=True, log_scale=False, **kwargs):  # pragma: no cover
         """Plot distributions of Source variables. If two variables are specified then produce a 2D
         distribution, otherwise a 1D distribution.
 
@@ -950,6 +950,11 @@ class Source():
         exclude_merged_sources : `boolean`
             Whether to exclude merged sources in distributions (default is
             True)
+
+        log_scale : `bool or tuple of bools`
+            Whether to use a log scale for the axes. For a 1D plot, only a bool can be supplied and it applies
+            to the x-axis. For a 2D plot, a single `bool` is applied to both axes, a tuple is applied to the
+            x- and y-axis respectively.
 
         **kwargs : `various`
             When only ``xstr`` is provided, the kwargs are the same as
@@ -973,6 +978,9 @@ class Source():
         labels = {"m_1": "Primary Mass", "m_2": "Secondary Mass", "m_c": "Chirp Mass", "ecc": "Eccentricity",
                   "dist": "Distance", "f_orb": "Orbital Frequency", "f_GW": "Gravitational Wave Frequency",
                   "a": "Semi-major axis", "snr": "Signal-to-noise Ratio"}
+        latex_labels = {"m_1": r"$m_1$", "m_2": r"$m_2$", "m_c": r"$\mathcal{M}_c$", "ecc": r"$e$",
+                        "dist": r"$D$", "f_orb": r"$f_{\rm orb}$", "f_GW": r"$f_{\rm GW}$",
+                        "a": r"$a$", "snr": r"$\rho$"}
         unitless = set(["ecc", "snr"])
 
         if which_sources is None:
@@ -997,19 +1005,38 @@ class Source():
             if y is None:
                 raise ValueError("y variable (`{}`)".format(ystr), "must be not be None")
 
+        # expand log_scale into tuple if necessary and set in kwargs
+        kwargs["log_scale"] = log_scale
+        if isinstance(log_scale, bool):
+            log_scale = (log_scale, log_scale)
+
         # create the x label if it wasn't provided
         if "xlabel" not in kwargs.keys():
-            if xstr in unitless:
-                kwargs["xlabel"] = labels[xstr]
+            kwargs["xlabel"] = labels[xstr]
+            disttype = "hist" if "disttype" not in kwargs.keys() else kwargs["disttype"]
+            if log_scale[0] and disttype == "hist" and ystr is None:
+                if xstr in unitless:
+                    kwargs["xlabel"] += r", $\log_{10} ($" + latex_labels[xstr] + ")"
+                else:
+                    kwargs["xlabel"] += r", $\log_{10} ($" + r"{} / {:latex})".format(latex_labels[xstr],
+                                                                                      x.unit)
             else:
-                kwargs["xlabel"] = r"{} [{:latex}]".format(labels[xstr], x.unit)
+                if xstr in unitless:
+                    kwargs["xlabel"] += ", " + latex_labels[xstr]
+                else:
+                    kwargs["xlabel"] += ", " + latex_labels[xstr] + r" [{:latex}]".format(x.unit)
 
         # create the y label if it wasn't provided and ystr was
         if ystr is not None and "ylabel" not in kwargs.keys():
             if ystr in unitless:
-                kwargs["ylabel"] = labels[ystr]
+                kwargs["ylabel"] = labels[ystr] + ", " + latex_labels[ystr]
             else:
-                kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr], y.unit)
+                kwargs["ylabel"] = r"{} [{:latex}]".format(labels[ystr] + ", " + latex_labels[ystr], y.unit)
+        elif "ylabel" not in kwargs.keys():
+            if log_scale[0]:
+                kwargs["ylabel"] = r"$\mathrm{d}N/\mathrm{d}(\log_{10}($" + latex_labels[xstr] + "))"
+            else:
+                kwargs["ylabel"] = r"$\mathrm{d}N/\mathrm{d}$" + latex_labels[xstr]
 
         # work out what the weights are
         weights = self.weights[which_sources] if self.weights is not None else None
@@ -1020,7 +1047,8 @@ class Source():
         else:
             return vis.plot_1D_dist(x=x[which_sources], weights=weights, **kwargs)
 
-    def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True, **kwargs):  # pragma: no cover
+    def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True,
+                           label="Stationary sources", **kwargs):  # pragma: no cover
         """Plot all sources in the class on the sensitivity curve
 
         Parameters
@@ -1038,6 +1066,9 @@ class Source():
 
         show : `boolean`
             Whether to immediately show the plot
+
+        label : `str`
+            Label to use for the plotted points
 
         **kwargs : `various`
             Keyword arguments to be passed to plotting functions
@@ -1067,29 +1098,15 @@ class Source():
         detectable = self.snr > snr_cutoff
         inspiraling = np.logical_not(self.merged)
 
-        # plot circular and stationary sources
-        circ_stat = self.get_source_mask(circular=True, stationary=True)
-        circ_stat = np.logical_and.reduce((circ_stat, detectable, inspiraling))
-        if circ_stat.any():
-            f_orb = self.f_orb[circ_stat]
-            h_0_2 = self.get_h_0_n(2, which_sources=circ_stat).flatten()
-            weights = self.weights[circ_stat] if self.weights is not None else None
-            fig, ax = vis.plot_sources_on_sc_circ_stat(f_orb=f_orb, h_0_2=h_0_2, snr=self.snr[circ_stat],
-                                                       weights=weights, snr_cutoff=snr_cutoff,
-                                                       fig=fig, ax=ax, show=False,
-                                                       label="Circular/Stationary",
-                                                       **self._sc_params, **kwargs)
-
-        # plot eccentric and stationary sources
-        ecc_stat = self.get_source_mask(circular=False, stationary=True)
-        ecc_stat = np.logical_and.reduce((ecc_stat, detectable, inspiraling))
-        if ecc_stat.any():
-            f_dom = self.f_orb[ecc_stat] * self.max_snr_harmonic[ecc_stat]
-            weights = self.weights[ecc_stat] if self.weights is not None else None
-            fig, ax = vis.plot_sources_on_sc_ecc_stat(f_dom=f_dom, snr=self.snr[ecc_stat], weights=weights,
-                                                      snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
-                                                      label="Eccentric/Stationary",
-                                                      **self._sc_params, **kwargs)
+        # plot stationary sources
+        stat = self.get_source_mask(stationary=True)
+        stat = np.logical_and.reduce((stat, detectable, inspiraling))
+        if stat.any():
+            f_dom = self.f_orb[stat] * self.max_snr_harmonic[stat]
+            weights = self.weights[stat] if self.weights is not None else None
+            fig, ax = vis.plot_sources_on_sc(f_dom=f_dom, snr=self.snr[stat], weights=weights,
+                                             snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
+                                             label=label, **self._sc_params, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
@@ -1144,6 +1161,7 @@ class VerificationBinaries(Source):
                          f_orb=vbs["f_GW"].to(u.Hz) / 2, ecc=np.zeros(len(vbs["m_1"])),
                          position=position, inclination=vbs["i"], interpolate_g=False)
 
-        # also assign the labels and SNR
+        # also assign the labels, SNR and max snr harmonics
         self.labels = vbs["label"]
         self.true_snr = np.array(vbs["snr"])
+        self.max_snr_harmonic = np.repeat(2, self.n_sources).astype(int)

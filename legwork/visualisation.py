@@ -19,12 +19,12 @@ params = {'figure.figsize': (12, 8),
 plt.rcParams.update(params)
 
 __all__ = ['plot_1D_dist', 'plot_2D_dist', 'plot_sensitivity_curve',
-           'plot_sources_on_sc_circ_stat', 'plot_sources_on_sc_ecc_stat']
+           'plot_sources_on_sc']
 
 
-def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=None, ylabel=None,
-                 xlim=None, ylim=None, color=None, show=True, **kwargs):
-    """plot a 1D distribution of ``x``.
+def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax=None, show=True,
+                 figsize=(10, 7), xlabel=None, ylabel=None, xlim=None, ylim=None, color=None, **kwargs):
+    """Plot a 1D distribution of ``x``.
 
     This function is a wrapper for :func:`matplotlib.pyplot.hist`, :func:`seaborn.kdeplot`
     and :func:`seaborn.ecdfplot`.
@@ -40,11 +40,20 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     disttype : `{{ "hist", "kde", "ecdf" }}`
         Which type of distribution plot to use
 
+    log_scale : `bool`
+        Whether to plot `log10(x)` instead of `x`
+
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
 
     ax: `matplotlib Axis`
         An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
+
+    show : `boolean`
+        Whether to immediately show the plot or only return the Figure and Axis
+
+    figsize : `tuple`
+        Tuple with size for the x- and y-axis if creating a new figure (i.e. ignored when fig/ax is not None)
 
     xlabel : `string`
         Label for the x axis, passed to Axes.set_xlabel()
@@ -61,9 +70,6 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     color : `string or tuple`
         Colour to use for the plot, see https://matplotlib.org/tutorials/colors/colors.html for details on
         how to specify a colour
-
-    show : `boolean`
-        Whether to immediately show the plot or only return the Figure and Axis
 
     **kwargs : `(if disttype=="hist")`
         Include values for any of `bins, range, density, cumulative, bottom, histtype, align, orientation,
@@ -87,10 +93,10 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     """
     # create new figure and axes is either weren't provided
     if fig is None or ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
 
     # change default kwargs for matplotlib.hist
-    hist_args = {"bins": "auto", "density": True}
+    hist_args = {"bins": "fd", "density": True}
 
     # change default kwargs for seaborn.kdeplot
     kde_args = {"gridsize": 200, "legend": True}
@@ -108,11 +114,18 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     # create whichever plot was requested
     with quantity_support():
         if disttype == "hist":
+            if log_scale:
+                # remove units before taking a log!
+                if isinstance(x, u.quantity.Quantity):
+                    x = x.value
+
+                # apply log to variable
+                x = np.log10(x)
             ax.hist(x, weights=weights, color=color, **plot_args)
         elif disttype == "kde":
-            sns.kdeplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
+            sns.kdeplot(x=x, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
         elif disttype == "ecdf":
-            sns.ecdfplot(x=x, weights=weights, ax=ax, color=color, **plot_args)
+            sns.ecdfplot(x=x, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
 
     # update axis labels
     if xlabel is not None:
@@ -122,7 +135,10 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
 
     # update axis limits
     if xlim is not None:
-        ax.set_xlim(xlim)
+        if disttype == "hist" and log_scale:
+            ax.set_xlim(np.log10(xlim))
+        else:
+            ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
 
@@ -134,9 +150,9 @@ def plot_1D_dist(x, weights=None, disttype="hist", fig=None, ax=None, xlabel=Non
     return fig, ax
 
 
-def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None, ax=None,
-                 xlabel=None, ylabel=None, xlim=None, ylim=None, color=None,
-                 show=True, **kwargs):
+def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show=True, figsize=(12, 7),
+                 xlabel=None, ylabel=None, xlim=None, ylim=None, log_scale=False,
+                 color=None, scatter_s=20, **kwargs):
     """Plot a 2D distribution of `x` and `y`
 
     This function is a wrapper for :func:`matplotlib.pyplot.scatter` and :func:`seaborn.kdeplot`.
@@ -155,14 +171,17 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
     disttype : `{{ "scatter", "kde" }}`
         Which type of distribution plot to use
 
-    scatter_s : `float`, default=20
-        Scatter point size, passed as ``s`` to a scatter plot and ignored for a KDE
-
     fig: `matplotlib Figure`
         A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
 
     ax: `matplotlib Axis`
         An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
+
+    show : `boolean`
+        Whether to immediately show the plot or only return the Figure and Axis
+
+    figsize : `tuple`
+        Tuple with size for the x- and y-axis if creating a new figure (i.e. ignored when fig/ax is not None)
 
     xlabel : `string`
         Label for the x axis, passed to Axes.set_xlabel()
@@ -176,12 +195,16 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
     ylim : `tuple`
         Lower and upper limits for the u axis, passed to Axes.set_ylim()
 
+    log_scale : `bool or tuple of bools`
+        Whether to use a log scale for the axes. A single `bool` is applied to both axes, a tuple is applied
+        to the x- and y-axis respectively.
+
+    scatter_s : `float`, default=20
+        Scatter point size, passed as ``s`` to a scatter plot and ignored for a KDE
+
     color : `string or tuple`
         Colour to use for the plot, see https://matplotlib.org/tutorials/colors/colors.html for details on how
         to specify a colour
-
-    show : `boolean`
-        Whether to immediately show the plot or only return the Figure and Axis
 
     **kwargs : `(if disttype=="scatter")`
         Input any of `s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths, edgecolors` or more.
@@ -202,7 +225,11 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
     """
     # create new figure and axes is either weren't provided
     if fig is None or ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
+
+    # expand log_scale
+    if isinstance(log_scale, bool):
+        log_scale = (log_scale, log_scale)
 
     # change default kwargs for matplotlib.scatter
     scatter_args = {}
@@ -225,8 +252,14 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
                 scatter_s = weights * scatter_s
 
             ax.scatter(x, y, s=scatter_s, color=color, **plot_args)
+
+            # apply log scaling to the respective axes
+            if log_scale[0]:
+                ax.set_xscale("log")
+            if log_scale[1]:
+                ax.set_yscale("log")
         elif disttype == "kde":
-            sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, **plot_args)
+            sns.kdeplot(x=x, y=y, weights=weights, ax=ax, color=color, log_scale=log_scale, **plot_args)
 
     # update axis labels
     if xlabel is not None:
@@ -249,7 +282,8 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", scatter_s=20, fig=None,
 
 
 def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=None, show=True,
-                           color="#18068b", fill=True, alpha=0.2, linewidth=1, label=None, **kwargs):
+                           figsize=(10, 7), color="#18068b", fill=True, alpha=0.2, linewidth=1, label=None,
+                           **kwargs):
     """Plot the LISA sensitivity curve
 
     Parameters
@@ -268,6 +302,9 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
     show : `boolean`
         Whether to immediately show the plot or only return the Figure and Axis
+
+    figsize : `tuple`
+        Tuple with size for the x- and y-axis if creating a new figure (i.e. ignored when fig/ax is not None)
 
     color : `string or tuple`
         Colour to use for the curve, see https://matplotlib.org/tutorials/colors/colors.html for details on
@@ -301,7 +338,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
         frequency_range = np.logspace(-5, 0, 1000) * u.Hz
 
     if fig is None or ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
 
     # work out what the noise amplitude should be
     PSD = psd.power_spectral_density(f=frequency_range, **kwargs)
@@ -335,120 +372,21 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     return fig, ax
 
 
-def plot_sources_on_sc_circ_stat(f_orb, h_0_2, snr, weights=None, snr_cutoff=0, t_obs="auto",
-                                 instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
-                                 confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
-    """Overlay circular/stationary sources on the LISA sensitivity curve.
-
-    Each source is plotted at its gravitational wave frequency (n = 2) such that its height above the curve
-    is equal to it signal-to-noise ratio.
-
-    Parameters
-    ----------
-    f_orb : `float/array`
-        Orbital frequency
-
-    h_0_2 : `float/array`
-        Strain amplitude of the n = 2 harmonic
-
-    snr : `float/array`
-        Signal-to-noise ratio
-
-    weights : `float/array`, optional, default=None
-        Statistical weights for each source, default is equal weights
-
-    snr_cutoff : `float`
-        SNR above which to plot binaries (default is 0 such that all sources are plotted)
-
-    instrument: {{ `LISA`, `TianQin`, `custom` }}
-        Instrument to use. LISA is used by default. Choosing `custom` uses ``custom_psd`` to compute PSD.
-
-    custom_psd : `function`
-        Custom function for computing the PSD. Must take the same arguments as :meth:`legwork.psd.lisa_psd`
-        even if it ignores some.
-
-    t_obs : `float`
-        Observation time (default "auto")
-
-    L : `float`
-        Arm length
-
-    approximate_R : `boolean`
-        Whether to approximate the response function (default: no)
-
-    confusion_noise : `various`
-        Galactic confusion noise. Acceptable inputs are either one of the values listed in
-        :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
-        `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
-        confusion noise at each frequency for a given mission length where it would be called by running
-        `noise(f, t_obs)` and return a value with units of inverse Hertz
-
-    fig: `matplotlib Figure`
-        A figure on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
-
-    ax: `matplotlib Axis`
-        An axis on which to plot the distribution. Both `ax` and `fig` must be supplied for either to be used
-
-    show : `boolean`
-        Whether to immediately show the plot or only return the Figure and Axis
-
-    **kwargs : `various`
-        This function is a wrapper on :func:`legwork.visualisation.plot_2D_dist` and each kwarg is passed
-        directly to this function. For example, you can write `disttype="kde"` for a kde density plot
-        instead of a scatter plot.
-
-    Returns
-    -------
-    fig : `matplotlib Figure`
-        The figure on which the distribution is plotted
-
-    ax : `matplotlib Axis`
-        The axis on which the distribution is plotted
-    """
-    # create figure if it wasn't provided
-    if fig is None or ax is None:
-        fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument,
-                                         custom_psd=custom_psd, L=L, approximate_R=approximate_R,
-                                         confusion_noise=confusion_noise)
-
-    # work out which binaries are above the cutoff
-    detectable = snr > snr_cutoff
-    if not detectable.any():
-        print("ERROR: There are no binaries above provided `snr_cutoff`")
-        return fig, ax
-
-    # convert auto observation times
-    if t_obs == "auto":
-        t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
-
-    # calculate the GW frequency and ASD for detectable binaries
-    f_GW = f_orb[detectable] * 2
-    asd = ((1/4 * t_obs)**(1/2) * h_0_2[detectable]).to(u.Hz**(-1/2))
-
-    # plot either a scatter or density plot of the detectable binaries
-    ylims = ax.get_ylim()
-    weights = weights[detectable] if weights is not None else None
-    fig, ax = plot_2D_dist(x=f_GW, y=asd, weights=weights, fig=fig, ax=ax, show=False, **kwargs)
-    ax.set_ylim(ylims)
-
-    if show:
-        plt.show()
-
-    return fig, ax
-
-
-def plot_sources_on_sc_ecc_stat(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
-                                instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
-                                confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
-    """Overlay eccentric/stationary sources on the LISA sensitivity curve.
+def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
+                       instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
+                       confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
+    """Overlay *stationary* sources on the LISA sensitivity curve.
 
     Each source is plotted at its max snr harmonic frequency such that that its height above the curve is
-    equal to it signal-to-noise ratio.
+    equal to it signal-to-noise ratio. For circular sources this is frequency is simply twice the orbital
+    frequency.
 
     Parameters
     ----------
     f_dom : `float/array`
-        Dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic with the maximum snr)
+        Dominant harmonic frequency (f_orb * n_dom where n_dom is the harmonic with the maximum snr). You may
+        find the :meth:`legwork.source.Source.max_snr_harmonic` attribute useful (which gets populated) after
+        :meth:`legwork.source.Source.get_snr`.
 
     snr : `float/array`
         Signal-to-noise ratio
