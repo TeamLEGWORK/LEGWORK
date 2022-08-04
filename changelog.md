@@ -143,3 +143,7 @@ helping us to notice this!
 - Replaced two functions `visualisation.plot_sources_on_sc_circ_stat` and `visualisation.plot_sources_on_sc_ecc_stat` with a simpler `visualisation.plot_sources_on_sc` since there was no point in
 having two when we could just set `f_dom=2 f_orb`
 - Fix demos to account for recent changes
+
+## 0.4.2
+*TW 27/077/22*
+- [Issues [#101](https://github.com/TeamLEGWORK/LEGWORK/issues/101)] Unhide cells that change plot styles in demos so no errors are thrown
