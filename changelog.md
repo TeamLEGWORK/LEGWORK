@@ -154,3 +154,8 @@ having two when we could just set `f_dom=2 f_orb`
     - `Source.get_snr()` now takes all `sc_params` as arguments for re-interpolation etc
     - `Source.get_snr_stationary` and `Source.get_snr_evolving` have the same parameters added as above
     - All functions in `snr` now take `**kwargs` that are passed directly to `psd.power_spectral_density` for maximum flexibility 
+
+
+## 0.4.4
+*TW 14/09/22*
+- [Issues [#106](https://github.com/TeamLEGWORK/LEGWORK/issues/106)] Fix sampling of inclination and polarisation when they are not supplied to `Source`
