@@ -122,10 +122,12 @@ class Source():
         else:
             if inclination is None:
                 print("Generating random values for source inclinations")
-                inclination = np.arcsin(np.random.uniform(-1, 1, len(m_1))) * u.rad
+                # inclination is sampled uniformly in cos(i) to get a range of [0, pi/2]
+                inclination = np.arccos(np.random.uniform(0, 1, len(m_1))) * u.rad
             if polarisation is None:
                 print("Generating random values for source polarisations")
-                polarisation = np.random.uniform(0, 2 * np.pi, len(m_1)) * u.rad
+                # polarisation is sampled from 0 to pi following Flanagan & Hughes 1998 (e.g. Eq. 2.34)
+                polarisation = np.random.uniform(0, np.pi, len(m_1)) * u.rad
 
         # ensure position is in the correct coordinate frame
         if position is not None:
