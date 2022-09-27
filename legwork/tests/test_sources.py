@@ -141,7 +141,7 @@ class Test(unittest.TestCase):
         phis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
         psis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
 
-        positions = SkyCoord(phis, thetas, distance=dist, frame='heliocentrictrueecliptic')
+        positions = SkyCoord(phis, thetas, distance=dist, frame='barycentrictrueecliptic')
 
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist,
@@ -169,7 +169,7 @@ class Test(unittest.TestCase):
         phis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
         psis = np.random.uniform(0, 2 * np.pi, n_values) * u.rad
 
-        positions = SkyCoord(phis, thetas, distance=dist, frame='heliocentrictrueecliptic')
+        positions = SkyCoord(phis, thetas, distance=dist, frame='barycentrictrueecliptic')
 
         sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb,
                                 ecc=ecc, dist=dist,
