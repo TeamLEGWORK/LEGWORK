@@ -136,13 +136,15 @@ class Source():
                                  "modulation is only valued for circular sources")
 
             # ensure position is in the correct coordinate frame
-            position = position.transform_to("heliocentrictrueecliptic")
+            position = position.transform_to("barycentrictrueecliptic")
+
+            # barycentrictrueecliptic
 
             # ensure that the position, polarisation, and inclination
             # quantities are at least 1d for masking later on
             lon, lat, polarisation, inclination = np.atleast_1d(position.lon, position.lat,
                                                                 polarisation, inclination)
-            position = SkyCoord(lon=lon, lat=lat, distance=dist, frame='heliocentrictrueecliptic')
+            position = SkyCoord(lon=lon, lat=lat, distance=dist, frame='barycentrictrueecliptic')
 
         # calculate whichever one wasn't supplied
         f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb

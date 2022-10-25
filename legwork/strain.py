@@ -1,5 +1,6 @@
 """Computes several types of gravitational wave strains"""
 
+import astropy.units as u
 import astropy.constants as c
 from legwork import utils
 import numpy as np
@@ -36,7 +37,8 @@ def amplitude_modulation(position, polarisation, inclination):
     modulation : `float/array`
         modulation to apply to strain from detector response
     """
-    theta, phi = position.lat, position.lon
+    # the pi/2 subtraction ensures that theta is a co-latitude to match Cornish+03
+    theta, phi = (np.pi/2 * u.rad) - position.lat, position.lon
 
     # a_plus/a_cross as defined in Robson+19 Eq.15 and Babak+21 Eq. 67
     a_plus = (1 + np.cos(inclination)**2) / 2
