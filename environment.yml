@@ -19,4 +19,4 @@ dependencies:
   - jupyter
   - ipython
   - pip:
-    - legwork >= 0.2.4
+    - legwork >= 0.4.6
