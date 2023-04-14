@@ -54,7 +54,7 @@ Installation
 
         .. code-block:: bash
 
-            conda create --name legwork "python>=3.7" pip "numba>=0.50" "numpy>=1.16" "astropy>=4.0" "scipy>=1.5.0" "matplotlib>=3.3.2" "seaborn>=0.11.1" "schwimmbad>=0.3.2" -c conda-forge -c defaults
+            conda create --name legwork "python>=3.7" pip "numba>=0.50" "numpy>=1.17" "astropy>=4.0" "scipy>=1.5.0" "matplotlib>=3.3.2" "seaborn>=0.11.1" "schwimmbad>=0.3.2" -c conda-forge -c defaults
 
         And then activate the environment by running
 

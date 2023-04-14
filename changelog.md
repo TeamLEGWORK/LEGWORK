@@ -164,3 +164,8 @@ having two when we could just set `f_dom=2 f_orb`
 *TW 27/09/22*
 - Change positions coordinate system to barycentric rather than heliocentric
 - Ensure `theta` is a co-latitude in `amplitude_modulation`
+
+## 0.4.6
+*TW 13/04/22*
+- [Issue [#109](https://github.com/TeamLEGWORK/LEGWORK/issues/109)] Upgrade `numpy` version
+    - Upgrade required to avoid error in `np.nan_to_num` usage - thanks to Jakob Stegmann for raising this
