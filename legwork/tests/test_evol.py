@@ -137,7 +137,7 @@ class Test(unittest.TestCase):
             single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0],
                                                ecc_i=ecc_i[0],
                                                large_e_tol=0.9).to(u.yr)
-            self.assertTrue(array_time[0] == single_time)
+            self.assertTrue(np.isclose(array_time[0], single_time))
 
     def test_mandel_fit(self):
         """checks that the Mandel fit to the Peters timescale is the same
