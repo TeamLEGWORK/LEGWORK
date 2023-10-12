@@ -1192,7 +1192,7 @@ class Source():
             return vis.plot_1D_dist(x=x[which_sources], weights=weights, **kwargs)
 
     def plot_sources_on_sc(self, snr_cutoff=0, fig=None, ax=None, show=True,
-                           label="Stationary sources", **kwargs):  # pragma: no cover
+                           label="Stationary sources", sc_vis_settings={}, **kwargs):  # pragma: no cover
         """Plot all sources in the class on the sensitivity curve
 
         Parameters
@@ -1250,7 +1250,7 @@ class Source():
             weights = self.weights[stat] if self.weights is not None else None
             fig, ax = vis.plot_sources_on_sc(f_dom=f_dom, snr=self.snr[stat], weights=weights,
                                              snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
-                                             label=label, **self._sc_params, **kwargs)
+                                             label=label, sc_vis_settings=sc_vis_settings, **self._sc_params, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)

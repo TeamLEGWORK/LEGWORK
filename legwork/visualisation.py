@@ -374,7 +374,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
 def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
                        instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
-                       confusion_noise="auto", fig=None, ax=None, show=True, **kwargs):
+                       confusion_noise="auto", fig=None, ax=None, show=True, sc_vis_settings={}, **kwargs):
     """Overlay *stationary* sources on the LISA sensitivity curve.
 
     Each source is plotted at its max snr harmonic frequency such that that its height above the curve is
@@ -446,7 +446,7 @@ def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
     if fig is None or ax is None:
         fig, ax = plot_sensitivity_curve(show=False, t_obs=t_obs, instrument=instrument, L=L,
                                          custom_psd=custom_psd, approximate_R=approximate_R,
-                                         confusion_noise=confusion_noise)
+                                         confusion_noise=confusion_noise, **sc_vis_settings)
 
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff
@@ -455,12 +455,14 @@ def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
         return fig, ax
 
     # calculate asd that makes it so height above curve is snr
-    asd = snr[detectable] * np.sqrt(psd.power_spectral_density(f_dom[detectable]))
+    asd = (snr[detectable] * np.sqrt(psd.power_spectral_density(f_dom[detectable]))).to(u.Hz**(-1/2))
+    h_c = asd * np.sqrt(f_dom[detectable])
+    use_h_c = ("y_quantity" in sc_vis_settings and sc_vis_settings["y_quantity"] == "h_c")
 
     # plot either a scatter or density plot of the detectable binaries
     ylims = ax.get_ylim()
     weights = weights[detectable] if weights is not None else None
-    fig, ax = plot_2D_dist(x=f_dom[detectable], y=asd.to(u.Hz**(-1/2)), weights=weights,
+    fig, ax = plot_2D_dist(x=f_dom[detectable], y=h_c if use_h_c else asd, weights=weights,
                            fig=fig, ax=ax, show=False, **kwargs)
     ax.set_ylim(ylims)
 
