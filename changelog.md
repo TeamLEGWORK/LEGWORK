@@ -166,6 +166,10 @@ having two when we could just set `f_dom=2 f_orb`
 - Ensure `theta` is a co-latitude in `amplitude_modulation`
 
 ## 0.4.6
-*TW 13/04/22*
+*TW 13/04/23*
 - [Issue [#109](https://github.com/TeamLEGWORK/LEGWORK/issues/109)] Upgrade `numpy` version
     - Upgrade required to avoid error in `np.nan_to_num` usage - thanks to Jakob Stegmann for raising this
+
+## 0.4.7
+*TW 12/10/23*
+- [Issue [#111](https://github.com/TeamLEGWORK/LEGWORK/issues/111)] Allow `plot_sources_on_sc` to change the underlying sensitivity curve directly with `sc_vis_settings`

@@ -15,7 +15,7 @@ __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc', 'get_t_merge_cir
            'determine_stationarity']
 
 
-@jit
+@jit(nopython=True)
 def de_dt(e, times, beta, c_0):                             # pragma: no cover
     """Compute eccentricity time derivative
 
