@@ -1214,6 +1214,10 @@ class Source():
         label : `str`
             Label to use for the plotted points
 
+        sc_vis_settings : `dict`
+            Dictionary of parameters to pass to :meth:`~legwork.visualisation.plot_sensitivity_curve`,
+            e.g. {"y_quantity": "h_c"} will plot characteristic strain instead of ASD
+
         **kwargs : `various`
             Keyword arguments to be passed to plotting functions
 

@@ -429,6 +429,10 @@ def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
     show : `boolean`
         Whether to immediately show the plot or only return the Figure and Axis
 
+    sc_vis_settings : `dict`
+        Dictionary of parameters to pass to :meth:`~legwork.visualisation.plot_sensitivity_curve`,
+        e.g. {"y_quantity": "h_c"} will plot characteristic strain instead of ASD
+
     **kwargs : `various`
         This function is a wrapper on :func:`legwork.visualisation.plot_2D_dist` and each kwarg is passed
         directly to this function. For example, you can write `disttype="kde"` for a kde density plot
