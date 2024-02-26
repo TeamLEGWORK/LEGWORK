@@ -191,6 +191,13 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=5 * u.yr, approximate_R=None
 
     return psd.to(u.Hz**(-1))
 
+def taiji_psd(f, L, t_obs, approximate_R, confusion_noise):
+    fstar = const.c / (2 * np.pi * L)
+    Sa = 9e-30 * u.m**2 * u.s**(-4) * u.Hz**(-1)
+    Sx = 64e-24 * u.m**2 * u.Hz**(-1)
+    psd = 10 / (3 * L**2) * (4 * Sa / (2 * np.pi * f)**4 * (1 + (4e-4 * u.Hz / f)) + Sx) \
+        * (1 + 0.6 * (f / fstar)**2)
+    return psd.to(u.Hz**(-1))
 
 def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs="auto", L="auto",
                            approximate_R=False, confusion_noise="auto"):
@@ -245,6 +252,9 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs="auto", 
 
         # calculate psd
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
+    elif instrument == "TaiJi":
+        L = 3e6 * u.km if L == "auto" else L
+        psd = taiji_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "custom":
         psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     else:
