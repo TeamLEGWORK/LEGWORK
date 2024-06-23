@@ -36,13 +36,12 @@ def snr_circ_stationary(m_c, f_orb, dist, t_obs, position=None, polarisation=Non
         Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
-        The code assumes that the function returns the output sorted as with the interp2d returned functions
-        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.RectBivariateSpline` that computes g(n,e)
+        from Peters (1964). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.
-        Default is None and uses exact values. Note: take care to ensure that your interpolated function has
+        Default is None and uses exact values. Note: take care to ensure that yourinterpolated function has
         the same LISA observation time as ``t_obs`` and uses the same instrument.
 
     **kwargs : `various`
@@ -96,9 +95,8 @@ def snr_ecc_stationary(m_c, f_orb, ecc, dist, t_obs, harmonics_required,
         Maximum integer harmonic to compute
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
-        The code assumes that the function returns the output sorted as with the interp2d returned functions
-        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.RectBivariateSpline` that computes g(n,e)
+        from Peters (1964). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.
@@ -186,9 +184,8 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
         Time until merger
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
-        The code assumes that the function returns the output sorted as with the interp2d returned functions
-        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.RectBivariateSpline` that computes g(n,e)
+        from Peters (1964). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.
@@ -274,9 +271,8 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
         Time until merger
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
-        The code assumes that the function returns the output sorted as with the interp2d returned functions
-        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.RectBivariateSpline` that computes g(n,e)
+        from Peters (1964). Default is None and uses exact g(n,e) in this case.
 
     interpolated_sc : `function`
         A function returned by :class:`scipy.interpolate.interp1d` that computes the LISA sensitivity curve.

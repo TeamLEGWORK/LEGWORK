@@ -3,7 +3,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 import numpy as np
 from importlib import resources
-from scipy.interpolate import interp1d, interp2d
+from scipy.interpolate import interp1d, RectBivariateSpline
 import os
 
 from legwork import utils, strain, psd, evol
@@ -226,8 +226,7 @@ class Source():
         the maximum strain for a system with eccentricity `ecc`."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
-        lum_info = np.load(os.path.join(resources.files("legwork"),
-                                        "harmonics.npz"), allow_pickle=True)
+        lum_info = np.load(os.path.join(resources.files("legwork"), "harmonics.npz"), allow_pickle=True)
 
         e_min, e_max, e_len = lum_info["e_lims"]
         e_len = e_len.astype(int)
@@ -315,7 +314,8 @@ class Source():
             # interpolate grid using scipy
             n_range = np.arange(1, 10000 + 1).astype(int)
             e_range = np.linspace(0, 1, 1000)
-            self.g = interp2d(n_range, e_range, peters_g, kind="cubic")
+            f = RectBivariateSpline(n_range, e_range, peters_g.T)
+            self.g = lambda n, e: f.ev(n, e)
         else:
             self.g = None
 
