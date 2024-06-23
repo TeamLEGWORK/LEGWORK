@@ -53,7 +53,7 @@ jobs:
         # test with as many cores as possible for speed
         pytest legwork -n=auto --cov=./ --cov-report=xml
     - name: Get Coverage
-      uses: orgoro/coverage@v3
+      uses: orgoro/coverage@v3.1
       with:
         coverageFile: ./coverage.xml
         token: ${{ secrets.GITHUB_TOKEN }}
