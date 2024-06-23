@@ -22,6 +22,9 @@ on:
       - 'setup.py'
       - 'pyproject.toml'
 
+permissions:
+  pull-requests: write
+
 jobs:
   build:
 
