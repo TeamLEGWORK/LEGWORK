@@ -2,7 +2,7 @@
 #   - setup.cfg
 #   - requirements.txt
 #   - install.rst
-name: legwork-new
+name: legwork
 channels:
   - defaults
   - conda-forge
@@ -18,5 +18,5 @@ dependencies:
   - schwimmbad >= 0.4.2
   - jupyter
   - ipython
-  # - pip:
-  #   - legwork >= 0.4.6
+  - pip:
+    - legwork >= 0.5.0
