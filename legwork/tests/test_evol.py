@@ -162,7 +162,7 @@ class Test(unittest.TestCase):
                                           ecc_i=ecc, exact=False).to(u.yr)
         single_time = evol.get_t_merge_ecc(beta=beta[0], a_i=a_i[0],
                                            ecc_i=ecc[0], exact=False).to(u.yr)
-        self.assertTrue(array_time[0] == single_time)
+        self.assertTrue(np.isclose(array_time[0], single_time))
 
     def test_timestep_creation(self):
         n_values = 10
