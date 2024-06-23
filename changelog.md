@@ -173,3 +173,9 @@ having two when we could just set `f_dom=2 f_orb`
 ## 0.4.7
 *TW 12/10/23*
 - [Issue [#111](https://github.com/TeamLEGWORK/LEGWORK/issues/111)] Allow `plot_sources_on_sc` to change the underlying sensitivity curve directly with `sc_vis_settings`
+
+## 0.5.0
+*TW 22/06/24*
+- Update to Python 3.11 and various dependencies
+    - Fix deprecations based on these updates
+- Add __repr__ and __len__ functions for the Source class and its subclasses
