@@ -4,6 +4,7 @@ from astropy.coordinates import SkyCoord
 import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, interp2d
+import os
 
 from legwork import utils, strain, psd, evol
 import legwork.snr as sn
@@ -225,8 +226,8 @@ class Source():
         the maximum strain for a system with eccentricity `ecc`."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
-        with resources.path(package="legwork", resource="harmonics.npz") as path:
-            lum_info = np.load(path)
+        lum_info = np.load(os.path.join(resources.files("legwork"),
+                                        "harmonics.npz"), allow_pickle=True)
 
         e_min, e_max, e_len = lum_info["e_lims"]
         e_len = e_len.astype(int)
@@ -309,9 +310,7 @@ class Source():
         """
         if interpolate_g:
             # open file containing pre-calculated fine g(n,e) grid
-            with resources.path(package="legwork",
-                                resource="peters_g.npy") as path:
-                peters_g = np.load(path)
+            peters_g = np.load(os.path.join(resources.files("legwork"), "peters_g.npy"))
 
             # interpolate grid using scipy
             n_range = np.arange(1, 10000 + 1).astype(int)
@@ -1298,9 +1297,8 @@ class VerificationBinaries(Source):
 
     def __init__(self):
         # open file containing verification binary data
-        with resources.path(package="legwork", resource="verification_binaries.npy") as path:
-            vbs = np.load(path, allow_pickle=True)
-            vbs = vbs.item()
+        vbs = np.load(os.path.join(resources.files("legwork"),
+                                   "verification_binaries.npy"), allow_pickle=True).item()
 
         position = SkyCoord(l=vbs["l_gal"], b=vbs["b_gal"], distance=vbs["dist"], frame="galactic")
 
