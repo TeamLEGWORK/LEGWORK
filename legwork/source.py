@@ -213,6 +213,12 @@ class Source():
         self.set_g(interpolate_g)
         self.set_sc()
 
+    def __repr__(self):
+        return f"<Source: {self.n_sources} sources>"
+    
+    def __len__(self):
+        return self.n_sources
+
     def create_harmonics_functions(self):
         """Create two harmonics related functions as methods for the Source class
 
@@ -1281,6 +1287,9 @@ class Stationary(Source):
                                            verbose=verbose)
         return self.snr
 
+    def __repr__(self):
+        return f"<Stationary: {self.n_sources} stationary sources>"
+
 
 class Evolving(Source):
     """Subclass for sources that are evolving"""
@@ -1289,6 +1298,10 @@ class Evolving(Source):
         self.snr = self.get_snr_evolving(t_obs=t_obs, n_step=n_step, instrument=instrument,
                                          custom_psd=custom_psd, verbose=verbose)
         return self.snr
+
+
+    def __repr__(self):
+        return f"<Evolving: {self.n_sources} evolving sources>"
 
 
 class VerificationBinaries(Source):
@@ -1311,3 +1324,7 @@ class VerificationBinaries(Source):
         self.labels = vbs["label"]
         self.true_snr = np.array(vbs["snr"])
         self.max_snr_harmonic = np.repeat(2, self.n_sources).astype(int)
+
+
+    def __repr__(self):
+        return f"<VerificationBinaries>"
