@@ -6,6 +6,7 @@ import astropy.units as u
 import astropy.constants as const
 from scipy.interpolate import splev, splrep
 from importlib import resources
+import os
 
 __all__ = ['load_response_function', 'approximate_response_function', 'power_spectral_density',
            'lisa_psd', 'tianqin_psd', 'get_confusion_noise', 'get_confusion_noise_robson19',
@@ -34,8 +35,7 @@ def load_response_function(f, fstar=19.09e-3):
     """
     # try to load the values for interpolating R
     try:
-        with resources.path(package="legwork", resource="R.npy") as path:
-            f_R, R = np.load(path)
+        f_R, R = np.load(os.path.join(resources.files("legwork"),"R.npy"), allow_pickle=True)
     except FileExistsError:  # pragma: no cover
         print("WARNING: Can't find response function file, using approximation instead")
         return approximate_response_function(f, fstar)

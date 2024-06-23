@@ -90,9 +90,8 @@ def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
-        The code assumes that the function returns the output sorted as with the interp2d returned functions
-        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.RectBivariateSpline` that computes g(n,e)
+        from Peters (1964). Default is None and uses exact g(n,e) in this case.
 
     Returns
     -------
@@ -117,27 +116,20 @@ def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
     prefac = (2**(28/3) / 5)**(0.5) * c.G**(5/3) / c.c**4
     n_independent_part = prefac * m_c**(5/3) * (np.pi * f_orb)**(2/3) / dist
 
+    # extend harmonic and eccentricity dimensions to full (x, y, z)
+    n = n[np.newaxis, np.newaxis, :]
+    ecc = ecc[..., np.newaxis]
+
     # check whether to interpolate g(n, e)
     if interpolated_g is None:
-        # extend harmonic and eccentricity dimensions to full (x, y, z)
-        n = n[np.newaxis, np.newaxis, :]
-        ecc = ecc[..., np.newaxis]
         n_dependent_part = utils.peters_g(n, ecc)**(1/2) / n
     else:
-        # flatten array to work nicely interp2d
-        g_vals = interpolated_g(n, ecc.flatten())
+        g_vals = interpolated_g(n, ecc)
 
         # set negative values from cubic fit to 0.0
         g_vals[g_vals < 0.0] = 0.0
 
-        # unsort the output array if there is more than one eccentricity
-        if isinstance(ecc, (np.ndarray, list)) and len(ecc) > 1:
-            g_vals = g_vals[np.argsort(ecc.flatten()).argsort()]
-
-        # reshape output to proper dimensions
-        g_vals = g_vals.reshape((*ecc.shape, len(n)))
-
-        n_dependent_part = g_vals**(0.5) / n[np.newaxis, np.newaxis, :]
+        n_dependent_part = g_vals**(0.5) / n
 
     h_0 = n_independent_part[..., np.newaxis] * n_dependent_part
 
@@ -186,9 +178,8 @@ def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
         Inclination of the source. Must have astropy angular units.
 
     interpolated_g : `function`
-        A function returned by :class:`scipy.interpolate.interp2d` that computes g(n,e) from Peters (1964).
-        The code assumes that the function returns the output sorted as with the interp2d returned functions
-        (and thus unsorts). Default is None and uses exact g(n,e) in this case.
+        A function returned by :class:`scipy.interpolate.RectBivariateSpline` that computes g(n,e)
+        from Peters (1964). Default is None and uses exact g(n,e) in this case.
 
     Returns
     -------
@@ -213,27 +204,20 @@ def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
     prefac = (2**(5/3) / (3 * np.pi**(4/3)))**(0.5) * c.G**(5/6) / c.c**(3/2)
     n_independent_part = prefac * m_c**(5/6) / dist * f_orb**(-1/6) / utils.peters_f(ecc)**(0.5)
 
+    # extend harmonic and eccentricity dimensions to full (x, y, z)
+    n = n[np.newaxis, np.newaxis, :]
+    ecc = ecc[..., np.newaxis]
+
     # check whether to interpolate g(n, e)
     if interpolated_g is None:
-        # extend harmonic and eccentricity dimensions to full (x, y, z)
-        n = n[np.newaxis, np.newaxis, :]
-        ecc = ecc[..., np.newaxis]
         n_dependent_part = (utils.peters_g(n, ecc) / n)**(1/2)
     else:
-        # flatten array to work nicely interp2d
-        g_vals = interpolated_g(n, ecc.flatten())
+        g_vals = interpolated_g(n, ecc)
 
         # set negative values from cubic fit to 0.0
         g_vals[g_vals < 0.0] = 0.0
 
-        # unsort the output array if there is more than one eccentricity
-        if isinstance(ecc, (np.ndarray, list)) and len(ecc) > 1:
-            g_vals = g_vals[np.argsort(ecc.flatten()).argsort()]
-
-        # reshape output to proper dimensions
-        g_vals = g_vals.reshape((*ecc.shape, len(n)))
-
-        n_dependent_part = (g_vals / n[np.newaxis, np.newaxis, :])**(0.5)
+        n_dependent_part = (g_vals / n)**(0.5)
 
     h_c = n_independent_part[..., np.newaxis] * n_dependent_part
 

@@ -3,7 +3,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 import numpy as np
 from importlib import resources
-from scipy.interpolate import interp1d, interp2d
+from scipy.interpolate import interp1d, RectBivariateSpline
+import os
 
 from legwork import utils, strain, psd, evol
 import legwork.snr as sn
@@ -212,6 +213,12 @@ class Source():
         self.set_g(interpolate_g)
         self.set_sc()
 
+    def __repr__(self):
+        return f"<Source: {self.n_sources} sources>"
+    
+    def __len__(self):
+        return self.n_sources
+
     def create_harmonics_functions(self):
         """Create two harmonics related functions as methods for the Source class
 
@@ -225,8 +232,7 @@ class Source():
         the maximum strain for a system with eccentricity `ecc`."""
 
         # open file containing pre-calculated g(n,e) and F(e) values
-        with resources.path(package="legwork", resource="harmonics.npz") as path:
-            lum_info = np.load(path)
+        lum_info = np.load(os.path.join(resources.files("legwork"), "harmonics.npz"), allow_pickle=True)
 
         e_min, e_max, e_len = lum_info["e_lims"]
         e_len = e_len.astype(int)
@@ -309,14 +315,13 @@ class Source():
         """
         if interpolate_g:
             # open file containing pre-calculated fine g(n,e) grid
-            with resources.path(package="legwork",
-                                resource="peters_g.npy") as path:
-                peters_g = np.load(path)
+            peters_g = np.load(os.path.join(resources.files("legwork"), "peters_g.npy"))
 
             # interpolate grid using scipy
             n_range = np.arange(1, 10000 + 1).astype(int)
             e_range = np.linspace(0, 1, 1000)
-            self.g = interp2d(n_range, e_range, peters_g, kind="cubic")
+            f = RectBivariateSpline(n_range, e_range, peters_g.T)
+            self.g = lambda n, e: f.ev(n, e)
         else:
             self.g = None
 
@@ -1282,6 +1287,9 @@ class Stationary(Source):
                                            verbose=verbose)
         return self.snr
 
+    def __repr__(self):
+        return f"<Stationary: {self.n_sources} stationary sources>"
+
 
 class Evolving(Source):
     """Subclass for sources that are evolving"""
@@ -1292,15 +1300,18 @@ class Evolving(Source):
         return self.snr
 
 
+    def __repr__(self):
+        return f"<Evolving: {self.n_sources} evolving sources>"
+
+
 class VerificationBinaries(Source):
     """Generate a Source class with the LISA verification binaries preloaded.
     Data for the binaries is gathered from Kupfer+18 Table 1 and 2."""
 
     def __init__(self):
         # open file containing verification binary data
-        with resources.path(package="legwork", resource="verification_binaries.npy") as path:
-            vbs = np.load(path, allow_pickle=True)
-            vbs = vbs.item()
+        vbs = np.load(os.path.join(resources.files("legwork"),
+                                   "verification_binaries.npy"), allow_pickle=True).item()
 
         position = SkyCoord(l=vbs["l_gal"], b=vbs["b_gal"], distance=vbs["dist"], frame="galactic")
 
@@ -1313,3 +1324,7 @@ class VerificationBinaries(Source):
         self.labels = vbs["label"]
         self.true_snr = np.array(vbs["snr"])
         self.max_snr_harmonic = np.repeat(2, self.n_sources).astype(int)
+
+
+    def __repr__(self):
+        return f"<VerificationBinaries>"
