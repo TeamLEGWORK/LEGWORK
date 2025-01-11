@@ -68,3 +68,9 @@ class Test(unittest.TestCase):
              [0, np.pi / 2]])  # inc
 
         self.assertAlmostEqual(result, 0.12)
+
+    def test_bad_harmonics(self):
+        """Make sure fn_dot fails when given harmonics < 1"""
+
+        with self.assertRaises(ValueError):
+            utils.fn_dot(m_c=10*u.Msun, f_orb=10*u.mHz, e=0.1, n=0)
