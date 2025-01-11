@@ -179,3 +179,7 @@ having two when we could just set `f_dom=2 f_orb`
 - Update to Python 3.11 and various dependencies
     - Fix deprecations based on these updates
 - Add __repr__ and __len__ functions for the Source class and its subclasses
+
+## 0.5.1
+*TW 11/01/25*
+- [Issue [#116](https://github.com/TeamLEGWORK/LEGWORK/issues/116)] LEGWORK will now raise errors if invalid harmonics are supplied

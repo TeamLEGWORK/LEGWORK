@@ -102,6 +102,10 @@ def h_0_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
     arrayed_args, _ = utils.ensure_array(m_c, f_orb, ecc, n, dist)
     m_c, f_orb, ecc, n, dist = arrayed_args
 
+    # raise a value error if any n is less than 1
+    if np.any(n < 1):
+        raise ValueError("All harmonics must be greater than or equal to 1")
+
     # if one timestep then extend dimensions
     if f_orb.ndim != 2:
         f_orb = f_orb[:, np.newaxis]
@@ -189,6 +193,10 @@ def h_c_n(m_c, f_orb, ecc, n, dist, position=None, polarisation=None, inclinatio
     # convert to array if necessary
     arrayed_args, _ = utils.ensure_array(m_c, f_orb, ecc, n, dist)
     m_c, f_orb, ecc, n, dist = arrayed_args
+
+    # raise a value error if any n is less than 1
+    if np.any(n < 1):
+        raise ValueError("All harmonics must be greater than or equal to 1")
 
     # if one timestep then extend dimensions
     if f_orb.ndim != 2:
