@@ -253,6 +253,9 @@ def fn_dot(m_c, f_orb, e, n):
     fn_dot : `float/array`
         Rate of change of nth frequency
     """
+    if np.any(n < 1):
+        raise ValueError("All harmonics must be greater than or equal to 1")
+
     fn_dot = (48 * n) / (5 * np.pi) * (c.G * m_c)**(5/3) / c.c**5 * (2 * np.pi * f_orb)**(11/3) * peters_f(e)
 
     # simplify units if present
