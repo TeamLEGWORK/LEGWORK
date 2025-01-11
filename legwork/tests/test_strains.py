@@ -28,3 +28,18 @@ class Test(unittest.TestCase):
         fn_dot = utils.fn_dot(m_c, f_orb, e, n)
 
         self.assertTrue(np.allclose(should_be_fn_dot, fn_dot))
+
+    def test_bad_harmonics(self):
+        """Make sure fn_dot fails when given harmonics < 1"""
+
+        n_values = 100000
+
+        m_c = np.random.uniform(0, 10, n_values) * u.Msun
+        dist = np.random.uniform(0, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-5, -1, n_values)) * u.Hz
+        e = np.random.uniform(0, 0.9, n_values)
+
+        with self.assertRaises(ValueError):
+            strain.h_0_n(m_c, f_orb, e, [0, 1, 2], dist)
+        with self.assertRaises(ValueError):
+            strain.h_c_n(m_c, f_orb, e, [0, 1, 2], dist)
