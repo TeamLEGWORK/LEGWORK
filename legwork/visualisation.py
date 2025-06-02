@@ -459,7 +459,14 @@ def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
         return fig, ax
 
     # calculate asd that makes it so height above curve is snr
-    asd = (snr[detectable] * np.sqrt(psd.power_spectral_density(f_dom[detectable]))).to(u.Hz**(-1/2))
+    sqrt_psd = np.sqrt(psd.power_spectral_density(f=f_dom[detectable],
+                                                  instrument=instrument,
+                                                  custom_psd=custom_psd,
+                                                  t_obs=t_obs,
+                                                  L=L,
+                                                  approximate_R=approximate_R,
+                                                  confusion_noise=confusion_noise)).to(u.Hz**(-1/2))
+    asd = snr[detectable] * sqrt_psd
     h_c = asd * np.sqrt(f_dom[detectable])
     use_h_c = ("y_quantity" in sc_vis_settings and sc_vis_settings["y_quantity"] == "h_c")
 
