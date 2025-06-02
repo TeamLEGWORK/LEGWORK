@@ -21,7 +21,7 @@ on:
       - 'setup.cfg'
       - 'setup.py'
       - 'pyproject.toml'
-      - 'python-package.yml'
+      - '.github/python-package.yml'
   workflow_dispatch:
 
 permissions:
