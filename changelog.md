@@ -183,3 +183,7 @@ having two when we could just set `f_dom=2 f_orb`
 ## 0.5.1
 *TW 11/01/25*
 - [Issue [#116](https://github.com/TeamLEGWORK/LEGWORK/issues/116)] LEGWORK will now raise errors if invalid harmonics are supplied
+
+## 0.5.2
+*TW 02/06/25*
+- Bug fix: Ensure that `plot_sources_on_sc` employs the sensitivity curve settings that are saved in a `Source` class when plotting y-values of sources (thanks to Kierstin Sorensen for pointing out this issue)
