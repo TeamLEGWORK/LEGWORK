@@ -21,6 +21,8 @@ on:
       - 'setup.cfg'
       - 'setup.py'
       - 'pyproject.toml'
+      - 'python-package.yml'
+  workflow_dispatch:
 
 permissions:
   pull-requests: write
@@ -34,9 +36,9 @@ jobs:
         python-version: [3.11]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -55,11 +57,13 @@ jobs:
       run: |
         # test with as many cores as possible for speed
         pytest legwork -n=auto --cov=./ --cov-report=xml
-    - name: Get Coverage
-      uses: orgoro/coverage@v3.2
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
       with:
-        coverageFile: ./coverage.xml
-        token: ${{ secrets.GITHUB_TOKEN }}
+        fail_ci_if_error: false
+        files: ./cov.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
     - name: Test the notebooks with pytest
       run: |
         # test notebooks in addition to the code
