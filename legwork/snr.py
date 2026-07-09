@@ -228,7 +228,7 @@ def snr_circ_evolving(m_1, m_2, f_orb_i, dist, t_obs, n_step, t_merge=None,
         h_f_lisa_2 = psd.power_spectral_density(f=2 * f_orb_evol, t_obs=t_obs, **kwargs)
     h_c_lisa_2 = (2 * f_orb_evol)**2 * h_f_lisa_2
 
-    snr = np.trapz(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1)**0.5
+    snr = np.trapezoid(y=h_c_n_2 / h_c_lisa_2, x=2 * f_orb_evol, axis=1)**0.5
 
     return snr.decompose().value
 
@@ -340,7 +340,7 @@ def snr_ecc_evolving(m_1, m_2, f_orb_i, dist, ecc, harmonics_required, t_obs, n_
     snr_evol = h_c_n_2 / h_c_lisa_2
 
     # integrate, sum and square root to get SNR
-    snr_n_2 = np.trapz(y=snr_evol, x=f_n_evol, axis=1)
+    snr_n_2 = np.trapezoid(y=snr_evol, x=f_n_evol, axis=1)
 
     if ret_snr2_by_harmonic:
         return snr_n_2.decompose().value
