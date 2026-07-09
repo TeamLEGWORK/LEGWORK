@@ -187,3 +187,9 @@ having two when we could just set `f_dom=2 f_orb`
 ## 0.5.2
 *TW 02/06/25*
 - Bug fix: Ensure that `plot_sources_on_sc` employs the sensitivity curve settings that are saved in a `Source` class when plotting y-values of sources (thanks to Kierstin Sorensen for pointing out this issue)
+
+## 0.5.3
+*TW 09/07/26*
+
+- Bug fix for [#127](https://github.com/TeamLEGWORK/LEGWORK/issues/127) found by @willcerny. This corrects $g(n, e)$ where one term was cubed instead of squared. This causes slight issues for low harmonic modes of very eccentric sources. See the issue for a plot demonstrating where this is focused.
+- Use decorators for visualisation to avoid changing global matplotlib settings for plot
