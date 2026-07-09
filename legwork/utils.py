@@ -58,7 +58,7 @@ def peters_g(n, e):
     bracket_2 = jv(n-2, n*e) - 2*jv(n, n*e) + jv(n+2, n*e)
     bracket_3 = jv(n, n*e)
 
-    g = n**4/32 * (bracket_1**2 + (1 - e**2) * bracket_2**2 + 4 / (3 * n**3) * bracket_3**2)
+    g = n**4/32 * (bracket_1**2 + (1 - e**2) * bracket_2**2 + 4 / (3 * n**2) * bracket_3**2)
 
     return g
 
