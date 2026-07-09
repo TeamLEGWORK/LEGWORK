@@ -69,7 +69,7 @@ def approximate_response_function(f, fstar):
     return (3 / 10) / (1 + 0.6 * (f / fstar)**2)
 
 
-def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_noise="robson19"):
+def lisa_psd(f, t_obs=4 * u.yr, L=2.5e9 * u.m, approximate_R=False, confusion_noise="karnesis21"):
     """Calculates the effective LISA power spectral density sensitivity curve
 
     Using equations from Robson+19, calculate the effective LISA power spectral
@@ -220,7 +220,7 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs="auto", 
     confusion_noise : `various`
         Galactic confusion noise. Acceptable inputs are either one of the values listed in
         :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
-        `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+        `instrument` - 'karnesis21' if LISA and 'huang20' if TianQin), or a custom function that gives the
         confusion noise at each frequency for a given mission length where it would be called by running
         `noise(f, t_obs)` and return a value with units of inverse Hertz
 
@@ -232,7 +232,7 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs="auto", 
     if instrument == "LISA":
         # update any auto values to be instrument specific
         L = 2.5e9 * u.m if L == "auto" else L
-        confusion_noise = "robson19" if confusion_noise == "auto" else confusion_noise
+        confusion_noise = "karnesis21" if confusion_noise == "auto" else confusion_noise
         t_obs = 4 * u.yr if t_obs == "auto" else t_obs
 
         # calculate psd
@@ -369,6 +369,42 @@ def get_confusion_noise_thiele21(f):
     return confusion_noise * u.Hz**(-1)
 
 
+def get_confusion_noise_karnesis21(f, t_obs=4 * u.yr):
+    """Calculate the confusion noise using the model from Karnesis+21 Eqs. 6,7 and Table II.
+    Note: This fit only applies to LISA and only when the mission length is 4 years.
+
+    Parameters
+    ----------
+    f : `float/array`
+        Frequencies at which to calculate the confusion noise, must have units of frequency
+    t_obs : `float`, optional
+        Mission length, parameters are defined via a fit valid up to 10 years. By default 4 years.
+
+    Returns
+    -------
+    confusion_noise : `float/array`
+        The confusion noise at each frequency
+    """
+    # erase the units for speed
+    f = f.to(u.Hz).value
+    t_obs = t_obs.to(u.yr).value 
+
+    # parameters from Karnesis+ 2021 Table II
+    a1 = -0.61 
+    ak = -0.34 
+    b1 = -2.78 
+    bk = -2.53 
+    A = 1.55e-44 
+    f2 = 0.00059
+    alpha = 1.66 
+
+    f1 = t_obs**a1 * 10**b1 #Eq 7
+    fk = t_obs**ak * 10**bk
+
+    confusion_noise = A/2 * f**(-7 / 3.) * np.exp(-(f/f1)**alpha) * (1 + np.tanh((fk - f)/f2)) * u.Hz**(-1)
+    return confusion_noise
+
+
 def get_confusion_noise(f, model, t_obs="auto"):
     """Calculate the confusion noise for a particular model
 
@@ -377,9 +413,9 @@ def get_confusion_noise(f, model, t_obs="auto"):
     f : `float/array`
         Frequencies at which to calculate the confusion noise, must have units of frequency
     model : str, optional
-        Which model to use for the confusion noise. Must be one of 'robson19', 'huang20', 'thiele21' or None.
+        Which model to use for the confusion noise. Must be one of 'robson19', 'huang20', 'thiele21', 'karnesis21' or None.
     t_obs : `float`, optional
-        Mission length. Default is 4 years for robson19 and thiele21 and 5 years for huang20.
+        Mission length. Default is 4 years for robson19, thiele21 and karnesis21 and 5 years for huang20.
 
     Returns
     -------
@@ -403,6 +439,9 @@ def get_confusion_noise(f, model, t_obs="auto"):
         else:
             error = "Invalid mission length: Thiele+21 confusion noise is only fit for `t_obs=4*u.yr`"
             raise ValueError(error)
+    elif model == "karnesis21":
+        t_obs = 4 * u.yr if t_obs == "auto" else t_obs
+        return get_confusion_noise_karnesis21(f=f, t_obs=t_obs)
     elif model is None:
         f = f.to(u.Hz).value
         return np.zeros_like(f) * u.Hz**(-1) if isinstance(f, (list, np.ndarray)) else 0.0 * u.Hz**(-1)

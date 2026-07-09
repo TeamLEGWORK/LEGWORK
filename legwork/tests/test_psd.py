@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
         """check that confusion noise is doing logical things"""
         frequencies = np.logspace(-6, 0, 10000) * u.Hz
 
-        models = ["robson19", "huang20", "thiele21"]
+        models = ["robson19", "huang20", "thiele21", "karnesis21"]
         instruments = ["LISA", "TianQin", "LISA"]
         for model, instrument in zip(models, instruments):
             confused = psd.get_confusion_noise(frequencies, model=model)

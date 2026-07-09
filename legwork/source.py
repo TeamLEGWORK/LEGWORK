@@ -537,7 +537,7 @@ class Source():
         confusion_noise : `various`
             Galactic confusion noise. Acceptable inputs are either one of the values listed in
             :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
-            `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+            `instrument` - 'karnesis21' if LISA and 'huang20' if TianQin), or a custom function that gives the
             confusion noise at each frequency for a given mission length where it would be called by running
             `noise(f, t_obs)` and return a value with units of inverse Hertz
 
@@ -670,7 +670,7 @@ class Source():
         confusion_noise : `various`
             Galactic confusion noise. Acceptable inputs are either one of the values listed in
             :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
-            `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+            `instrument` - 'karnesis21' if LISA and 'huang20' if TianQin), or a custom function that gives the
             confusion noise at each frequency for a given mission length where it would be called by running
             `noise(f, t_obs)` and return a value with units of inverse Hertz
 
@@ -822,7 +822,7 @@ class Source():
         confusion_noise : `various`
             Galactic confusion noise. Acceptable inputs are either one of the values listed in
             :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
-            `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+            `instrument` - 'karnesis21' if LISA and 'huang20' if TianQin), or a custom function that gives the
             confusion noise at each frequency for a given mission length where it would be called by running
             `noise(f, t_obs)` and return a value with units of inverse Hertz
 
