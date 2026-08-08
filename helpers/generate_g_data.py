@@ -8,4 +8,4 @@ N, E = np.meshgrid(n_range, e_range)
 
 g_vals = lw.utils.peters_g(N, E)
 
-np.save("../legwork/peters_g.npy", g_vals)
+np.save("../src/legwork/peters_g.npy", g_vals)
