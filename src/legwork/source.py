@@ -215,7 +215,7 @@ class Source():
 
     def __repr__(self):
         return f"<Source: {self.n_sources} sources>"
-    
+
     def __len__(self):
         return self.n_sources
 
@@ -1259,7 +1259,8 @@ class Source():
             weights = self.weights[stat] if self.weights is not None else None
             fig, ax = vis.plot_sources_on_sc(f_dom=f_dom, snr=self.snr[stat], weights=weights,
                                              snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
-                                             label=label, sc_vis_settings=sc_vis_settings, **self._sc_params, **kwargs)
+                                             label=label, sc_vis_settings=sc_vis_settings,
+                                             **self._sc_params, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
@@ -1327,4 +1328,4 @@ class VerificationBinaries(Source):
 
 
     def __repr__(self):
-        return f"<VerificationBinaries>"
+        return "<VerificationBinaries>"

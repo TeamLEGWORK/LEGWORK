@@ -2,7 +2,6 @@ import numpy as np
 import legwork.strain as strain
 import legwork.utils as utils
 import unittest
-from astropy.coordinates import SkyCoord
 
 from astropy import units as u
 

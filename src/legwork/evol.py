@@ -3,7 +3,6 @@ binary parameters."""
 
 import legwork.utils as utils
 from numba import jit, njit
-import numba as nb
 from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
