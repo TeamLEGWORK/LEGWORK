@@ -153,7 +153,7 @@ having two when we could just set `f_dom=2 f_orb`
 - [Issues [#102](https://github.com/TeamLEGWORK/LEGWORK/issues/102)] Make SNR functions notice when you change confusion noise
     - `Source.get_snr()` now takes all `sc_params` as arguments for re-interpolation etc
     - `Source.get_snr_stationary` and `Source.get_snr_evolving` have the same parameters added as above
-    - All functions in `snr` now take `**kwargs` that are passed directly to `psd.power_spectral_density` for maximum flexibility 
+    - All functions in `snr` now take `**kwargs` that are passed directly to `psd.power_spectral_density` for maximum flexibility
 
 
 ## 0.4.4
@@ -194,3 +194,18 @@ having two when we could just set `f_dom=2 f_orb`
 - Bug fix for [#127](https://github.com/TeamLEGWORK/LEGWORK/issues/127) found by @willcerny. This corrects $g(n, e)$ where one term was cubed instead of squared. This causes slight issues for low harmonic modes of very eccentric sources. See the issue for a plot demonstrating where this is focused.
 - Use decorators for visualisation to avoid changing global matplotlib settings for plot
 - Change to use `np.trapezoid` over `np.trapz` and fix numpy to >= 2.0
+
+## 1.0.0
+*TODO*
+
+- Features/enhancements:
+    - New LISA confusion noise model "karnesis21" added, set as the new default for all LISA calculations
+
+- Code clean up and package modernisation:
+    - Consolidate all packaging/tooling config into `pyproject.toml` (PEP 621) — `setup.py`, `setup.cfg`, `requirements.txt`, `environment.yml` and `docs/requirements.txt` have been removed
+    - Move the package to a `src/` layout (`legwork/` -> `src/legwork/`)
+    - Replace `flake8` with `ruff` (configured under `[tool.ruff]` in `pyproject.toml`) and fix the lint errors it surfaced
+    - Build releases with `python -m build` instead of `python setup.py sdist bdist_wheel`
+    - Split CI into separate `Lint`, `Tests` and `Docs notebooks` workflows so a failure says what broke
+    - Add `.pre-commit-config.yaml` so lint problems are caught locally before they reach CI
+    - Add Dependabot to keep the GitHub Actions versions up to date
