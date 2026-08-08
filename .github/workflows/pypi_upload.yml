@@ -1,5 +1,4 @@
 # This workflow automatically uploads the package to PyPi every time we create a new release on GitHub
-# Based on this guide: https://www.caktusgroup.com/blog/2021/02/11/automating-pypi-releases/
 
 name: Upload Python Package to PyPi
 
@@ -13,19 +12,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.13'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
+        python -m pip install build twine
+    - name: Build the distributions
+      run: python -m build
+    - name: Check the distributions
+      run: twine check dist/*
+    - name: Publish to PyPI
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI }}
-      run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+      run: twine upload dist/*
