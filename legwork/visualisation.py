@@ -5,23 +5,40 @@ import astropy.units as u
 import legwork.psd as psd
 from astropy.visualization import quantity_support
 
-# set the default font and fontsize
-plt.rc('font', family='serif')
-plt.rcParams['text.usetex'] = False
 fs = 24
-
-# update various fontsizes to match
-params = {'figure.figsize': (12, 8),
-          'legend.fontsize': fs,
-          'axes.labelsize': fs,
-          'xtick.labelsize': 0.7 * fs,
-          'ytick.labelsize': 0.7 * fs}
-plt.rcParams.update(params)
+style_params = {
+    'font.family': 'serif',
+    'text.usetex': False,
+    'figure.figsize': (12, 8),
+    'axes.titlesize': 24,
+    'legend.title_fontsize': 18,
+    'legend.fontsize': 16,
+    'axes.labelsize': 24,
+    'xtick.labelsize': 21,
+    'ytick.labelsize': 21,
+    'axes.linewidth': 1.1,
+    'xtick.major.size': 7,
+    'xtick.minor.size': 4,
+    'ytick.major.size': 7,
+    'ytick.minor.size': 4,
+    'xtick.minor.visible': True,
+    'ytick.minor.visible': True,
+}
 
 __all__ = ['plot_1D_dist', 'plot_2D_dist', 'plot_sensitivity_curve',
            'plot_sources_on_sc']
 
 
+# define a decorator for plotting functions which applies the style params in a context environment so that
+# the style is only applied to plots made by legwork and not to any other plots the user might make
+def legwork_plot_style(func):
+    def wrapper(*args, **kwargs):
+        with plt.rc_context(style_params):
+            return func(*args, **kwargs)
+    return wrapper
+
+
+@legwork_plot_style
 def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax=None, show=True,
                  figsize=(10, 7), xlabel=None, ylabel=None, xlim=None, ylim=None, color=None, **kwargs):
     """Plot a 1D distribution of ``x``.
@@ -150,6 +167,7 @@ def plot_1D_dist(x, weights=None, disttype="hist", log_scale=False, fig=None, ax
     return fig, ax
 
 
+@legwork_plot_style
 def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show=True, figsize=(12, 7),
                  xlabel=None, ylabel=None, xlim=None, ylim=None, log_scale=False,
                  color=None, scatter_s=20, **kwargs):
@@ -281,6 +299,7 @@ def plot_2D_dist(x, y, weights=None, disttype="scatter", fig=None, ax=None, show
     return fig, ax
 
 
+@legwork_plot_style
 def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=None, show=True,
                            figsize=(10, 7), color="#18068b", fill=True, alpha=0.2, linewidth=1, label=None,
                            **kwargs):
@@ -372,6 +391,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     return fig, ax
 
 
+@legwork_plot_style
 def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
                        instrument="LISA", custom_psd=None, L="auto", approximate_R=False,
                        confusion_noise="auto", fig=None, ax=None, show=True, sc_vis_settings={}, **kwargs):
