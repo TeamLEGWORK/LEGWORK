@@ -30,4 +30,3 @@ also accounts for frequency spreading due to doppler modulation from the detecto
 This means that this calculation is only valid for circular sources and will *always* return
 SNRs that are lower than the fully averaged SNR calculation because of the effects of the
 frequency spreading.
- 

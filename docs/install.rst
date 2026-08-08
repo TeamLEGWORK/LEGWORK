@@ -41,7 +41,7 @@ Installation
         Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
 
     .. tab:: Development (from GitHub)
-        
+
         .. warning::
 
             We don't guarantee that there won't be mistakes or bugs in the development version, use at your own risk!
@@ -50,7 +50,7 @@ Installation
         <https://github.com/TeamLEGWORK/LEGWORK>`_. To start, clone the repository onto your machine:
 
         .. code-block:: bash
-        
+
             git clone https://github.com/TeamLEGWORK/LEGWORK
             cd LEGWORK
 
