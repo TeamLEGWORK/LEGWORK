@@ -1,0 +1,33 @@
+# Local checks that mirror what the lint workflow enforces on PRs.
+# To start using these, run the following once in your clone:
+#     pip install pre-commit
+#     pre-commit install
+# After that they run automatically on `git commit`. To check the whole repo:
+#     pre-commit run --all-files
+# To bump the pinned versions below:
+#     pre-commit autoupdate
+
+ci:
+  autoupdate_schedule: monthly
+  autoupdate_commit_msg: "ci: bump pre-commit hook versions"
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.2
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # notebooks are JSON, so whitespace fixes there are pure diff noise
+      - id: end-of-file-fixer
+        exclude: '\.ipynb$'
+      - id: trailing-whitespace
+        exclude: '\.ipynb$'
+      - id: check-toml
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1000]
