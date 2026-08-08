@@ -4,6 +4,7 @@ import numpy as np
 import astropy.units as u
 import legwork.psd as psd
 from astropy.visualization import quantity_support
+import warnings
 
 fs = 24
 style_params = {
@@ -370,10 +371,15 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
     # plot the curve and fill if needed
     with quantity_support():
-        ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
-        if fill:
-            ax.fill_between(frequency_range, np.zeros_like(noise_amplitude), noise_amplitude,
-                            alpha=alpha, color=color)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", 
+                message="This axis already has a converter set and is updating"
+            )
+            ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
+            if fill:
+                ax.fill_between(frequency_range, np.zeros_like(noise_amplitude), noise_amplitude,
+                                alpha=alpha, color=color)
 
     # adjust labels, sizes and frequency limits to plot is flush to the edges
     ax.set_xlabel(r'Frequency [$\rm Hz$]')
@@ -436,7 +442,7 @@ def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
     confusion_noise : `various`
         Galactic confusion noise. Acceptable inputs are either one of the values listed in
         :meth:`legwork.psd.get_confusion_noise`, "auto" (automatically selects confusion noise based on
-        `instrument` - 'robson19' if LISA and 'huang20' if TianQin), or a custom function that gives the
+        `instrument` - 'karnesis21' if LISA and 'huang20' if TianQin), or a custom function that gives the
         confusion noise at each frequency for a given mission length where it would be called by running
         `noise(f, t_obs)` and return a value with units of inverse Hertz
 
