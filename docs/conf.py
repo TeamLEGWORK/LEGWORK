@@ -22,7 +22,7 @@ import hacks  # noqa: F401  (imported for its side effects)
 # -- Project information -----------------------------------------------------
 
 project = 'LEGWORK'
-copyright = '2021, Tom Wagg, Katie Breivik'
+copyright = '2021-2026, Tom Wagg, Katie Breivik'
 author = 'Tom Wagg, Katie Breivik'
 
 
