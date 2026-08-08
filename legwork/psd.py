@@ -10,7 +10,7 @@ import os
 
 __all__ = ['load_response_function', 'approximate_response_function', 'power_spectral_density',
            'lisa_psd', 'tianqin_psd', 'get_confusion_noise', 'get_confusion_noise_robson19',
-           'get_confusion_noise_huang20', 'get_confusion_noise_thiele21']
+           'get_confusion_noise_huang20', 'get_confusion_noise_thiele21', 'get_confusion_noise_karnesis21']
 
 
 def load_response_function(f, fstar=19.09e-3):
@@ -371,7 +371,8 @@ def get_confusion_noise_thiele21(f):
 
 def get_confusion_noise_karnesis21(f, t_obs=4 * u.yr):
     """Calculate the confusion noise using the model from Karnesis+21 Eqs. 6,7 and Table II.
-    Note: This fit only applies to LISA and only when the mission length is 4 years.
+
+    This fit assumes an SNR threshold of 7 and applies a running median (column 4 from Table II).
 
     Parameters
     ----------
@@ -389,19 +390,23 @@ def get_confusion_noise_karnesis21(f, t_obs=4 * u.yr):
     f = f.to(u.Hz).value
     t_obs = t_obs.to(u.yr).value 
 
-    # parameters from Karnesis+ 2021 Table II
-    a1 = -0.61 
-    ak = -0.34 
-    b1 = -2.78 
-    bk = -2.53 
-    A = 1.55e-44 
-    f2 = 0.00059
-    alpha = 1.66 
+    # parameters from Karnesis+ 2021 Table II, column 4
+    a_1 = -0.15
+    a_k = -0.37 
+    b_1 = -2.72 
+    b_k = -2.49 
+    A = 1.15e-44 
+    f_2 = 0.00067
+    alpha = 1.56 
 
-    f1 = t_obs**a1 * 10**b1 #Eq 7
-    fk = t_obs**ak * 10**bk
+    # equation 7 handles the Tobs dependence
+    f_1 = t_obs**a_1 * 10**b_1
+    f_knee = t_obs**a_k * 10**b_k
 
-    confusion_noise = A/2 * f**(-7 / 3.) * np.exp(-(f/f1)**alpha) * (1 + np.tanh((fk - f)/f2)) * u.Hz**(-1)
+    confusion_noise = (
+        A/2 * f**(-7 / 3.) * np.exp(-(f / f_1)**alpha)
+        * (1 + np.tanh((f_knee - f)/f_2)) * u.Hz**(-1)
+    )
     return confusion_noise
 
 
