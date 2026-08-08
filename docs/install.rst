@@ -7,18 +7,23 @@ Installation
 
         This is our recommend installation method! Follow the steps below to start using ``LEGWORK``!
 
-        #. :download:`Download the environment.yml file from our repository <https://raw.githubusercontent.com/TeamLEGWORK/LEGWORK/main/environment.yml>`
-        #. Create a new conda environment using this file
+        #. Create a new conda environment for LEGWORK
 
             .. code-block:: bash
 
-                conda env create -f path/to/environment.yml
+                conda create --name legwork "python=3.13" pip -c conda-forge
 
         #. Activate the environment by running
 
             .. code-block:: bash
 
                 conda activate legwork
+
+        #. Install LEGWORK (and its dependencies) into the environment
+
+            .. code-block:: bash
+
+                pip install legwork
 
         and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
         Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
@@ -54,7 +59,7 @@ Installation
 
         .. code-block:: bash
 
-            conda create --name legwork "python>=3.7" pip "numba>=0.50" "numpy>=1.17" "astropy>=4.0" "scipy>=1.5.0" "matplotlib>=3.3.2" "seaborn>=0.11.1" "schwimmbad>=0.3.2" -c conda-forge -c defaults
+            conda create --name legwork "python=3.13" pip -c conda-forge
 
         And then activate the environment by running
 
@@ -62,11 +67,13 @@ Installation
 
             conda activate legwork
 
-        At this point, all that's left to do is install LEGWORK!
+        At this point, all that's left to do is install LEGWORK! We recommend an editable install so that
+        your changes to the source are picked up immediately, along with the ``test`` extra so that you can
+        run the test suite.
 
         .. code-block:: bash
 
-            pip install .
+            pip install -e ".[test]"
 
         and you should be all set! Check out our `quickstart tutorial <notebooks/Quickstart.ipynb>`__ to learn some LEGWORK basics.
         Note that if you also want to work with the notebooks in the tutorials and/or demos you'll also need to install jupyter/ipython in this environment!
