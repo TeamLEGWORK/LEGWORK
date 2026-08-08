@@ -1,15 +1,25 @@
 # Executes every demo notebook to check that the documented examples still run.
 # Only needs the [test] extra: nbmake pulls in ipykernel itself, and the demos
 # import nothing beyond legwork's own runtime dependencies.
-# No Python matrix: this checks the notebooks, not interpreter compatibility.
+
 
 name: Test demo notebooks
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'docs/demos/**'
+      - 'pyproject.toml'
+      - '.github/workflows/notebooks.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'docs/demos/**'
+      - 'pyproject.toml'
+      - '.github/workflows/notebooks.yml'
   workflow_dispatch:
 
 permissions:
@@ -21,13 +31,20 @@ concurrency:
 
 jobs:
   notebooks:
+    name: Notebooks on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # oldest and newest supported versions — see note at the top of the file
+        python-version: ['3.11', '3.13']
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: ${{ matrix.python-version }}
     - name: Install LEGWORK
       run: |
         python -m pip install --upgrade pip
