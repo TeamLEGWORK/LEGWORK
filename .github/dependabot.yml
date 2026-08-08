@@ -1,0 +1,20 @@
+# Keeps the GitHub Actions used in .github/workflows up to date.
+# Only the "github-actions" ecosystem is enabled: LEGWORK is a library with open
+# lower bounds on its dependencies (e.g. numpy >= 2.0), so there are no pins for
+# Dependabot to bump in pyproject.toml — raising a minimum supported version is a
+# compatibility decision we want to make deliberately, not automatically.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # Bundle every action bump into a single PR rather than one PR per action
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
