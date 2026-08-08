@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
         """check that confusion noise is doing logical things"""
         frequencies = np.logspace(-6, 0, 10000) * u.Hz
 
-        models = ["robson19", "huang20", "thiele21"]
+        models = ["robson19", "huang20", "thiele21", "karnesis21"]
         instruments = ["LISA", "TianQin", "LISA"]
         for model, instrument in zip(models, instruments):
             confused = psd.get_confusion_noise(frequencies, model=model)
@@ -48,8 +48,8 @@ class Test(unittest.TestCase):
 
         # ensure that a shorter mission length never decreases the noise
         for noise in noises:
-            above = noise > regular
-            close = np.isclose(noise, regular, atol=1e-39)
+            above = noise > looonngg
+            close = np.isclose(noise, looonngg, atol=1e-39)
             self.assertTrue(np.logical_or(above, close).all())
 
     def test_alternate_instruments(self):
