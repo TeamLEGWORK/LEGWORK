@@ -4,6 +4,7 @@ import numpy as np
 import astropy.units as u
 import legwork.psd as psd
 from astropy.visualization import quantity_support
+import warnings
 
 fs = 24
 style_params = {
@@ -370,10 +371,15 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
 
     # plot the curve and fill if needed
     with quantity_support():
-        ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
-        if fill:
-            ax.fill_between(frequency_range, np.zeros_like(noise_amplitude), noise_amplitude,
-                            alpha=alpha, color=color)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", 
+                message="This axis already has a converter set and is updating"
+            )
+            ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
+            if fill:
+                ax.fill_between(frequency_range, np.zeros_like(noise_amplitude), noise_amplitude,
+                                alpha=alpha, color=color)
 
     # adjust labels, sizes and frequency limits to plot is flush to the edges
     ax.set_xlabel(r'Frequency [$\rm Hz$]')
