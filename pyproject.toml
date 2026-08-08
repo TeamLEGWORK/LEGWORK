@@ -1,6 +1,108 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "legwork"
+description = "A python package to compute gravitational wave evolution and signal to noise ratio calculations for LISA"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE.rst"]
+authors = [
+    { name = "Tom Wagg", email = "tomjwagg@gmail.com" },
+    { name = "Katie Breivik" },
+]
+keywords = [
+    "gravitational waves",
+    "LISA",
+    "astronomy",
+    "astrophysics",
+    "binaries",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numba >= 0.58",
+    "numpy >= 2.0",
+    "astropy >= 6.1",
+    "scipy >= 1.13",
+    "matplotlib >= 3.8",
+    "seaborn >= 0.13.2",
+    "schwimmbad >= 0.4.2",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/TeamLEGWORK/LEGWORK"
+Documentation = "https://legwork.readthedocs.io"
+Repository = "https://github.com/TeamLEGWORK/LEGWORK"
+Changelog = "https://github.com/TeamLEGWORK/LEGWORK/blob/main/changelog.md"
+"Bug Tracker" = "https://github.com/TeamLEGWORK/LEGWORK/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "nbmake",
+]
+docs = [
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinx_automodapi",
+    "sphinxcontrib-bibtex",
+    "sphinx_copybutton",
+    "sphinx-tabs",
+    "nbsphinx >= 0.8.6",
+    "numpydoc",
+    "ipython",
+    "ipykernel",
+]
+lint = [
+    "ruff",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "legwork._version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.npy", "*.npz"]
+
+[tool.pytest.ini_options]
+testpaths = ["src/legwork/tests"]
+
+[tool.coverage.run]
+source = ["legwork"]
+omit = [
+    "*/legwork/tests/*",
+    "*/legwork/__init__.py",
+    "*/legwork/visualisation.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about packages we have installed
+    "except ImportError",
+]
+
+[tool.ruff]
+line-length = 110
+extend-exclude = ["docs/notebooks", "docs/demos"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
