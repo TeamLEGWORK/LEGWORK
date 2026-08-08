@@ -48,8 +48,8 @@ class Test(unittest.TestCase):
 
         # ensure that a shorter mission length never decreases the noise
         for noise in noises:
-            above = noise > regular
-            close = np.isclose(noise, regular, atol=1e-39)
+            above = noise > looonngg
+            close = np.isclose(noise, looonngg, atol=1e-39)
             self.assertTrue(np.logical_or(above, close).all())
 
     def test_alternate_instruments(self):
