@@ -338,7 +338,7 @@ html[data-theme="dark"] .toms-nav-box {
     background-color: var(--lw-bg-raised);
 }
 /* shrink on hover */
-html[data-theme="dark"] .toms-nav-container .box:hover, .toms-nav-box:hover {
+html[data-theme="dark"] .toms-nav-container .box:hover, html[data-theme="dark"] .toms-nav-box:hover {
     transform: scale(0.9);
     background-color: #2980b9;
 }
