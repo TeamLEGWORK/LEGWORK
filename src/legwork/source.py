@@ -109,8 +109,8 @@ class Source():
         :meth:`legwork.utils.get_a_from_f_orb`
 
     ecc_tol : `float`
-        Eccentricity above which a binary is considered eccentric. Set by
-        :meth:`legwork.source.Source.find_eccentric_transition`
+        Eccentricity above which a binary is considered eccentric. Derived from ``gw_lum_tol`` by
+        :meth:`legwork.source.Source.find_eccentric_transition` and so read-only
 
     snr : `float/array`
         Signal-to-noise ratio. Set by :meth:`legwork.source.Source.get_snr`
@@ -336,7 +336,7 @@ class Source():
             file.attrs["gw_lum_tol"] = self.gw_lum_tol
             file.attrs["stat_tol"] = self.stat_tol
             file.attrs["n_proc"] = self.n_proc
-            file.attrs["interpolate_g"] = self.g is not None
+            file.attrs["interpolate_g"] = self.interpolate_g
             file.attrs["interpolate_sc"] = self.interpolate_sc
 
             # save the source variables (any that are None are skipped)
@@ -488,8 +488,20 @@ class Source():
     def a(self):
         """Semi-major axis. Set using ``f_orb``, ``m_1`` and ``m_2`` in
         :meth:`legwork.utils.get_a_from_f_orb`, so it stays consistent with ``f_orb`` if the sources are
-        evolved or masked"""
+        evolved or masked. Assigning to this instead updates ``f_orb`` to match."""
         return utils.get_a_from_f_orb(self.f_orb, self.m_1, self.m_2)
+
+    @a.setter
+    def a(self, a):
+        assert isinstance(a, u.quantity.Quantity), "`a` must have units"
+
+        # only `f_orb` is stored, so convert and let the getter convert back
+        self.f_orb = utils.get_f_orb_from_a(a, self.m_1, self.m_2)
+
+    @property
+    def interpolate_g(self):
+        """Whether the g(n,e) function from Peters (1964) is interpolated for these sources"""
+        return self.g is not None
 
     def create_harmonics_functions(self):
         """Create two harmonics related functions as methods for the Source class
@@ -554,14 +566,24 @@ class Source():
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric. We define this as the maximum
         eccentricity at which the n=2 harmonic is the total GW luminosity given the tolerance
-        ``self.gw_lum_tol``. Store the result in ``self.ecc_tol``"""
+        ``self.gw_lum_tol``. Store the result in ``self._ecc_tol``"""
         # only need to check lower eccentricities
         e_range = np.linspace(0.0, 0.2, 10000)
 
         # find first e where n=2 harmonic is below tolerance
         circular_lum = utils.peters_g(2, e_range)
         lum_within_tolerance = (1 - self.gw_lum_tol) * utils.peters_f(e_range)
-        self.ecc_tol = e_range[circular_lum < lum_within_tolerance][0]
+        self._ecc_tol = e_range[circular_lum < lum_within_tolerance][0]
+
+    @property
+    def ecc_tol(self):
+        """Eccentricity above which a binary is considered eccentric
+
+        This is derived from :attr:`legwork.source.Source.gw_lum_tol` in
+        :meth:`legwork.source.Source.find_eccentric_transition` and so can't be set directly, change
+        ``gw_lum_tol`` instead.
+        """
+        return self._ecc_tol
 
     @property
     def gw_lum_tol(self):
