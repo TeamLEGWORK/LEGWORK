@@ -19,14 +19,6 @@ html[data-theme="dark"] {
     --lw-link-visited: #b48ead;
 }
 
-/* --- the logo -----------------------------------------------------------
-   html_logo in conf.py can only take a single image, so swap the <img> out
-   with CSS instead. Doing it here rather than in JavaScript means the right
-   logo is painted first time round, with no flicker on load. */
-html[data-theme="dark"] .wy-side-nav-search > a img.logo {
-    content: url("images/shoe_logo_word_darkmode.png");
-}
-
 /* --- page furniture ----------------------------------------------------- */
 html[data-theme="dark"] body,
 html[data-theme="dark"] .wy-body-for-nav,
@@ -79,11 +71,6 @@ html[data-theme="dark"] .rst-content .highlighted {
 html[data-theme="dark"] .wy-nav-side {
     background: var(--lw-bg-sunken);
 }
-
-/* html[data-theme="dark"] .wy-side-nav-search,
-html[data-theme="dark"] .wy-nav-top {
-    background: var(--lw-bg-raised);
-} */
 
 html[data-theme="dark"] .wy-side-nav-search input[type=text] {
     background: var(--lw-text);
