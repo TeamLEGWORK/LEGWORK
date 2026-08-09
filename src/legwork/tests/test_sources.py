@@ -3,6 +3,8 @@ import legwork.snr as snr
 import legwork.source as source
 import legwork.strain as strain
 import legwork.utils as utils
+import os
+import tempfile
 import unittest
 
 from astropy import units as u
@@ -44,6 +46,10 @@ class Test(unittest.TestCase):
         final_merger_times[final_merger_times < 0 * u.yr] = 0 * u.yr
         self.assertTrue(np.allclose(final_merger_times,
                                     evolved_sources.t_merge))
+
+        # the semi-major axis should follow the evolved frequencies rather than going stale
+        self.assertTrue(np.allclose(evolved_sources.a,
+                                    utils.get_a_from_f_orb(evolved_sources.f_orb, m_1, m_2)))
 
     def test_source_snr(self):
         """check that source calculates snr in correct way"""
@@ -457,3 +463,147 @@ class Test(unittest.TestCase):
             "custom_psd": None,
         }
         self.assertTrue(correct_final_sc_params == sources._sc_params)
+
+    @staticmethod
+    def _random_sources(n_values=20, positions=False, **kwargs):
+        """create a random set of circular sources for testing masking and file IO"""
+        m_1 = np.random.uniform(1, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(1, 10, n_values) * u.Msun
+        dist = np.random.uniform(1, 30, n_values) * u.kpc
+        f_orb = 10**(np.random.uniform(-5, -3, n_values)) * u.Hz
+        ecc = np.zeros(n_values)
+
+        position = None
+        if positions:
+            position = SkyCoord(np.random.uniform(0, 360, n_values) * u.deg,
+                                np.arcsin(np.random.uniform(-1, 1, n_values)) * u.rad,
+                                distance=dist, frame="galactic")
+
+        return source.Source(m_1=m_1, m_2=m_2, ecc=ecc, dist=dist, f_orb=f_orb, position=position,
+                             weights=np.random.uniform(0, 1, n_values), interpolate_g=False, **kwargs)
+
+    def test_masking_sources(self):
+        """check that sources can be masked with any index identifier"""
+        n_values = 20
+        sources = self._random_sources(n_values=n_values)
+        sources.get_snr()
+        sources.get_merger_time()
+
+        # every type of index should give the same sources as masking the arrays directly
+        inds = np.arange(n_values)
+        for ind in [5, -1, [1, 3, 5], np.array([0, 7]), slice(2, 8, 2), slice(None),
+                    sources.f_orb > 1e-4 * u.Hz]:
+            masked = sources[ind]
+            expected = inds[[ind]] if isinstance(ind, int) else inds[ind]
+
+            self.assertTrue(len(masked) == len(expected))
+            self.assertTrue(masked.n_sources == len(expected))
+            self.assertTrue(np.all(masked.m_1 == sources.m_1[expected]))
+            self.assertTrue(np.all(masked.m_c == sources.m_c[expected]))
+            self.assertTrue(np.all(masked.a == sources.a[expected]))
+            self.assertTrue(np.all(masked.ecc == sources.ecc[expected]))
+            self.assertTrue(np.all(masked.snr == sources.snr[expected]))
+            self.assertTrue(np.all(masked.t_merge == sources.t_merge[expected]))
+            self.assertTrue(np.all(masked.weights == sources.weights[expected]))
+
+            # the interpolated functions should be passed straight through
+            self.assertTrue(masked.g is sources.g)
+            self.assertTrue(masked.sc is sources.sc)
+
+        # the masked class should be able to recompute the same SNRs
+        mask = sources.m_1 > 5 * u.Msun
+        self.assertTrue(np.allclose(sources[mask].get_snr(), sources.snr[mask]))
+
+        # changing the sc params of the mask shouldn't affect the original class
+        masked = sources[mask]
+        masked.update_sc_params({"instrument": "TianQin"})
+        self.assertTrue(sources._sc_params["instrument"] == "LISA")
+
+    def test_masking_positions(self):
+        """check that positions, inclinations and polarisations are masked too"""
+        sources = self._random_sources(positions=True)
+        mask = np.random.choice([True, False], sources.n_sources)
+
+        masked = sources[mask]
+        self.assertTrue(np.all(masked.position.lon == sources.position.lon[mask]))
+        self.assertTrue(np.all(masked.position.lat == sources.position.lat[mask]))
+        self.assertTrue(np.all(masked.inclination == sources.inclination[mask]))
+        self.assertTrue(np.all(masked.polarisation == sources.polarisation[mask]))
+
+    def test_bad_masks(self):
+        """check that nonsense index identifiers are rejected"""
+        sources = self._random_sources(n_values=10)
+
+        for bad_ind in [np.repeat(True, 5), 1.5, ["not", "an", "index"]]:
+            it_broke = False
+            try:
+                sources[bad_ind]
+            except ValueError:
+                it_broke = True
+            self.assertTrue(it_broke)
+
+    def test_source_file_io(self):
+        """check that sources can be saved to a file and read back in identically"""
+        sources = self._random_sources(positions=True, interpolate_sc=True,
+                                       sc_params={"t_obs": 5 * u.yr, "confusion_noise": None})
+        sources.get_snr()
+        sources.get_merger_time()
+
+        with tempfile.TemporaryDirectory() as directory:
+            file_name = os.path.join(directory, "sources")
+            sources.save(file_name)
+
+            # saving again should only work when overwriting is allowed
+            it_broke = False
+            try:
+                sources.save(file_name)
+            except FileExistsError:
+                it_broke = True
+            self.assertTrue(it_broke)
+            sources.save(file_name, overwrite=True)
+
+            loaded = source.Source.from_file(file_name)
+
+            for var in ["m_1", "m_2", "m_c", "dist", "f_orb", "a", "ecc", "weights", "snr", "t_merge",
+                        "max_snr_harmonic", "merged", "inclination", "polarisation"]:
+                self.assertTrue(np.all(getattr(loaded, var) == getattr(sources, var)))
+            self.assertTrue(np.all(loaded.position.lon == sources.position.lon))
+            self.assertTrue(np.all(loaded.position.lat == sources.position.lat))
+
+            # settings should match too (including the None confusion noise)
+            self.assertTrue(loaded._sc_params == sources._sc_params)
+            self.assertTrue(loaded._gw_lum_tol == sources._gw_lum_tol)
+            self.assertTrue(loaded.stat_tol == sources.stat_tol)
+            self.assertTrue(loaded.interpolate_sc == sources.interpolate_sc)
+            self.assertTrue((loaded.g is None) == (sources.g is None))
+
+            # and the loaded sources should give the same SNRs
+            self.assertTrue(np.allclose(loaded.get_snr(), sources.snr))
+
+    def test_source_file_io_subclasses(self):
+        """check that file IO handles subclasses and interpolation settings"""
+        with tempfile.TemporaryDirectory() as directory:
+            file_name = os.path.join(directory, "stationary_sources.h5")
+
+            sources = self._random_sources(n_values=10)
+            stationary = source.Stationary(m_1=sources.m_1, m_2=sources.m_2, ecc=sources.ecc,
+                                           dist=sources.dist, f_orb=sources.f_orb, interpolate_g=False,
+                                           interpolate_sc=False)
+            stationary.save(file_name)
+
+            # the subclass should be recreated automatically
+            loaded = source.Source.from_file(file_name)
+            self.assertTrue(isinstance(loaded, source.Stationary))
+            self.assertTrue(loaded.g is None and loaded.sc is None)
+
+            # but the user can override the interpolation settings
+            loaded = source.Source.from_file(file_name, interpolate_sc=True)
+            self.assertTrue(loaded.sc is not None)
+
+            # missing files should be flagged
+            it_broke = False
+            try:
+                source.Source.from_file(os.path.join(directory, "not_a_file.h5"))
+            except FileNotFoundError:
+                it_broke = True
+            self.assertTrue(it_broke)
