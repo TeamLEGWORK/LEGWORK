@@ -86,17 +86,17 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_theme = 'sphinx_rtd_theme'
 
-html_theme_options = {"display_version": True, "logo_only" : True}
+html_theme_options = {"version_selector": True, "logo_only" : True}
 html_last_updated_fmt = "%Y %b %d at %H:%M:%S UTC"
 html_show_sourcelink = False
-html_favicon = "images/shoe_logo.ico"
-html_logo = "images/shoe_logo_word.png"
+html_favicon = "_static/images/shoe_logo.ico"
+html_logo = "_static/images/shoe_logo_word.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_css_files = ["custom.css"]
+html_css_files = ["custom.css", "dark_mode.css"]
 html_js_files = ['custom.js']
 
 # autodocs

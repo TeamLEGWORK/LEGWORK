@@ -141,3 +141,4 @@ cython_debug/
 docs/api
 local_tests/
 .vscode/
+docs/_generated/

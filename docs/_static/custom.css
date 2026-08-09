@@ -1,3 +1,61 @@
+/* Show only the image/element matching the current theme. Written as
+   :not([data-theme="dark"]) rather than [data-theme="light"] so that light mode
+   is what you get if the theme hasn't been set yet (e.g. JavaScript disabled) */
+html:not([data-theme="dark"]) .only-dark,
+html[data-theme="dark"] .only-light {
+    display: none;
+}
+
+/* The theme toggle, added to the sidebar header by custom.js */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 6px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    color: #fcfcfc;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.theme-toggle svg {
+    flex-shrink: 0;
+}
+
+/* Fade the colours when the theme changes. custom.js only puts .theme-switching
+   on <html> for the duration of a switch, so the page still paints instantly on
+   load instead of animating in from the theme's default colours. Keep the
+   duration here in step with THEME_TRANSITION_MS in custom.js */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    transition: background-color 300ms ease,
+                color 300ms ease,
+                border-color 300ms ease,
+                fill 300ms ease !important;
+    transition-delay: 0s !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.theme-switching,
+    html.theme-switching *,
+    html.theme-switching *::before,
+    html.theme-switching *::after {
+        transition: none !important;
+    }
+}
+
 /* Hide numbers with Jupyter notebook cells */
 div.nbinput.container div.prompt pre {
     display: none;
@@ -17,7 +75,6 @@ div.highlight-python.notranslate pre {
     margin: 20px auto;
     width: 600px;
     height: 150px;
-    background-color: #fff;
     display: grid;
     grid-template-columns: 300px 300px;
     grid-template-rows: 75px 75px;
@@ -88,4 +145,19 @@ a.copybtn > img {
     width: 100%;
     display: block;
     padding-bottom: 0.3em;
+}
+
+form input[type="text"] {
+    box-shadow: none!important;
+}
+
+.wy-side-nav-search input[type=text] {
+    border: 0;
+}
+
+.version-heading,
+.version-heading p,
+.version-heading strong,
+.version-heading a {
+    font-size: 1.5rem;
 }
