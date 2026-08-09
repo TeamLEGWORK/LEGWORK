@@ -154,3 +154,10 @@ form input[type="text"] {
 .wy-side-nav-search input[type=text] {
     border: 0;
 }
+
+.version-heading,
+.version-heading p,
+.version-heading strong,
+.version-heading a {
+    font-size: 1.5rem;
+}

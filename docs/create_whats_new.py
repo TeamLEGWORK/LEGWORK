@@ -45,12 +45,12 @@ def generate_rst(parsed_sections, output_path):
 
     for heading, features in parsed_sections:
         # lines.append(f"v{heading}\n{'-' * (len(heading) + 1)}\n")
-        lines.append(f"**v{heading}**\n")
+        lines.append(f".. container:: version-heading\n\n    **v{heading}**\n")
 
         # Check if the heading is a version number (e.g., "4.1.0")
         if re.match(r'^\d+\.\d+\.\d+$', heading):
             github_link = f"https://github.com/TeamLEGWORK/LEGWORK/releases/tag/v{heading}"
-            lines[-1] = lines[-1].replace("\n", f" | `GitHub release <{github_link}>`_\n")
+            lines[-1] = lines[-1][:-1] + f" | `GitHub release <{github_link}>`_\n"
 
         for feature in features:
             lines.append(feature)
