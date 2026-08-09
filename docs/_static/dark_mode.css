@@ -165,6 +165,7 @@ html[data-theme="dark"] .highlight .kn,
 html[data-theme="dark"] .highlight .kp,
 html[data-theme="dark"] .highlight .kr,
 html[data-theme="dark"] .highlight .kt,
+html[data-theme="dark"] .highlight .nv,
 html[data-theme="dark"] .highlight .ow { color: #c792ea; }
 html[data-theme="dark"] .highlight .o { color: #89ddff; }
 html[data-theme="dark"] .highlight .s,
