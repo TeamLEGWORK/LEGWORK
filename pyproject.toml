@@ -35,6 +35,7 @@ dependencies = [
     "numba >= 0.58",
     "numpy >= 2.0",
     "astropy >= 6.1",
+    "h5py >= 3.10",
     "scipy >= 1.13",
     "matplotlib >= 3.8",
     "seaborn >= 0.13.2",

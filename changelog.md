@@ -200,6 +200,9 @@ having two when we could just set `f_dom=2 f_orb`
 
 - Features/enhancements:
     - New LISA confusion noise model "karnesis21" added, set as the new default for all LISA calculations
+    - `Source` classes can now be masked with any index identifier (e.g. `sources[0]`, `sources[[1, 2]]`, `sources[:10]`, `sources[sources.snr > 7]`), which returns a new class containing only the masked sources. Any interpolated `g(n,e)` and sensitivity curve functions are passed directly to the new class so no interpolation is repeated.
+    - Sources can be saved to an HDF5 file with `Source.save()` and read back in with `Source.from_file()`. The version of LEGWORK used to create the sources is recorded in the file and a warning is shown on load if it differs from the installed version (this adds `h5py` as a new dependency).
+    - `Source.m_c` and `Source.a` are now derived properties rather than stored variables, so they always stay consistent with `m_1`, `m_2` and `f_orb`. Note that this means they can no longer be assigned to directly.
 
 - Code clean up and package modernisation:
     - Consolidate all packaging/tooling config into `pyproject.toml` (PEP 621) — `setup.py`, `setup.cfg`, `requirements.txt`, `environment.yml` and `docs/requirements.txt` have been removed
