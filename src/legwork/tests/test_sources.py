@@ -1,4 +1,7 @@
+import h5py
+import io
 import numpy as np
+import legwork.psd as psd
 import legwork.snr as snr
 import legwork.source as source
 import legwork.strain as strain
@@ -9,6 +12,7 @@ import unittest
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from contextlib import redirect_stdout
 
 
 class Test(unittest.TestCase):
@@ -50,6 +54,32 @@ class Test(unittest.TestCase):
         # the semi-major axis should follow the evolved frequencies rather than going stale
         self.assertTrue(np.allclose(evolved_sources.a,
                                     utils.get_a_from_f_orb(evolved_sources.f_orb, m_1, m_2)))
+
+    def test_evolving_circular_sources(self):
+        """check that exactly circular sources are evolved (they take a different path to eccentric ones)"""
+        n_values = 10
+
+        # use wide, low mass binaries so that nothing merges during the evolution
+        m_1 = np.repeat(1, n_values) * u.Msun
+        m_2 = np.repeat(1, n_values) * u.Msun
+        dist = np.repeat(10, n_values) * u.kpc
+        f_orb = np.repeat(1e-4, n_values) * u.Hz
+
+        # a mixture of exactly circular and eccentric sources exercises both branches at once
+        ecc = np.repeat(0.0, n_values)
+        ecc[n_values // 2:] = 0.3
+
+        sources = source.Source(m_1=m_1, m_2=m_2, f_orb=f_orb, ecc=ecc, dist=dist,
+                                interpolate_g=False, interpolate_sc=False)
+        evolved = sources.evolve_sources(1000 * u.yr, create_new_class=True)
+
+        # nothing should have merged and every source should have been evolved to a higher frequency
+        self.assertFalse(evolved.merged.any())
+        self.assertTrue(np.all(evolved.f_orb > f_orb))
+
+        # the circular sources should still be circular, the eccentric ones should have circularised
+        self.assertTrue(np.all(evolved.ecc[:n_values // 2] == 0.0))
+        self.assertTrue(np.all(evolved.ecc[n_values // 2:] < ecc[n_values // 2:]))
 
     def test_source_snr(self):
         """check that source calculates snr in correct way"""
@@ -331,7 +361,7 @@ class Test(unittest.TestCase):
 
         # erase interpolation
         sources.interpolate_sc = False
-        sources.update_sc_params(None)
+        sources.sc_params = None
 
         snr = sources.get_snr(verbose=True)
 
@@ -433,10 +463,18 @@ class Test(unittest.TestCase):
 
         no_worries = True
         try:
-            source.VerificationBinaries()
+            vbs = source.VerificationBinaries()
         except ValueError:
             no_worries = False
         self.assertTrue(no_worries)
+
+        # the verification binaries are a fixed set of sources so they can't be subsetted
+        it_broke = False
+        try:
+            vbs[0]
+        except NotImplementedError:
+            it_broke = True
+        self.assertTrue(it_broke)
 
     def test_updating_sc_params(self):
         """ ensuring that updating the sc params always works """
@@ -452,7 +490,8 @@ class Test(unittest.TestCase):
         sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.2, dist=10*u.kpc,
                                 sc_params=original_sc_params)
 
-        sources.update_sc_params({"instrument": "TianQin"})
+        # assigning a new set of params should reset anything that isn't supplied to its default
+        sources.sc_params = {"instrument": "TianQin"}
 
         correct_final_sc_params = {
             "instrument": "TianQin",
@@ -462,7 +501,173 @@ class Test(unittest.TestCase):
             "confusion_noise": "auto",
             "custom_psd": None,
         }
-        self.assertTrue(correct_final_sc_params == sources._sc_params)
+        self.assertTrue(correct_final_sc_params == sources.sc_params)
+
+    def test_sc_params_re_interpolation(self):
+        """check that the sensitivity curve is re-interpolated when the params change"""
+        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.0, dist=10 * u.kpc,
+                                interpolate_g=False, sc_params={"instrument": "LISA"})
+
+        # changing a single value should re-interpolate the curve
+        original_sc = sources.sc
+        original_value = sources.sc(1e-3 * u.Hz)
+        sources.sc_params["instrument"] = "TianQin"
+
+        self.assertTrue(sources.sc_params["instrument"] == "TianQin")
+        self.assertTrue(sources.sc is not original_sc)
+        # (atol=0 since the PSD values are tiny, so everything is "close" by default)
+        self.assertFalse(np.isclose(sources.sc(1e-3 * u.Hz), original_value, atol=0))
+
+        # everything else should be left alone
+        self.assertTrue(sources.sc_params["t_obs"] == "auto")
+
+        # setting the same value again shouldn't bother re-interpolating
+        unchanged_sc = sources.sc
+        sources.sc_params["instrument"] = "TianQin"
+        self.assertTrue(sources.sc is unchanged_sc)
+
+        # changing several values at once should only re-interpolate once
+        n_interpolations = [0]
+        real_set_sc = sources.set_sc
+
+        def counting_set_sc():
+            n_interpolations[0] += 1
+            real_set_sc()
+        sources.set_sc = counting_set_sc
+
+        sources.sc_params.update({"instrument": "LISA", "t_obs": 2 * u.yr})
+        self.assertTrue(n_interpolations[0] == 1)
+        self.assertTrue(sources.sc_params["t_obs"] == 2 * u.yr)
+
+    def test_mismatched_sc_params(self):
+        """check that params passed to the SNR functions are matched by the interpolated curve"""
+        n_values = 5
+        args = {"m_1": np.repeat(1, n_values) * u.Msun, "m_2": np.repeat(1, n_values) * u.Msun,
+                "dist": np.repeat(10, n_values) * u.kpc, "ecc": np.zeros(n_values),
+                "f_orb": np.repeat(1e-4, n_values) * u.Hz, "interpolate_g": False}
+
+        # each of these functions passes whatever it is given on to the sensitivity curve params
+        for snr_function in ["get_snr", "get_snr_stationary", "get_snr_evolving"]:
+            sources = source.Source(**args)
+            self.assertTrue(sources.sc_params["t_obs"] == "auto")
+
+            # the curve should be re-interpolated to match what was supplied
+            getattr(sources, snr_function)(t_obs=2 * u.yr, instrument="TianQin")
+            self.assertTrue(sources.sc_params["t_obs"] == 2 * u.yr)
+            self.assertTrue(sources.sc_params["instrument"] == "TianQin")
+
+            # but supplying the same values again shouldn't repeat the interpolation
+            n_interpolations = [0]
+            real_set_sc = sources.set_sc
+
+            def counting_set_sc():
+                n_interpolations[0] += 1
+                real_set_sc()
+            sources.set_sc = counting_set_sc
+
+            getattr(sources, snr_function)(t_obs=2 * u.yr, instrument="TianQin")
+            self.assertTrue(n_interpolations[0] == 0)
+
+    def test_max_strain_harmonic(self):
+        """check that the harmonic with the maximum strain is interpolated sensibly"""
+        sources = source.Source(m_1=np.repeat(1, 5) * u.Msun, m_2=np.repeat(1, 5) * u.Msun,
+                                f_orb=np.repeat(1e-3, 5) * u.Hz, ecc=np.repeat(0.2, 5),
+                                dist=np.repeat(10, 5) * u.kpc, interpolate_g=False, interpolate_sc=False)
+
+        # circular sources radiate at n=2 and more eccentric sources peak at higher harmonics
+        self.assertTrue(sources.max_strain_harmonic(0.0) == 2)
+        self.assertTrue(np.all(np.diff(sources.max_strain_harmonic(np.array([0.1, 0.5, 0.9]))) > 0))
+
+    def test_bad_sc_params(self):
+        """check that only real sensitivity curve params can be set"""
+        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.0, dist=10 * u.kpc,
+                                interpolate_g=False, interpolate_sc=False)
+
+        # a parameter that isn't used for the sensitivity curve should be rejected
+        for bad_params in [{"not_a_param": 42}, {"instrument": "LISA", "t_ob": 4 * u.yr}]:
+            it_broke = False
+            try:
+                sources.sc_params = bad_params
+            except KeyError:
+                it_broke = True
+            self.assertTrue(it_broke)
+
+        it_broke = False
+        try:
+            sources.sc_params["nonsense"] = 42
+        except KeyError:
+            it_broke = True
+        self.assertTrue(it_broke)
+
+        # params can be changed but not removed
+        it_broke = False
+        try:
+            del sources.sc_params["instrument"]
+        except TypeError:
+            it_broke = True
+        self.assertTrue(it_broke)
+
+    def test_updating_gw_lum_tol(self):
+        """check that changing the GW luminosity tolerance updates the cached calculations"""
+        sources = source.Source(m_1=np.repeat(1, 5) * u.Msun, m_2=np.repeat(1, 5) * u.Msun,
+                                f_orb=np.repeat(1e-3, 5) * u.Hz, ecc=np.repeat(0.2, 5),
+                                dist=np.repeat(10, 5) * u.kpc, interpolate_g=False, interpolate_sc=False)
+
+        original_ecc_tol = sources.ecc_tol
+        original_harmonics = sources.harmonics_required(0.3)
+
+        # a tighter tolerance means more harmonics are needed and eccentricity matters sooner
+        sources.gw_lum_tol = 0.001
+
+        self.assertTrue(sources.gw_lum_tol == 0.001)
+        self.assertTrue(sources.ecc_tol < original_ecc_tol)
+        self.assertTrue(sources.harmonics_required(0.3) > original_harmonics)
+
+        # setting the same tolerance again shouldn't repeat the calculations
+        unchanged = sources.harmonics_required
+        sources.gw_lum_tol = 0.001
+        self.assertTrue(sources.harmonics_required is unchanged)
+
+        # `ecc_tol` is derived from the tolerance so it can't be set directly
+        it_broke = False
+        try:
+            sources.ecc_tol = 0.5
+        except AttributeError:
+            it_broke = True
+        self.assertTrue(it_broke)
+
+    def test_semi_major_axis(self):
+        """check that assigning to the semi-major axis updates the orbital frequency"""
+        n_values = 10
+        m_1 = np.random.uniform(1, 10, n_values) * u.Msun
+        m_2 = np.random.uniform(1, 10, n_values) * u.Msun
+        sources = source.Source(m_1=m_1, m_2=m_2, ecc=np.zeros(n_values),
+                                dist=np.repeat(10, n_values) * u.kpc,
+                                f_orb=10**(np.random.uniform(-5, -3, n_values)) * u.Hz,
+                                interpolate_g=False, interpolate_sc=False)
+
+        new_a = np.logspace(-3, -1, n_values) * u.AU
+        sources.a = new_a
+
+        self.assertTrue(np.allclose(sources.a.to(u.AU), new_a))
+        self.assertTrue(np.allclose(sources.f_orb, utils.get_f_orb_from_a(new_a, m_1, m_2)))
+
+        # units are still required
+        it_broke = False
+        try:
+            sources.a = np.ones(n_values)
+        except AssertionError:
+            it_broke = True
+        self.assertTrue(it_broke)
+
+    def test_interpolate_g_property(self):
+        """check that the class reports whether g(n,e) is interpolated"""
+        args = {"m_1": np.repeat(1, 5) * u.Msun, "m_2": np.repeat(1, 5) * u.Msun,
+                "f_orb": np.repeat(1e-3, 5) * u.Hz, "ecc": np.zeros(5),
+                "dist": np.repeat(10, 5) * u.kpc, "interpolate_sc": False}
+
+        self.assertFalse(source.Source(interpolate_g=False, **args).interpolate_g)
+        self.assertTrue(source.Source(interpolate_g=True, **args).interpolate_g)
 
     @staticmethod
     def _random_sources(n_values=20, positions=False, **kwargs):
@@ -516,8 +721,8 @@ class Test(unittest.TestCase):
 
         # changing the sc params of the mask shouldn't affect the original class
         masked = sources[mask]
-        masked.update_sc_params({"instrument": "TianQin"})
-        self.assertTrue(sources._sc_params["instrument"] == "LISA")
+        masked.sc_params["instrument"] = "TianQin"
+        self.assertTrue(sources.sc_params["instrument"] == "LISA")
 
     def test_masking_positions(self):
         """check that positions, inclinations and polarisations are masked too"""
@@ -607,3 +812,51 @@ class Test(unittest.TestCase):
             except FileNotFoundError:
                 it_broke = True
             self.assertTrue(it_broke)
+
+    def test_reprs(self):
+        """check that the reprs are informative and don't crash"""
+        sources = self._random_sources(n_values=10)
+        repr(sources)
+        repr(sources[0])
+        repr(sources[0:5])
+
+        self.assertTrue(len(sources) == 10)
+        self.assertTrue(len(sources[0:5]) == 5)
+
+        # each subclass should say which type of sources it holds
+        args = {"m_1": sources.m_1, "m_2": sources.m_2, "ecc": sources.ecc, "dist": sources.dist,
+                "f_orb": sources.f_orb, "interpolate_g": False, "interpolate_sc": False}
+        self.assertTrue(repr(source.Stationary(**args)) == "<Stationary: 10 stationary sources>")
+        self.assertTrue(repr(source.Evolving(**args)) == "<Evolving: 10 evolving sources>")
+        self.assertTrue(repr(source.VerificationBinaries()) == "<VerificationBinaries | Kupfer+2018>")
+
+    def test_source_file_io_warnings(self):
+        """check that saving and loading warns the user about anything that can't be reproduced"""
+        with tempfile.TemporaryDirectory() as directory:
+            file_name = os.path.join(directory, "custom_sources.h5")
+
+            # custom PSD functions can't be written to file
+            sources = self._random_sources(n_values=10, interpolate_sc=False,
+                                           sc_params={"instrument": "custom", "custom_psd": psd.lisa_psd})
+
+            saving_output = io.StringIO()
+            with redirect_stdout(saving_output):
+                sources.save(file_name)
+            self.assertTrue("custom_psd" in saving_output.getvalue())
+
+            # so the user should be told to supply it again when they load the sources back in
+            loading_output = io.StringIO()
+            with redirect_stdout(loading_output):
+                loaded = source.Source.from_file(file_name)
+            self.assertTrue("custom_psd" in loading_output.getvalue())
+            self.assertTrue(loaded.sc_params["custom_psd"] is None)
+            self.assertTrue(loaded.sc_params["instrument"] == "custom")
+
+            # a file written by a different version of LEGWORK should be flagged
+            with h5py.File(file_name, "a") as file:
+                file.attrs["legwork_version"] = "0.0.1"
+
+            version_output = io.StringIO()
+            with redirect_stdout(version_output):
+                source.Source.from_file(file_name)
+            self.assertTrue("0.0.1" in version_output.getvalue())

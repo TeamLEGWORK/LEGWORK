@@ -14,7 +14,7 @@ from . import visualisation as vis
 from ._version import __version__
 from ._logging import logger
 
-__all__ = ['Source', 'Stationary', 'Evolving', 'VerificationBinaries']
+__all__ = ['Source', 'Stationary', 'Evolving', 'VerificationBinaries', 'SensitivityCurveParams']
 
 
 # constants for masking, saving, and loading Source classes
@@ -25,6 +25,16 @@ _ARR_ATTRS = [
 _NOT_KWARG_ATTRS = [
     "t_merge", "snr", "max_snr_harmonic", "merged"
 ]
+
+# the parameters used for the interpolated sensitivity curve and their default values
+DEFAULT_SC_PARAMS = {
+    "instrument": "LISA",
+    "custom_psd": None,
+    "t_obs": "auto",
+    "L": "auto",
+    "approximate_R": False,
+    "confusion_noise": "auto"
+}
 
 
 class Source():
@@ -71,9 +81,8 @@ class Source():
 
     gw_lum_tol : `float`
         Allowed error on the GW luminosity when calculating SNRs. This is used to calculate maximum harmonics
-        needed and transition between 'eccentric' and 'circular'. This variable should be updated using the
-        function :meth:`legwork.source.Source.update_gw_lum_tol` (not ``Source._gw_lum_tol =``) to ensure
-        the cached calculations match the current tolerance.
+        needed and transition between 'eccentric' and 'circular'. Assigning to
+        :attr:`legwork.source.Source.gw_lum_tol` updates the cached calculations to match the new tolerance.
 
     stat_tol : `float`
         Fractional change in frequency over mission length above which a binary should be considered to be
@@ -101,8 +110,8 @@ class Source():
         :meth:`legwork.utils.get_a_from_f_orb`
 
     ecc_tol : `float`
-        Eccentricity above which a binary is considered eccentric. Set by
-        :meth:`legwork.source.Source.find_eccentric_transition`
+        Eccentricity above which a binary is considered eccentric. Derived from ``gw_lum_tol`` by
+        :meth:`legwork.source.Source.find_eccentric_transition` and so read-only
 
     snr : `float/array`
         Signal-to-noise ratio. Set by :meth:`legwork.source.Source.get_snr`
@@ -157,8 +166,6 @@ class Source():
             # ensure position is in the correct coordinate frame
             position = position.transform_to("barycentrictrueecliptic")
 
-            # barycentrictrueecliptic
-
             # ensure that the position, polarisation, and inclination
             # quantities are at least 1d for masking later on
             lon, lat, polarisation, inclination = np.atleast_1d(position.lon, position.lat,
@@ -187,37 +194,31 @@ class Source():
         if length_check.any():
             raise ValueError("All input arrays must have the same length")
 
-        default_sc_params = {
-            "instrument": "LISA",
-            "custom_psd": None,
-            "t_obs": "auto",
-            "L": "auto",
-            "approximate_R": False,
-            "confusion_noise": 'auto'
-        }
-        default_sc_params.update(sc_params)
-        self._sc_params = default_sc_params
-
+        # per source values
         self.m_1 = m_1
         self.m_2 = m_2
         self.ecc = ecc
         self.dist = dist
-        self.stat_tol = stat_tol
         self.f_orb = f_orb
         self.position = position
         self.inclination = inclination
         self.polarisation = polarisation
         self.weights = weights
+
+        # stationary tolerance and processes
+        self.stat_tol = stat_tol
         self.n_proc = n_proc
+
+        # initialize values that will be set later
         self.t_merge = None
         self.snr = None
         self.max_snr_harmonic = None
-        self.n_sources = len(m_1)
-        self.interpolate_sc = interpolate_sc
-
         self.merged = np.repeat(False, self.n_sources)
 
-        self.update_gw_lum_tol(gw_lum_tol)
+        # setting these interpolates the harmonics functions and the sensitivity curve respectively
+        self.gw_lum_tol = gw_lum_tol
+        self.interpolate_sc = interpolate_sc
+        self.sc_params = sc_params
 
         # warn the user that interpolation might not be necessary if they have a small number of sources
         if interpolate_g and self.n_sources <= 1000:
@@ -227,7 +228,6 @@ class Source():
                            "which is faster.")
 
         self.set_g(interpolate_g)
-        self.set_sc()
 
     def __repr__(self):
         return f"<Source: {self.n_sources} sources>"
@@ -290,11 +290,20 @@ class Source():
             else:
                 masked_sources.__dict__[key] = copy(value)
 
-        # avoid sharing the sensitivity curve params dictionary between the two classes
-        masked_sources._sc_params = self._sc_params.copy()
-        masked_sources.n_sources = len(masked_sources.m_1)
+        # give the new class its own params (bound to itself, so it re-interpolates its own curve)
+        masked_sources._sc_params = SensitivityCurveParams(self.sc_params, source=masked_sources)
 
         return masked_sources
+
+    def copy(self):
+        """Return a copy of this class
+
+        Returns
+        -------
+        sources : `Source`
+            A new class of the same type containing the same sources
+        """
+        return self[:]
 
     def save(self, file_name, overwrite=False):
         """Save these sources to an HDF5 file, which can be read back in with
@@ -336,10 +345,10 @@ class Source():
             file.attrs["legwork_version"] = __version__
             file.attrs["class_name"] = self.__class__.__name__
             file.attrs["n_sources"] = self.n_sources
-            file.attrs["gw_lum_tol"] = self._gw_lum_tol
+            file.attrs["gw_lum_tol"] = self.gw_lum_tol
             file.attrs["stat_tol"] = self.stat_tol
             file.attrs["n_proc"] = self.n_proc
-            file.attrs["interpolate_g"] = self.g is not None
+            file.attrs["interpolate_g"] = self.interpolate_g
             file.attrs["interpolate_sc"] = self.interpolate_sc
 
             # save the source variables (any that are None are skipped)
@@ -354,7 +363,7 @@ class Source():
 
             # save the sensitivity curve settings as attributes of a group
             sc_group = file.create_group("sc_params")
-            for key, value in self._sc_params.items():
+            for key, value in self.sc_params.items():
                 if callable(value):
                     print((f"WARNING: `{key}` in `sc_params` is a custom function and cannot be"
                            "saved to file, it will be replaced by the default value when you load these",
@@ -449,8 +458,8 @@ class Source():
             # custom functions can't be saved so let the user know they need to supply them again
             if sc_params.get("instrument") == "custom" and sc_params.get("custom_psd") is None:
                 print("WARNING: These sources use a custom instrument but the corresponding `custom_psd`",
-                      "function could not be saved to file. Use Source.update_sc_params() to supply it",
-                      "again before calculating anything.")
+                      "function could not be saved to file. Set `Source.sc_params[\"custom_psd\"]` to",
+                      "supply it again before calculating anything.")
 
             # use the saved settings unless the user overrode them
             interpolate_g = file.attrs["interpolate_g"] if interpolate_g is None else interpolate_g
@@ -478,6 +487,11 @@ class Source():
         return sources
 
     @property
+    def n_sources(self):
+        """Number of sources in class"""
+        return len(self.m_1)
+
+    @property
     def m_c(self):
         """Chirp mass. Set using ``m_1`` and ``m_2`` in :meth:`legwork.utils.chirp_mass`"""
         return utils.chirp_mass(self.m_1, self.m_2)
@@ -486,8 +500,20 @@ class Source():
     def a(self):
         """Semi-major axis. Set using ``f_orb``, ``m_1`` and ``m_2`` in
         :meth:`legwork.utils.get_a_from_f_orb`, so it stays consistent with ``f_orb`` if the sources are
-        evolved or masked"""
+        evolved or masked. Assigning to this instead updates ``f_orb`` to match."""
         return utils.get_a_from_f_orb(self.f_orb, self.m_1, self.m_2)
+
+    @a.setter
+    def a(self, a):
+        assert isinstance(a, u.quantity.Quantity), "`a` must have units"
+
+        # only `f_orb` is stored, so convert and let the getter convert back
+        self.f_orb = utils.get_f_orb_from_a(a, self.m_1, self.m_2)
+
+    @property
+    def interpolate_g(self):
+        """Whether the g(n,e) function from Peters (1964) is interpolated for these sources"""
+        return self.g is not None
 
     def create_harmonics_functions(self):
         """Create two harmonics related functions as methods for the Source class
@@ -525,7 +551,7 @@ class Source():
             total_lum = g_vals[i][:harmonics_needed[i]].sum()
 
             # keep adding harmonics until gw luminosity is within errors
-            while total_lum < (1 - self._gw_lum_tol) * f_vals[i] and harmonics_needed[i] < len(n_range):
+            while total_lum < (1 - self.gw_lum_tol) * f_vals[i] and harmonics_needed[i] < len(n_range):
                 harmonics_needed[i] += 1
                 total_lum += g_vals[i][harmonics_needed[i] - 1]
 
@@ -544,7 +570,7 @@ class Source():
         interpolated_dh = interp1d(e_range, max_strain_harmonics, bounds_error=False,
                                    fill_value=(2, np.max(harmonics_needed)))
 
-        def max_strain_harmonic(e):  # pragma: no cover
+        def max_strain_harmonic(e):
             return np.round(interpolated_dh(e)).astype(int)
 
         self.max_strain_harmonic = max_strain_harmonic
@@ -552,24 +578,41 @@ class Source():
     def find_eccentric_transition(self):
         """Find the eccentricity at which we must treat binaries at eccentric. We define this as the maximum
         eccentricity at which the n=2 harmonic is the total GW luminosity given the tolerance
-        ``self._gw_lum_tol``. Store the result in ``self.ecc_tol``"""
+        ``self.gw_lum_tol``. Store the result in ``self._ecc_tol``"""
         # only need to check lower eccentricities
         e_range = np.linspace(0.0, 0.2, 10000)
 
         # find first e where n=2 harmonic is below tolerance
         circular_lum = utils.peters_g(2, e_range)
-        lum_within_tolerance = (1 - self._gw_lum_tol) * utils.peters_f(e_range)
-        self.ecc_tol = e_range[circular_lum < lum_within_tolerance][0]
+        lum_within_tolerance = (1 - self.gw_lum_tol) * utils.peters_f(e_range)
+        self._ecc_tol = e_range[circular_lum < lum_within_tolerance][0]
 
-    def update_gw_lum_tol(self, gw_lum_tol):
-        """Update GW luminosity tolerance. Use the updated value to recalculate harmonics_required function
-        and transition to eccentric
+    @property
+    def ecc_tol(self):
+        """Eccentricity above which a binary is considered eccentric
 
-        Parameters
-        ----------
-        gw_lum_tol : `float`
-            Allowed error on the GW luminosity when calculating SNRs
+        This is derived from :attr:`legwork.source.Source.gw_lum_tol` in
+        :meth:`legwork.source.Source.find_eccentric_transition` and so can't be set directly, change
+        ``gw_lum_tol`` instead.
         """
+        return self._ecc_tol
+
+    @property
+    def gw_lum_tol(self):
+        """Allowed error on the GW luminosity when calculating SNRs
+
+        Changing this value automatically recalculates the harmonics functions
+        (:meth:`legwork.source.Source.create_harmonics_functions`) and the transition to eccentric
+        (:meth:`legwork.source.Source.find_eccentric_transition`) to match the new tolerance.
+        """
+        return self._gw_lum_tol
+
+    @gw_lum_tol.setter
+    def gw_lum_tol(self, gw_lum_tol):
+        # don't repeat the calculations if the tolerance isn't actually changing
+        if gw_lum_tol == getattr(self, "_gw_lum_tol", None):
+            return
+
         self._gw_lum_tol = gw_lum_tol
         self.create_harmonics_functions()
         self.find_eccentric_transition()
@@ -604,7 +647,7 @@ class Source():
         if self.interpolate_sc:
             # get values
             frequency_range = np.logspace(-7, np.log10(2), 10000) * u.Hz
-            sc = psd.power_spectral_density(frequency_range, **self._sc_params)
+            sc = psd.power_spectral_density(frequency_range, **self.sc_params)
 
             # interpolate
             interp_sc = interp1d(frequency_range, sc, bounds_error=False, fill_value=1e30)
@@ -614,27 +657,32 @@ class Source():
         else:
             self.sc = None
 
-    def update_sc_params(self, sc_params):
-        """Update sensitivity curve parameters
+    @property
+    def sc_params(self):
+        """Parameters used for the interpolated sensitivity curve
 
-        Update the parameters used to interpolate sensitivity curve and perform interpolation again to
-        match new params
+        This is a :class:`legwork.source.SensitivityCurveParams` dictionary containing ``instrument``,
+        ``custom_psd``, ``t_obs``, ``L``, ``approximate_R`` and ``confusion_noise``. The sensitivity curve
+        is automatically re-interpolated whenever a parameter changes, either by changing a single value::
+
+            sources.sc_params["instrument"] = "TianQin"
+
+        or by assigning a new set of parameters (note that anything you leave out is reset to its default
+        value, so this is the way to *replace* the parameters rather than update them)::
+
+            sources.sc_params = {"instrument": "TianQin", "t_obs": 5 * u.yr}
         """
-        # check whether params have actually changed
-        if sc_params != self._sc_params:
-            # ensure all values are filled (leave as defaults if not)
-            default_sc_params = {
-                "instrument": "LISA",
-                "custom_psd": None,
-                "t_obs": "auto",
-                "L": "auto",
-                "approximate_R": False,
-                "confusion_noise": "auto"
-            }
-            if sc_params is not None:
-                default_sc_params.update(sc_params)
-            # change values and re-interpolate
-            self._sc_params = default_sc_params
+        return self._sc_params
+
+    @sc_params.setter
+    def sc_params(self, sc_params):
+        new_params = SensitivityCurveParams(sc_params, source=self)
+
+        # only re-interpolate if this actually changes something
+        current_params = getattr(self, "_sc_params", None)
+        changed = current_params is None or new_params != current_params
+        self._sc_params = new_params
+        if changed:
             self.set_sc()
 
     def get_source_mask(self, circular=None, stationary=None, t_obs=None):
@@ -652,7 +700,7 @@ class Source():
             ``None`` means either, ``True`` means only stationary binaries and ``False`` means only evolving
 
         t_obs : `float`
-            Observation time, default is value from `self._sc_params`
+            Observation time, default is value from `self.sc_params`
 
         Returns
         -------
@@ -671,9 +719,9 @@ class Source():
         if stationary is None:
             stat_mask = np.repeat(True, self.n_sources)
         elif stationary is True or stationary is False:
-            t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+            t_obs = self.sc_params["t_obs"] if t_obs is None else t_obs
             if t_obs == "auto":
-                t_obs = 4 * u.yr if self._sc_params["instrument"] == "LISA" else 5 * u.yr
+                t_obs = 4 * u.yr if self.sc_params["instrument"] == "LISA" else 5 * u.yr
             stat_mask = evol.determine_stationarity(m_c=self.m_c, f_orb_i=self.f_orb, t_evol=t_obs,
                                                     ecc_i=self.ecc, stat_tol=self.stat_tol)
             if stationary is False:
@@ -781,7 +829,7 @@ class Source():
         return h_c_n[which_sources, :]
 
     def get_snr(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
-                confusion_noise=None, n_step=100, verbose=False, re_interpolate_sc=True, which_sources=None):
+                confusion_noise=None, n_step=100, verbose=False, which_sources=None):
         """Computes the SNR for a generic binary. Also records the harmonic with maximum SNR for each
         binary in ``self.max_snr_harmonic``.
 
@@ -817,10 +865,6 @@ class Source():
         verbose : `boolean`
             Whether to print additional information to user
 
-        re_interpolate_sc : `boolean`
-            Whether to re-interpolate the sensitivity curve if the observation time or instrument
-            changes. If False, warning will instead be given
-
         which_sources : `boolean/array`
             Mask of which sources to calculate the SNR for. If None then calculate SNR for all sources.
 
@@ -830,40 +874,17 @@ class Source():
             The signal-to-noise ratio
         """
         # if no values are provided, use those in sc_params
-        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
-        instrument = self._sc_params["instrument"] if instrument is None else instrument
-        custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
-        L = self._sc_params["L"] if L is None else L
-        approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
-        confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
+        t_obs = self.sc_params["t_obs"] if t_obs is None else t_obs
+        instrument = self.sc_params["instrument"] if instrument is None else instrument
+        custom_psd = self.sc_params["custom_psd"] if custom_psd is None else custom_psd
+        L = self.sc_params["L"] if L is None else L
+        approximate_R = self.sc_params["approximate_R"] if approximate_R is None else approximate_R
+        confusion_noise = self.sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
 
-        # if the user interpolated a sensitivity curve with different settings
-        if (self.interpolate_sc and self._sc_params is not None
-                and (t_obs != self._sc_params["t_obs"]
-                     or instrument != self._sc_params["instrument"]
-                     or custom_psd != self._sc_params["custom_psd"]
-                     or custom_psd != self._sc_params["custom_psd"]
-                     or L != self._sc_params["L"]
-                     or approximate_R != self._sc_params["approximate_R"]
-                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
-
-            # re interpolate the sensitivity curve with new parameters
-            if re_interpolate_sc:
-                self._sc_params["t_obs"] = t_obs
-                self._sc_params["instrument"] = instrument
-                self._sc_params["custom_psd"] = custom_psd
-                self._sc_params["L"] = L
-                self._sc_params["approximate_R"] = approximate_R
-                self._sc_params["confusion_noise"] = confusion_noise
-
-                self.set_sc()
-
-            # otherwise warn the user that they are making a mistake
-            else:
-                logger.warning("Current `sc_params` are different from what was passed to this "
-                               "function. Either set `re_interpolate_sc=True` to re-interpolate the "
-                               "sensitivity curve on the fly or update your `sc_params` with "
-                               "Source.update_sc_params() to make sure your interpolated curve matches")
+        # match the sensitivity curve to whatever was supplied (this only re-interpolates if it changes)
+        self.sc_params.update({"t_obs": t_obs, "instrument": instrument, "custom_psd": custom_psd,
+                               "L": L, "approximate_R": approximate_R,
+                               "confusion_noise": confusion_noise})
 
         if verbose:
             n_snr = len(which_sources[which_sources]) if which_sources is not None else self.n_sources
@@ -916,7 +937,7 @@ class Source():
         return snr
 
     def get_snr_stationary(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
-                           confusion_noise=None, re_interpolate_sc=True, which_sources=None, verbose=False):
+                           confusion_noise=None, which_sources=None, verbose=False):
         """Computes the SNR assuming a stationary binary
 
         Parameters
@@ -944,10 +965,6 @@ class Source():
             confusion noise at each frequency for a given mission length where it would be called by running
             `noise(f, t_obs)` and return a value with units of inverse Hertz
 
-        re_interpolate_sc : `boolean`
-            Whether to re-interpolate the sensitivity curve if the observation time or instrument
-            changes. If False, warning will instead be given
-
         which_sources : `bool/array`
             Mask on which sources to consider stationary and calculate (default is all sources in Class)
 
@@ -962,42 +979,19 @@ class Source():
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
 
-        instrument = self._sc_params["instrument"] if instrument is None else instrument
-        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        instrument = self.sc_params["instrument"] if instrument is None else instrument
+        t_obs = self.sc_params["t_obs"] if t_obs is None else t_obs
         if t_obs == "auto":
             t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
-        custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
-        L = self._sc_params["L"] if L is None else L
-        approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
-        confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
+        custom_psd = self.sc_params["custom_psd"] if custom_psd is None else custom_psd
+        L = self.sc_params["L"] if L is None else L
+        approximate_R = self.sc_params["approximate_R"] if approximate_R is None else approximate_R
+        confusion_noise = self.sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
 
-        # if the user interpolated a sensitivity curve with different settings
-        if (self.interpolate_sc and self._sc_params is not None
-                and (t_obs != self._sc_params["t_obs"]
-                     or instrument != self._sc_params["instrument"]
-                     or custom_psd != self._sc_params["custom_psd"]
-                     or custom_psd != self._sc_params["custom_psd"]
-                     or L != self._sc_params["L"]
-                     or approximate_R != self._sc_params["approximate_R"]
-                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
-
-            # re interpolate the sensitivity curve with new parameters
-            if re_interpolate_sc:
-                self._sc_params["t_obs"] = t_obs
-                self._sc_params["instrument"] = instrument
-                self._sc_params["custom_psd"] = custom_psd
-                self._sc_params["L"] = L
-                self._sc_params["approximate_R"] = approximate_R
-                self._sc_params["confusion_noise"] = confusion_noise
-
-                self.set_sc()
-
-            # otherwise warn the user that they are making a mistake
-            else:
-                logger.warning("Current `sc_params` are different from what was passed to this "
-                               "function. Either set `re_interpolate_sc=True` to re-interpolate the "
-                               "sensitivity curve on the fly or update your `sc_params` with "
-                               "Source.update_sc_params() to make sure your interpolated curve matches")
+        # match the sensitivity curve to whatever was supplied (this only re-interpolates if it changes)
+        self.sc_params.update({"t_obs": t_obs, "instrument": instrument, "custom_psd": custom_psd,
+                               "L": L, "approximate_R": approximate_R,
+                               "confusion_noise": confusion_noise})
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
@@ -1067,7 +1061,7 @@ class Source():
         return snr[which_sources]
 
     def get_snr_evolving(self, t_obs=None, instrument=None, custom_psd=None, L=None, approximate_R=None,
-                         confusion_noise=None, re_interpolate_sc=True, n_step=100, which_sources=None,
+                         confusion_noise=None, n_step=100, which_sources=None,
                          verbose=False):
         """Computes the SNR assuming an evolving binary
 
@@ -1096,10 +1090,6 @@ class Source():
             confusion noise at each frequency for a given mission length where it would be called by running
             `noise(f, t_obs)` and return a value with units of inverse Hertz
 
-        re_interpolate_sc : `boolean`
-            Whether to re-interpolate the sensitivity curve if the observation time or instrument
-            changes. If False, warning will instead be given
-
         n_step : `int`
             Number of time steps during observation duration
 
@@ -1119,42 +1109,19 @@ class Source():
         if which_sources is None:
             which_sources = np.repeat(True, self.n_sources)
 
-        instrument = self._sc_params["instrument"] if instrument is None else instrument
-        t_obs = self._sc_params["t_obs"] if t_obs is None else t_obs
+        instrument = self.sc_params["instrument"] if instrument is None else instrument
+        t_obs = self.sc_params["t_obs"] if t_obs is None else t_obs
         if t_obs == "auto":
             t_obs = 4 * u.yr if instrument == "LISA" else 5 * u.yr
-        custom_psd = self._sc_params["custom_psd"] if custom_psd is None else custom_psd
-        L = self._sc_params["L"] if L is None else L
-        approximate_R = self._sc_params["approximate_R"] if approximate_R is None else approximate_R
-        confusion_noise = self._sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
+        custom_psd = self.sc_params["custom_psd"] if custom_psd is None else custom_psd
+        L = self.sc_params["L"] if L is None else L
+        approximate_R = self.sc_params["approximate_R"] if approximate_R is None else approximate_R
+        confusion_noise = self.sc_params["confusion_noise"] if confusion_noise is None else confusion_noise
 
-        # if the user interpolated a sensitivity curve with different settings
-        if (self.interpolate_sc and self._sc_params is not None
-                and (t_obs != self._sc_params["t_obs"]
-                     or instrument != self._sc_params["instrument"]
-                     or custom_psd != self._sc_params["custom_psd"]
-                     or custom_psd != self._sc_params["custom_psd"]
-                     or L != self._sc_params["L"]
-                     or approximate_R != self._sc_params["approximate_R"]
-                     or confusion_noise != self._sc_params["confusion_noise"])):  # pragma: no cover
-
-            # re interpolate the sensitivity curve with new parameters
-            if re_interpolate_sc:
-                self._sc_params["t_obs"] = t_obs
-                self._sc_params["instrument"] = instrument
-                self._sc_params["custom_psd"] = custom_psd
-                self._sc_params["L"] = L
-                self._sc_params["approximate_R"] = approximate_R
-                self._sc_params["confusion_noise"] = confusion_noise
-
-                self.set_sc()
-
-            # otherwise warn the user that they are making a mistake
-            else:
-                logger.warning("Current `sc_params` are different from what was passed to this "
-                               "function. Either set `re_interpolate_sc=True` to re-interpolate the "
-                               "sensitivity curve on the fly or update your `sc_params` with "
-                               "Source.update_sc_params() to make sure your interpolated curve matches")
+        # match the sensitivity curve to whatever was supplied (this only re-interpolates if it changes)
+        self.sc_params.update({"t_obs": t_obs, "instrument": instrument, "custom_psd": custom_psd,
+                               "L": L, "approximate_R": approximate_R,
+                               "confusion_noise": confusion_noise})
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
@@ -1324,8 +1291,8 @@ class Source():
             evolved_sources = Source(m_1=self.m_1, m_2=self.m_2, ecc=ecc_evol, dist=self.dist,
                                      n_proc=self.n_proc, f_orb=f_orb_evol, position=self.position,
                                      polarisation=self.polarisation, inclination=self.inclination,
-                                     gw_lum_tol=self._gw_lum_tol, stat_tol=self.stat_tol,
-                                     interpolate_g=False, interpolate_sc=False, sc_params=self._sc_params)
+                                     gw_lum_tol=self.gw_lum_tol, stat_tol=self.stat_tol,
+                                     interpolate_g=False, interpolate_sc=False, sc_params=self.sc_params)
 
             # copy over interpolated g and sc
             evolved_sources.g = self.g
@@ -1530,7 +1497,7 @@ class Source():
             fig, ax = vis.plot_sources_on_sc(f_dom=f_dom, snr=self.snr[stat], weights=weights,
                                              snr_cutoff=snr_cutoff, show=show, fig=fig, ax=ax,
                                              label=label, sc_vis_settings=sc_vis_settings,
-                                             **self._sc_params, **kwargs)
+                                             **self.sc_params, **kwargs)
 
         # show warnings for evolving sources
         circ_evol = self.get_source_mask(circular=True, stationary=False)
@@ -1546,6 +1513,83 @@ class Source():
                            "for evolving sources.".format(len(ecc_evol[ecc_evol])))
 
         return fig, ax
+
+
+class SensitivityCurveParams(dict):
+    """A dictionary of sensitivity curve parameters that keeps a :class:`legwork.source.Source` up to date
+
+    This behaves just like a regular dictionary, except that changing a value (e.g.
+    ``sources.sc_params["t_obs"] = 5 * u.yr``) automatically re-interpolates the sensitivity curve of the
+    class that the parameters belong to. Any parameters that aren't supplied are filled in with the values
+    in ``DEFAULT_SC_PARAMS``. It also won't let you add new keys that aren't used for the sensitivity curve.
+
+    Parameters
+    ----------
+    params : `dict`, optional
+        Sensitivity curve parameters, any of ``instrument``, ``custom_psd``, ``t_obs``, ``L``,
+        ``approximate_R`` and ``confusion_noise``
+
+    source : `Source`, optional
+        The class that these parameters belong to. Its sensitivity curve is re-interpolated whenever a
+        parameter changes, no class is updated if this isn't supplied.
+
+    Raises
+    ------
+    KeyError
+        If a parameter that isn't used for the sensitivity curve is supplied
+    """
+
+    def __init__(self, params=None, source=None):
+        filled_params = dict(DEFAULT_SC_PARAMS)
+        if params is not None:
+            self._check_keys(params)
+            filled_params.update(params)
+        super().__init__(filled_params)
+        self._source = source
+
+    @staticmethod
+    def _check_keys(params):
+        """Ensure that only sensitivity curve parameters are supplied"""
+        unknown_keys = [key for key in params if key not in DEFAULT_SC_PARAMS]
+        if len(unknown_keys) > 0:
+            raise KeyError("{} not sensitivity curve parameter(s), choose from: {}".format(
+                ', '.join(["`{}`".format(key) for key in unknown_keys]),
+                ', '.join(["`{}`".format(key) for key in DEFAULT_SC_PARAMS])))
+
+    def _re_interpolate(self):
+        """Re-interpolate the sensitivity curve of the class that these parameters belong to"""
+        if self._source is not None:
+            self._source.set_sc()
+
+    def __setitem__(self, key, value):
+        self._check_keys([key])
+        changed = self.get(key) != value
+        super().__setitem__(key, value)
+        if changed:
+            self._re_interpolate()
+
+    def update(self, *args, **kwargs):
+        """Change several parameters at once, only re-interpolating the sensitivity curve once"""
+        new_params = dict(*args, **kwargs)
+        self._check_keys(new_params)
+        changed = any(self.get(key) != value for key, value in new_params.items())
+        super().update(new_params)
+        if changed:
+            self._re_interpolate()
+
+    def __copy__(self):
+        """Copy the parameters without triggering any re-interpolation"""
+        return SensitivityCurveParams(dict(self), source=self._source)
+
+    def _cant_remove(self, *args, **kwargs):
+        raise TypeError("Sensitivity curve parameters can't be removed, only changed")
+
+    __delitem__ = _cant_remove
+    pop = _cant_remove
+    popitem = _cant_remove
+    clear = _cant_remove
+
+
 
 
 class Stationary(Source):
