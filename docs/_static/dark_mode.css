@@ -337,3 +337,7 @@ html[data-theme="dark"] .toms-nav-container .box:hover, html[data-theme="dark"] 
     transform: scale(0.9);
     background-color: #2980b9;
 }
+
+html[data-theme="dark"] .nboutput img {
+    filter: brightness(0.7);
+}
