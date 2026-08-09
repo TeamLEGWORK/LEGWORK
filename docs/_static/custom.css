@@ -1,3 +1,8 @@
+html[data-theme="light"] .only-dark,
+html[data-theme="dark"] .only-light {
+    display: none;
+}
+
 /* Hide numbers with Jupyter notebook cells */
 div.nbinput.container div.prompt pre {
     display: none;
@@ -17,7 +22,6 @@ div.highlight-python.notranslate pre {
     margin: 20px auto;
     width: 600px;
     height: 150px;
-    background-color: #fff;
     display: grid;
     grid-template-columns: 300px 300px;
     grid-template-rows: 75px 75px;
