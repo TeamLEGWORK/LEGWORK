@@ -207,18 +207,12 @@ html[data-theme="dark"] .highlight .err { color: #ff5370; border: none; }
 html[data-theme="dark"] .highlight .go { color: var(--lw-text); }
 
 /* --- API reference (the definition lists autodoc generates) -------------- */
-html[data-theme="dark"] .rst-content dl:not(.docutils) > dt,
-html[data-theme="dark"] .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt {
-    background: #17242b;
-    border-top-color: #2980b9;
-    color: var(--lw-link);
-}
 
-html[data-theme="dark"] .rst-content dl:not(.docutils) dl:not(.docutils) > dt,
-html[data-theme="dark"] .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt {
-    background: var(--lw-bg-raised);
-    border-left-color: var(--lw-border);
-    color: var(--lw-text);
+html[data-theme="dark"] .field-list dl dt {
+    padding-left: 0.5rem;
+    background: var(--lw-bg-raised) !important;
+    border-left-color: var(--lw-border) !important;
+    color: var(--lw-text) !important;
 }
 
 /* --- tables ------------------------------------------------------------- */
