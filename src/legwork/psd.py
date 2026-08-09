@@ -388,16 +388,16 @@ def get_confusion_noise_karnesis21(f, t_obs=4 * u.yr):
     """
     # erase the units for speed
     f = f.to(u.Hz).value
-    t_obs = t_obs.to(u.yr).value 
+    t_obs = t_obs.to(u.yr).value
 
     # parameters from Karnesis+ 2021 Table II, column 4
     a_1 = -0.15
-    a_k = -0.37 
-    b_1 = -2.72 
-    b_k = -2.49 
-    A = 1.15e-44 
+    a_k = -0.37
+    b_1 = -2.72
+    b_k = -2.49
+    A = 1.15e-44
     f_2 = 0.00067
-    alpha = 1.56 
+    alpha = 1.56
 
     # equation 7 handles the Tobs dependence
     f_1 = t_obs**a_1 * 10**b_1
@@ -418,7 +418,8 @@ def get_confusion_noise(f, model, t_obs="auto"):
     f : `float/array`
         Frequencies at which to calculate the confusion noise, must have units of frequency
     model : str, optional
-        Which model to use for the confusion noise. Must be one of 'robson19', 'huang20', 'thiele21', 'karnesis21' or None.
+        Which model to use for the confusion noise. Must be one of 'robson19', 'huang20', 'thiele21',
+        'karnesis21' or None.
     t_obs : `float`, optional
         Mission length. Default is 4 years for robson19, thiele21 and karnesis21 and 5 years for huang20.
 

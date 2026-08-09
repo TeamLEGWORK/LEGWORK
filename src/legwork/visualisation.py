@@ -373,7 +373,7 @@ def plot_sensitivity_curve(frequency_range=None, y_quantity="ASD", fig=None, ax=
     with quantity_support():
         with warnings.catch_warnings():
             warnings.filterwarnings(
-                "ignore", 
+                "ignore",
                 message="This axis already has a converter set and is updating"
             )
             ax.loglog(frequency_range, noise_amplitude, color=color, label=label, linewidth=linewidth)
