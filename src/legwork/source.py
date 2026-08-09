@@ -193,25 +193,28 @@ class Source():
         if length_check.any():
             raise ValueError("All input arrays must have the same length")
 
+        # per source values
         self.m_1 = m_1
         self.m_2 = m_2
         self.ecc = ecc
         self.dist = dist
-        self.stat_tol = stat_tol
         self.f_orb = f_orb
         self.position = position
         self.inclination = inclination
         self.polarisation = polarisation
         self.weights = weights
+
+        # stationary tolerance and processes
+        self.stat_tol = stat_tol
         self.n_proc = n_proc
+
+        # initialize values that will be set later
         self.t_merge = None
         self.snr = None
         self.max_snr_harmonic = None
-
         self.merged = np.repeat(False, self.n_sources)
 
         # setting these interpolates the harmonics functions and the sensitivity curve respectively
-        # (`interpolate_sc` must be set first since `sc_params` uses it)
         self.gw_lum_tol = gw_lum_tol
         self.interpolate_sc = interpolate_sc
         self.sc_params = sc_params
