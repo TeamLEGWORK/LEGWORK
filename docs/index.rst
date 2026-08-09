@@ -38,6 +38,7 @@ Want to determine if *your* favorite source is detectable by LISA? Let LEGWORK d
     Modules <modules>
     Derivations <notebooks/Derivations.ipynb>
     Limitations and Scope <limitations>
+    Changelog <_generated/whats_new>
 
 .. toctree::
     :maxdepth: 1
