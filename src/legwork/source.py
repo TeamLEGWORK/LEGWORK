@@ -1,16 +1,29 @@
 """A collection of classes for analysing gravitational wave sources"""
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+import h5py
 import numpy as np
 from importlib import resources
 from scipy.interpolate import interp1d, RectBivariateSpline
 import os
+from copy import copy
 
 from legwork import utils, strain, psd, evol
+from legwork._version import __version__
 import legwork.snr as sn
 import legwork.visualisation as vis
 
 __all__ = ['Source', 'Stationary', 'Evolving', 'VerificationBinaries']
+
+
+# constants for masking, saving, and loading Source classes
+_ARR_ATTRS = [
+    "m_1", "m_2", "dist", "f_orb", "ecc", "weights", "inclination", "polarisation", "position",
+    "t_merge", "snr", "max_snr_harmonic", "merged"
+]
+_NOT_KWARG_ATTRS = [
+    "t_merge", "snr", "max_snr_harmonic", "merged"
+]
 
 
 class Source():
@@ -82,6 +95,10 @@ class Source():
     m_c : `float/array`
         Chirp mass. Set using ``m_1`` and ``m_2`` in :meth:`legwork.utils.chirp_mass`
 
+    a : `float/array`
+        Semi-major axis. Set using ``f_orb``, ``m_1`` and ``m_2`` in
+        :meth:`legwork.utils.get_a_from_f_orb`
+
     ecc_tol : `float`
         Eccentricity above which a binary is considered eccentric. Set by
         :meth:`legwork.source.Source.find_eccentric_transition`
@@ -134,7 +151,7 @@ class Source():
         if position is not None:
             if np.atleast_1d(ecc).any() > 0.0:
                 raise ValueError("The sky position, inclination, and polarization "
-                                 "modulation is only valued for circular sources")
+                                 "modulation is only valid for circular sources")
 
             # ensure position is in the correct coordinate frame
             position = position.transform_to("barycentrictrueecliptic")
@@ -147,24 +164,23 @@ class Source():
                                                                 polarisation, inclination)
             position = SkyCoord(lon=lon, lat=lat, distance=dist, frame='barycentrictrueecliptic')
 
-        # calculate whichever one wasn't supplied
+        # calculate the orbital frequency if it wasn't supplied
         f_orb = utils.get_f_orb_from_a(a, m_1, m_2) if f_orb is None else f_orb
-        a = utils.get_a_from_f_orb(f_orb, m_1, m_2) if a is None else a
 
         # define which arguments must have units
-        unit_args = [m_1, m_2, dist, f_orb, a]
-        unit_args_str = ['m_1', 'm_2', 'dist', 'f_orb', 'a']
+        unit_args = [m_1, m_2, dist, f_orb]
+        unit_args_str = ['m_1', 'm_2', 'dist', 'f_orb']
 
         for i in range(len(unit_args)):
             assert (isinstance(unit_args[i], u.quantity.Quantity)), \
                 "`{}` must have units".format(unit_args_str[i])
 
         # make sure the inputs are arrays
-        fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, a, ecc, weights)
-        m_1, m_2, dist, f_orb, a, ecc, weights = fixed_args
+        fixed_args, _ = utils.ensure_array(m_1, m_2, dist, f_orb, ecc, weights)
+        m_1, m_2, dist, f_orb, ecc, weights = fixed_args
 
         # ensure all array arguments are the same length
-        array_args = [m_1, m_2, dist, f_orb, a, ecc]
+        array_args = [m_1, m_2, dist, f_orb, ecc]
         length_check = np.array([len(arg) != len(array_args[0])
                                  for arg in array_args])
         if length_check.any():
@@ -183,12 +199,10 @@ class Source():
 
         self.m_1 = m_1
         self.m_2 = m_2
-        self.m_c = utils.chirp_mass(m_1, m_2)
         self.ecc = ecc
         self.dist = dist
         self.stat_tol = stat_tol
         self.f_orb = f_orb
-        self.a = a
         self.position = position
         self.inclination = inclination
         self.polarisation = polarisation
@@ -218,6 +232,260 @@ class Source():
 
     def __len__(self):
         return self.n_sources
+
+    def __getitem__(self, ind):
+        """Mask the sources using any index identifier and return them in a new class
+
+        Every attribute that has one entry per source (e.g. ``m_1``, ``ecc``, ``snr``, ``position``) is
+        masked, whilst everything else (e.g. the tolerances and the interpolated ``g`` and ``sc`` functions)
+        is passed directly to the new class. This means that no interpolation is repeated.
+
+        Parameters
+        ----------
+        ind : `int/list/slice/bool array`
+            Any identifier that can be used to index a numpy array. So an integer, a list (or array) of
+            integers, a slice, or a boolean mask with the same length as the number of sources.
+
+        Returns
+        -------
+        masked_sources : `Source`
+            A new class of the same type containing only the masked sources
+
+        Raises
+        ------
+        ValueError
+            If a boolean mask has a different length from the number of sources, or if ``ind`` is not an
+            integer, boolean or a collection of them
+        """
+        # convert whatever the user supplied into something that can index a numpy array
+        if isinstance(ind, (int, np.integer)):
+            # wrap single integers in a list to avoid collapsing the arrays down to scalars
+            mask = np.array([ind])
+        elif isinstance(ind, slice):
+            mask = np.arange(self.n_sources)[ind]
+        else:
+            mask = np.asarray(ind)
+            if mask.dtype == bool:
+                if len(mask) != self.n_sources:
+                    raise ValueError(("Boolean masks must have the same length as the number of sources "
+                                      "({} != {})").format(len(mask), self.n_sources))
+            elif not np.issubdtype(mask.dtype, np.integer):
+                raise ValueError("`ind` must be an integer, a slice, or a list/array of integers/booleans")
+
+        # create a new class *without* calling __init__ (avoids repeating any interpolation)
+        masked_sources = self.__class__.__new__(self.__class__)
+
+        # mask anything with one entry per source and copy everything else over directly
+        for key, value in self.__dict__.items():
+            if key in _ARR_ATTRS and value is not None:
+                if key == "position":
+                    masked_sources.position = SkyCoord(lon=value.lon[mask], lat=value.lat[mask],
+                                                       distance=value.distance[mask],
+                                                       frame="barycentrictrueecliptic")
+                else:
+                    value = np.asarray(value) if isinstance(value, list) else value
+                    masked_sources.__dict__[key] = value[mask]
+            else:
+                masked_sources.__dict__[key] = copy(value)
+
+        # avoid sharing the sensitivity curve params dictionary between the two classes
+        masked_sources._sc_params = self._sc_params.copy()
+        masked_sources.n_sources = len(masked_sources.m_1)
+
+        return masked_sources
+
+    def save(self, file_name, overwrite=False):
+        """Save these sources to an HDF5 file, which can be read back in with
+        :meth:`legwork.source.Source.from_file`
+
+        The version of LEGWORK used to create the sources is stored in the file so that any differences can
+        be flagged when the file is loaded back in.
+
+        Parameters
+        ----------
+        file_name : `str`
+            Path at which to save the sources. ``.h5`` is appended if the path has no HDF5 file extension.
+
+        overwrite : `boolean`, optional
+            Whether to overwrite the file if it already exists, by default False
+
+        Raises
+        ------
+        FileExistsError
+            If the file already exists and ``overwrite`` is False
+
+        Notes
+        -----
+
+        .. warning::
+
+            Any custom functions in ``sc_params`` (i.e. ``custom_psd`` or a callable ``confusion_noise``)
+            cannot be saved to file. These are replaced by their default values and a warning is shown.
+        """
+        if not file_name.endswith((".h5", ".hdf5")):
+            file_name += ".h5"
+
+        if os.path.isfile(file_name) and not overwrite:
+            raise FileExistsError(("{} already exists, set `overwrite=True` if you want to "
+                                   "replace it").format(file_name))
+
+        with h5py.File(file_name, "w") as file:
+            # record the settings needed to recreate the class
+            file.attrs["legwork_version"] = __version__
+            file.attrs["class_name"] = self.__class__.__name__
+            file.attrs["n_sources"] = self.n_sources
+            file.attrs["gw_lum_tol"] = self._gw_lum_tol
+            file.attrs["stat_tol"] = self.stat_tol
+            file.attrs["n_proc"] = self.n_proc
+            file.attrs["interpolate_g"] = self.g is not None
+            file.attrs["interpolate_sc"] = self.interpolate_sc
+
+            # save the source variables (any that are None are skipped)
+            for name in _ARR_ATTRS:
+                if getattr(self, name) is None:
+                    continue
+                if name == "position":
+                    _write_dataset(file, "position_lon", self.position.lon)
+                    _write_dataset(file, "position_lat", self.position.lat)
+                else:
+                    _write_dataset(file, name, getattr(self, name))
+
+            # save the sensitivity curve settings as attributes of a group
+            sc_group = file.create_group("sc_params")
+            for key, value in self._sc_params.items():
+                if callable(value):
+                    print((f"WARNING: `{key}` in `sc_params` is a custom function and cannot be"
+                           "saved to file, it will be replaced by the default value when you load these",
+                           "sources back in"))
+                elif value is None:
+                    sc_group.attrs[key] = "__none__"
+                elif isinstance(value, u.Quantity):
+                    sc_group.attrs[key] = value.value
+                    sc_group.attrs[key + "_unit"] = str(value.unit)
+                else:
+                    sc_group.attrs[key] = value
+
+    @classmethod
+    def from_file(cls, file_name, interpolate_g=None, interpolate_sc=None, n_proc=None):
+        """Create a class of sources from a file that was created with
+        :meth:`legwork.source.Source.save`
+
+        Parameters
+        ----------
+        file_name : `str`
+            Path to the file. ``.h5`` is appended if the path has no HDF5 file extension.
+
+        interpolate_g : `boolean`, optional
+            Whether to interpolate the g(n,e) function from Peters (1964), by default use the same setting
+            as the saved sources
+
+        interpolate_sc : `boolean`, optional
+            Whether to interpolate the sensitivity curve, by default use the same setting as the saved
+            sources
+
+        n_proc : `int`, optional
+            Number of processors to split eccentric evolution over if needed, by default use the same
+            setting as the saved sources
+
+        Returns
+        -------
+        sources : `Source`
+            The sources from the file
+
+        Raises
+        ------
+        FileNotFoundError
+            If the file doesn't exist
+
+        Notes
+        -----
+        A warning is shown if the file was created with a different version of LEGWORK from the one that
+        is currently installed.
+
+        Sources that were saved from a subclass with a different constructor (e.g.
+        :class:`legwork.source.VerificationBinaries`) are loaded into whichever class this function is
+        called on, so any extra attributes of that subclass are not restored.
+        """
+        if not file_name.endswith((".h5", ".hdf5")):
+            file_name += ".h5"
+
+        if not os.path.isfile(file_name):
+            raise FileNotFoundError("{} does not exist".format(file_name))
+
+        with h5py.File(file_name, "r") as file:
+            # warn the user if the sources were made with a different version of LEGWORK
+            file_version = file.attrs.get("legwork_version", "unknown")
+            if file_version != __version__:
+                print("WARNING: These sources were created with LEGWORK v{}".format(file_version),
+                      "but you are currently running v{}.".format(__version__),
+                      "Some values may not be consistent with the current version.")
+
+            # collect the variables needed by the constructor
+            kwargs = {name: _read_dataset(file, name) for name in _ARR_ATTRS
+                      if name != "position" and name not in _NOT_KWARG_ATTRS}
+
+            # recreate the sky position (it was saved in the barycentric true ecliptic frame)
+            if "position_lon" in file:
+                kwargs["position"] = SkyCoord(
+                    lon=_read_dataset(file, "position_lon"),
+                    lat=_read_dataset(file, "position_lat"),
+                    distance=kwargs["dist"], frame="barycentrictrueecliptic"
+                )
+
+            # convert the sensitivity curve settings back into a dictionary
+            sc_params = {}
+            for key, value in file["sc_params"].attrs.items():
+                if key.endswith("_unit"):
+                    continue
+                if isinstance(value, str) and value == "__none__":
+                    sc_params[key] = None
+                elif key + "_unit" in file["sc_params"].attrs:
+                    sc_params[key] = value * u.Unit(file["sc_params"].attrs[key + "_unit"])
+                else:
+                    sc_params[key] = value.item() if isinstance(value, np.generic) else value
+
+            # custom functions can't be saved so let the user know they need to supply them again
+            if sc_params.get("instrument") == "custom" and sc_params.get("custom_psd") is None:
+                print("WARNING: These sources use a custom instrument but the corresponding `custom_psd`",
+                      "function could not be saved to file. Use Source.update_sc_params() to supply it",
+                      "again before calculating anything.")
+
+            # use the saved settings unless the user overrode them
+            interpolate_g = file.attrs["interpolate_g"] if interpolate_g is None else interpolate_g
+            interpolate_sc = file.attrs["interpolate_sc"] if interpolate_sc is None else interpolate_sc
+            n_proc = file.attrs["n_proc"] if n_proc is None else n_proc
+
+            # if these sources were saved from a subclass with the same constructor then use that class
+            klass = cls
+            if cls is Source:
+                saved_class = globals().get(file.attrs.get("class_name", "Source"))
+                if (isinstance(saved_class, type) and issubclass(saved_class, Source)
+                        and saved_class.__init__ is Source.__init__):
+                    klass = saved_class
+
+            sources = klass(n_proc=int(n_proc), gw_lum_tol=float(file.attrs["gw_lum_tol"]),
+                            stat_tol=float(file.attrs["stat_tol"]), interpolate_g=bool(interpolate_g),
+                            interpolate_sc=bool(interpolate_sc), sc_params=sc_params, **kwargs)
+
+            # add back anything that had already been calculated when the sources were saved
+            for name in _NOT_KWARG_ATTRS:
+                value = _read_dataset(file, name)
+                if value is not None:
+                    setattr(sources, name, value)
+
+        return sources
+
+    @property
+    def m_c(self):
+        """Chirp mass. Set using ``m_1`` and ``m_2`` in :meth:`legwork.utils.chirp_mass`"""
+        return utils.chirp_mass(self.m_1, self.m_2)
+
+    @property
+    def a(self):
+        """Semi-major axis. Set using ``f_orb``, ``m_1`` and ``m_2`` in
+        :meth:`legwork.utils.get_a_from_f_orb`, so it stays consistent with ``f_orb`` if the sources are
+        evolved or masked"""
+        return utils.get_a_from_f_orb(self.f_orb, self.m_1, self.m_2)
 
     def create_harmonics_functions(self):
         """Create two harmonics related functions as methods for the Source class
@@ -1327,5 +1595,28 @@ class VerificationBinaries(Source):
         self.max_snr_harmonic = np.repeat(2, self.n_sources).astype(int)
 
 
+    def __getitem__(self, ind):
+        raise NotImplementedError("Verification binaries cannot be subsetted with indexing.")
+
     def __repr__(self):
-        return "<VerificationBinaries>"
+        return "<VerificationBinaries | Kupfer+2018>"
+
+
+def _write_dataset(group, name, value):
+    """Write ``value`` to ``group`` as a dataset called ``name``, recording any units as an attribute.
+    Anything that is ``None`` is simply not written to the file."""
+    if isinstance(value, u.Quantity):
+        dset = group.create_dataset(name, data=np.asarray(value.value))
+        dset.attrs["unit"] = str(value.unit)
+    else:
+        group.create_dataset(name, data=np.asarray(value))
+
+
+def _read_dataset(group, name):
+    """Read a dataset called ``name`` from ``group``, re-applying any units. Returns ``None`` if the
+    dataset is not in the file."""
+    if name not in group:
+        return None
+    dset = group[name]
+    value = dset[...]
+    return value * u.Unit(dset.attrs["unit"]) if "unit" in dset.attrs else value
