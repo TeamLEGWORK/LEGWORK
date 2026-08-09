@@ -8,10 +8,11 @@ from scipy.interpolate import interp1d, RectBivariateSpline
 import os
 from copy import copy
 
-from legwork import utils, strain, psd, evol
-from legwork._version import __version__
-import legwork.snr as sn
-import legwork.visualisation as vis
+from . import utils, strain, psd, evol
+from . import snr as sn
+from . import visualisation as vis
+from ._version import __version__
+from ._logging import logger
 
 __all__ = ['Source', 'Stationary', 'Evolving', 'VerificationBinaries']
 
@@ -139,11 +140,11 @@ class Source():
                 raise ValueError("If you specify the polarisation, you must also specify a sky position.")
         else:
             if inclination is None:
-                print("Generating random values for source inclinations")
+                logger.info("Generating random values for source inclinations")
                 # inclination is sampled uniformly in cos(i) to get a range of [0, pi/2]
                 inclination = np.arccos(np.random.uniform(0, 1, len(m_1))) * u.rad
             if polarisation is None:
-                print("Generating random values for source polarisations")
+                logger.info("Generating random values for source polarisations")
                 # polarisation is sampled from 0 to pi following Flanagan & Hughes 1998 (e.g. Eq. 2.34)
                 polarisation = np.random.uniform(0, np.pi, len(m_1)) * u.rad
 
@@ -220,9 +221,10 @@ class Source():
 
         # warn the user that interpolation might not be necessary if they have a small number of sources
         if interpolate_g and self.n_sources <= 1000:
-            print("WARNING: Setting `interpolate_g=True` for a small number of sources may be slower than",
-                  "computing directly. The exact runtime depends on the eccentricity of your sources so",
-                  "we recommend trying your sample with `interpolate_g=False` to check which is faster.")
+            logger.warning("Setting `interpolate_g=True` for a small number of sources may be slower than "
+                           "computing directly. The exact runtime depends on the eccentricity of your "
+                           "sources so we recommend trying your sample with `interpolate_g=False` to check "
+                           "which is faster.")
 
         self.set_g(interpolate_g)
         self.set_sc()
@@ -858,10 +860,10 @@ class Source():
 
             # otherwise warn the user that they are making a mistake
             else:
-                print("WARNING: Current `sc_params` are different from what was passed to this function.",
-                      "Either set `re_interpolate_sc=True` to re-interpolate the sensitivity curve on the",
-                      "fly or update your `sc_params` with Source.update_sc_params() to make sure your",
-                      "interpolated curve matches")
+                logger.warning("Current `sc_params` are different from what was passed to this "
+                               "function. Either set `re_interpolate_sc=True` to re-interpolate the "
+                               "sensitivity curve on the fly or update your `sc_params` with "
+                               "Source.update_sc_params() to make sure your interpolated curve matches")
 
         if verbose:
             n_snr = len(which_sources[which_sources]) if which_sources is not None else self.n_sources
@@ -992,10 +994,10 @@ class Source():
 
             # otherwise warn the user that they are making a mistake
             else:
-                print("WARNING: Current `sc_params` are different from what was passed to this function.",
-                      "Either set `re_interpolate_sc=True` to re-interpolate the sensitivity curve on the",
-                      "fly or update your `sc_params` with Source.update_sc_params() to make sure your",
-                      "interpolated curve matches")
+                logger.warning("Current `sc_params` are different from what was passed to this "
+                               "function. Either set `re_interpolate_sc=True` to re-interpolate the "
+                               "sensitivity curve on the fly or update your `sc_params` with "
+                               "Source.update_sc_params() to make sure your interpolated curve matches")
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         snr = np.zeros(self.n_sources)
@@ -1149,10 +1151,10 @@ class Source():
 
             # otherwise warn the user that they are making a mistake
             else:
-                print("WARNING: Current `sc_params` are different from what was passed to this function.",
-                      "Either set `re_interpolate_sc=True` to re-interpolate the sensitivity curve on the",
-                      "fly or update your `sc_params` with Source.update_sc_params() to make sure your",
-                      "interpolated curve matches")
+                logger.warning("Current `sc_params` are different from what was passed to this "
+                               "function. Either set `re_interpolate_sc=True` to re-interpolate the "
+                               "sensitivity curve on the fly or update your `sc_params` with "
+                               "Source.update_sc_params() to make sure your interpolated curve matches")
 
         insp_sources = np.logical_and(which_sources, np.logical_not(self.merged))
         e_mask = np.logical_and(self.ecc > self.ecc_tol, insp_sources)
@@ -1513,7 +1515,7 @@ class Source():
         """
         # only allow plotting when an SNR has been calculated
         if self.snr is None:
-            print("ERROR: No SNR has been calculated yet")
+            logger.error("No SNR has been calculated yet")
             return None, None
 
         detectable = self.snr > snr_cutoff
@@ -1534,16 +1536,14 @@ class Source():
         circ_evol = self.get_source_mask(circular=True, stationary=False)
         circ_evol = np.logical_and.reduce((circ_evol, detectable, inspiraling))
         if circ_evol.any():
-            print("{} circular and evolving".format(len(circ_evol[circ_evol])),
-                  "sources detected, plotting not yet implemented for",
-                  "evolving sources.")
+            logger.warning("{} circular and evolving sources detected, plotting not yet implemented "
+                           "for evolving sources.".format(len(circ_evol[circ_evol])))
 
         ecc_evol = self.get_source_mask(circular=True, stationary=False)
         ecc_evol = np.logical_and.reduce((ecc_evol, detectable, inspiraling))
         if ecc_evol.any():
-            print("{} eccentric and evolving".format(len(ecc_evol[ecc_evol])),
-                  "sources detected, plotting not yet implemented for",
-                  "evolving sources.")
+            logger.warning("{} eccentric and evolving sources detected, plotting not yet implemented "
+                           "for evolving sources.".format(len(ecc_evol[ecc_evol])))
 
         return fig, ax
 

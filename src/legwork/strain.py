@@ -2,8 +2,9 @@
 
 import astropy.units as u
 import astropy.constants as c
-from legwork import utils
 import numpy as np
+
+from . import utils
 
 __all__ = ['amplitude_modulation', 'h_0_n', 'h_c_n']
 
