@@ -32,6 +32,30 @@ html[data-theme="dark"] .only-light {
     flex-shrink: 0;
 }
 
+/* Fade the colours when the theme changes. custom.js only puts .theme-switching
+   on <html> for the duration of a switch, so the page still paints instantly on
+   load instead of animating in from the theme's default colours. Keep the
+   duration here in step with THEME_TRANSITION_MS in custom.js */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    transition: background-color 300ms ease,
+                color 300ms ease,
+                border-color 300ms ease,
+                fill 300ms ease !important;
+    transition-delay: 0s !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.theme-switching,
+    html.theme-switching *,
+    html.theme-switching *::before,
+    html.theme-switching *::after {
+        transition: none !important;
+    }
+}
+
 /* Hide numbers with Jupyter notebook cells */
 div.nbinput.container div.prompt pre {
     display: none;

@@ -6,6 +6,13 @@
    `body[data-theme="dark"]`, so we get its dark theme for free. */
 const LEGWORK_THEME_KEY = "legwork-theme";
 
+// how long the colours take to fade when switching, in step with .theme-switching
+// in custom.css. Transitions are off until the first theme has been applied, so
+// that the page paints straight into the right colours rather than animating in
+const THEME_TRANSITION_MS = 300;
+let legworkThemeAnimates = false;
+let legworkThemeTimer = null;
+
 function storedLegworkTheme() {
     // storage can throw when cookies are blocked
     try {
@@ -17,6 +24,14 @@ function storedLegworkTheme() {
 }
 
 function setLegworkTheme(theme, remember) {
+    if (legworkThemeAnimates && theme !== document.documentElement.getAttribute("data-theme")) {
+        document.documentElement.classList.add("theme-switching");
+        clearTimeout(legworkThemeTimer);   // restart the clock if the reader toggles again mid-fade
+        legworkThemeTimer = setTimeout(function() {
+            document.documentElement.classList.remove("theme-switching");
+        }, THEME_TRANSITION_MS);
+    }
+
     document.documentElement.setAttribute("data-theme", theme);
     if (document.body) {
         document.body.setAttribute("data-theme", theme);
@@ -41,6 +56,9 @@ function setLegworkTheme(theme, remember) {
 // apply the theme immediately: an explicit choice wins, otherwise follow the OS
 setLegworkTheme(storedLegworkTheme()
                 || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"), false);
+
+// every change from here on is a real switch, so it should fade
+legworkThemeAnimates = true;
 
 // keep following the OS unless the reader has picked a theme themselves
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function(event) {

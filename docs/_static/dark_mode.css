@@ -86,9 +86,9 @@ html[data-theme="dark"] .wy-nav-top {
 } */
 
 html[data-theme="dark"] .wy-side-nav-search input[type=text] {
-    background: var(--lw-bg-sunken);
-    border-color: var(--lw-border);
-    color: var(--lw-text);
+    background: var(--lw-text);
+    border: 0;
+    color: black;
 }
 
 /* the theme expands the current page's subtree onto a light grey background with
