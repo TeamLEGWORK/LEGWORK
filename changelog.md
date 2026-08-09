@@ -28,6 +28,9 @@ This log keeps track of the changes implemented in each version of LEGWORK. It's
     - Add ``.pre-commit-config.yaml`` so lint problems are caught locally before they reach CI
     - Add Dependabot to keep the GitHub Actions versions up to date
 
+- Documentation
+    - Add dark mode, changelog page, full-screen pages, and documentation for the new changes listed above
+
 ## 0.5.3
 *TW 09/07/26*
 
