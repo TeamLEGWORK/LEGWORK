@@ -134,7 +134,7 @@ html[data-theme="dark"] .rst-content tt {
 
 html[data-theme="dark"] .rst-content code.literal,
 html[data-theme="dark"] .rst-content tt.literal {
-    color: #ff8a80;
+    color: #2980b9;
 }
 
 html[data-theme="dark"] .rst-content a code,
@@ -207,6 +207,20 @@ html[data-theme="dark"] .highlight .err { color: #ff5370; border: none; }
 html[data-theme="dark"] .highlight .go { color: var(--lw-text); }
 
 /* --- API reference (the definition lists autodoc generates) -------------- */
+
+html[data-theme="dark"] .py.class > dt,
+html[data-theme="dark"] .py.function > dt,
+html[data-theme="dark"] .py.method > dt {
+    background: var(--lw-bg-raised) !important;
+}
+html[data-theme="dark"] .py.class > dt .sig-prename span[class="pre"],
+html[data-theme="dark"] .py.function > dt .sig-prename span[class="pre"],
+html[data-theme="dark"] .py.method > dt .sig-prename span[class="pre"],
+html[data-theme="dark"] .py.class > dt .sig-name span[class="pre"],
+html[data-theme="dark"] .py.function > dt .sig-name span[class="pre"],
+html[data-theme="dark"] .py.method > dt .sig-name span[class="pre"] {
+    color: var(--lw-text);
+}
 
 html[data-theme="dark"] .field-list dl dt {
     padding-left: 0.5rem;
