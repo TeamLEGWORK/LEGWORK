@@ -295,6 +295,16 @@ class Source():
 
         return masked_sources
 
+    def copy(self):
+        """Return a copy of this class
+
+        Returns
+        -------
+        sources : `Source`
+            A new class of the same type containing the same sources
+        """
+        return self[:]
+
     def save(self, file_name, overwrite=False):
         """Save these sources to an HDF5 file, which can be read back in with
         :meth:`legwork.source.Source.from_file`
