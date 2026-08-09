@@ -1,9 +1,14 @@
-.. image:: images/legwork.png
-   :width: 400
-   :alt: logo for legwork
-   :align: center
+.. .. image:: images/legwork.png
+..    :width: 400
+..    :alt: logo for legwork
+..    :align: center
 
-|
+.. raw:: html
+
+    <div id="logo-container" style="text-align:center; margin-bottom: 20px; width: 100%;">
+        <img src="_static/images/legwork.png" alt="logo for legwork" width="400" align="center" class="only-light">
+        <img src="_static/images/legwork_darkmode.png" alt="logo for legwork" width="400" align="center" class="only-dark">
+    </div>
 
 **LEGWORK** (**L**\ ISA **E**\ volution and **G**\ ravitational **W**\ ave **OR**\ bit **K**\ it) is a python package designed to calculate signal-to-noise ratios for GWs emitted from inspiraling binary systems that are potentially observable by LISA.
 

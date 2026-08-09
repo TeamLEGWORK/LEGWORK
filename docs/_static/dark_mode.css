@@ -1,0 +1,357 @@
+/* =========================================================================
+   Dark mode
+
+   sphinx_rtd_theme has no dark theme of its own, so everything below recolours
+   it when custom.js puts data-theme="dark" on <html>.
+   ========================================================================= */
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --lw-bg: #1b1d1e;           /* main content */
+    --lw-bg-raised: #232628;    /* panels sitting on top of the content */
+    --lw-bg-sunken: #141617;    /* code blocks, page margins, sidebar */
+    --lw-border: #3a3f42;
+    --lw-text: #c9ced1;
+    --lw-text-muted: #8d9499;
+    --lw-heading: #e8ebed;
+    --lw-link: #62b0e8;
+    --lw-link-visited: #b48ead;
+}
+
+/* --- the logo -----------------------------------------------------------
+   html_logo in conf.py can only take a single image, so swap the <img> out
+   with CSS instead. Doing it here rather than in JavaScript means the right
+   logo is painted first time round, with no flicker on load. */
+html[data-theme="dark"] .wy-side-nav-search > a img.logo {
+    content: url("images/shoe_logo_word_darkmode.png");
+}
+
+/* --- page furniture ----------------------------------------------------- */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .wy-body-for-nav,
+html[data-theme="dark"] .wy-nav-content-wrap {
+    background: var(--lw-bg-sunken);
+    color: var(--lw-text);
+}
+
+html[data-theme="dark"] .wy-nav-content {
+    background: var(--lw-bg);
+}
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] legend,
+html[data-theme="dark"] .rst-content .toctree-wrapper > p.caption {
+    color: var(--lw-heading);
+}
+
+html[data-theme="dark"] hr,
+html[data-theme="dark"] footer {
+    border-color: var(--lw-border);
+}
+
+html[data-theme="dark"] footer,
+html[data-theme="dark"] footer span,
+html[data-theme="dark"] .rst-content blockquote {
+    color: var(--lw-text-muted);
+}
+
+/* links, scoped to the content column so the sidebar keeps its own colours */
+html[data-theme="dark"] .wy-nav-content a {
+    color: var(--lw-link);
+}
+
+html[data-theme="dark"] .wy-nav-content a:visited {
+    color: var(--lw-link-visited);
+}
+
+html[data-theme="dark"] .rst-content .highlighted {
+    background: #f1c40f;
+    color: #1b1d1e;
+}
+
+/* --- sidebar ------------------------------------------------------------ */
+html[data-theme="dark"] .wy-nav-side {
+    background: var(--lw-bg-sunken);
+}
+
+/* html[data-theme="dark"] .wy-side-nav-search,
+html[data-theme="dark"] .wy-nav-top {
+    background: var(--lw-bg-raised);
+} */
+
+html[data-theme="dark"] .wy-side-nav-search input[type=text] {
+    background: var(--lw-bg-sunken);
+    border-color: var(--lw-border);
+    color: var(--lw-text);
+}
+
+/* the theme expands the current page's subtree onto a light grey background with
+   dark text, which needs inverting */
+html[data-theme="dark"] .wy-menu-vertical li.current,
+html[data-theme="dark"] .wy-menu-vertical li.current > a,
+html[data-theme="dark"] .wy-menu-vertical li.on a {
+    background: var(--lw-bg);
+    border-color: var(--lw-bg-sunken);
+}
+
+html[data-theme="dark"] .wy-menu-vertical li.current > a,
+html[data-theme="dark"] .wy-menu-vertical li.on a {
+    color: var(--lw-heading);
+}
+
+html[data-theme="dark"] .wy-menu-vertical li.current a,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l2 a,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l3 a,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l4 a,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l5 a {
+    color: var(--lw-text);
+    border-right-color: var(--lw-border);
+}
+
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l2.current > a,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a {
+    background: var(--lw-bg-raised);
+}
+
+html[data-theme="dark"] .wy-menu-vertical li.current a:hover,
+html[data-theme="dark"] .wy-menu-vertical li.on a:hover,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l2 a:hover,
+html[data-theme="dark"] .wy-menu-vertical li.toctree-l3 a:hover {
+    background: #2c3033;
+    color: var(--lw-heading);
+}
+
+/* --- code --------------------------------------------------------------- */
+html[data-theme="dark"] .highlight,
+html[data-theme="dark"] .rst-content div[class^=highlight],
+html[data-theme="dark"] .rst-content div[class^=highlight] pre {
+    background: var(--lw-bg-sunken);
+    border-color: var(--lw-border);
+    color: var(--lw-text);
+}
+
+html[data-theme="dark"] code,
+html[data-theme="dark"] .rst-content code,
+html[data-theme="dark"] .rst-content tt {
+    background: var(--lw-bg-sunken);
+    border-color: var(--lw-border);
+    color: var(--lw-text);
+}
+
+html[data-theme="dark"] .rst-content code.literal,
+html[data-theme="dark"] .rst-content tt.literal {
+    color: #ff8a80;
+}
+
+html[data-theme="dark"] .rst-content a code,
+html[data-theme="dark"] .rst-content a code.literal,
+html[data-theme="dark"] .rst-content code.xref {
+    color: var(--lw-link);
+}
+
+/* the copy button icon is a dark glyph, so it needs flipping */
+html[data-theme="dark"] a.copybtn > img {
+    filter: invert(1);
+}
+
+/* pygments only ships one stylesheet, so recolour the tokens by hand */
+html[data-theme="dark"] .highlight .hll { background-color: #33383d; }
+html[data-theme="dark"] .highlight .c,
+html[data-theme="dark"] .highlight .ch,
+html[data-theme="dark"] .highlight .cm,
+html[data-theme="dark"] .highlight .c1,
+html[data-theme="dark"] .highlight .cs,
+html[data-theme="dark"] .highlight .cp,
+html[data-theme="dark"] .highlight .cpf,
+html[data-theme="dark"] .highlight .gp { color: #7f8c98; }
+html[data-theme="dark"] .highlight .k,
+html[data-theme="dark"] .highlight .kc,
+html[data-theme="dark"] .highlight .kd,
+html[data-theme="dark"] .highlight .kn,
+html[data-theme="dark"] .highlight .kp,
+html[data-theme="dark"] .highlight .kr,
+html[data-theme="dark"] .highlight .kt,
+html[data-theme="dark"] .highlight .ow { color: #c792ea; }
+html[data-theme="dark"] .highlight .o { color: #89ddff; }
+html[data-theme="dark"] .highlight .s,
+html[data-theme="dark"] .highlight .sa,
+html[data-theme="dark"] .highlight .sb,
+html[data-theme="dark"] .highlight .sc,
+html[data-theme="dark"] .highlight .dl,
+html[data-theme="dark"] .highlight .sd,
+html[data-theme="dark"] .highlight .s2,
+html[data-theme="dark"] .highlight .se,
+html[data-theme="dark"] .highlight .sh,
+html[data-theme="dark"] .highlight .si,
+html[data-theme="dark"] .highlight .sx,
+html[data-theme="dark"] .highlight .sr,
+html[data-theme="dark"] .highlight .s1,
+html[data-theme="dark"] .highlight .ss,
+html[data-theme="dark"] .highlight .gi { color: #c3e88d; }
+html[data-theme="dark"] .highlight .m,
+html[data-theme="dark"] .highlight .mb,
+html[data-theme="dark"] .highlight .mf,
+html[data-theme="dark"] .highlight .mh,
+html[data-theme="dark"] .highlight .mi,
+html[data-theme="dark"] .highlight .mo,
+html[data-theme="dark"] .highlight .il { color: #f78c6c; }
+html[data-theme="dark"] .highlight .nb,
+html[data-theme="dark"] .highlight .bp,
+html[data-theme="dark"] .highlight .nf,
+html[data-theme="dark"] .highlight .fm { color: #82aaff; }
+html[data-theme="dark"] .highlight .nc,
+html[data-theme="dark"] .highlight .nn,
+html[data-theme="dark"] .highlight .nd,
+html[data-theme="dark"] .highlight .ne,
+html[data-theme="dark"] .highlight .na { color: #ffcb6b; }
+html[data-theme="dark"] .highlight .nt,
+html[data-theme="dark"] .highlight .gd,
+html[data-theme="dark"] .highlight .gr,
+html[data-theme="dark"] .highlight .gt { color: #ff5370; }
+html[data-theme="dark"] .highlight .err { color: #ff5370; border: none; }
+html[data-theme="dark"] .highlight .go { color: var(--lw-text); }
+
+/* --- API reference (the definition lists autodoc generates) -------------- */
+html[data-theme="dark"] .rst-content dl:not(.docutils) > dt,
+html[data-theme="dark"] .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt {
+    background: #17242b;
+    border-top-color: #2980b9;
+    color: var(--lw-link);
+}
+
+html[data-theme="dark"] .rst-content dl:not(.docutils) dl:not(.docutils) > dt,
+html[data-theme="dark"] .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt {
+    background: var(--lw-bg-raised);
+    border-left-color: var(--lw-border);
+    color: var(--lw-text);
+}
+
+/* --- tables ------------------------------------------------------------- */
+html[data-theme="dark"] .rst-content table.docutils td,
+html[data-theme="dark"] .rst-content table.docutils th,
+html[data-theme="dark"] .rst-content table.docutils,
+html[data-theme="dark"] .wy-table-bordered-all td,
+html[data-theme="dark"] .wy-table-bordered-all {
+    border-color: var(--lw-border);
+}
+
+html[data-theme="dark"] .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td,
+html[data-theme="dark"] .wy-table-odd td,
+html[data-theme="dark"] .wy-table-striped tr:nth-child(2n-1) td {
+    background: var(--lw-bg-raised);
+}
+
+html[data-theme="dark"] .rst-content table.docutils thead th,
+html[data-theme="dark"] .wy-table thead th {
+    color: var(--lw-heading);
+}
+
+/* --- admonitions -------------------------------------------------------- */
+html[data-theme="dark"] .rst-content .admonition,
+html[data-theme="dark"] .wy-alert {
+    color: var(--lw-text);
+}
+
+html[data-theme="dark"] .rst-content .note,
+html[data-theme="dark"] .rst-content .seealso,
+html[data-theme="dark"] .wy-alert.wy-alert-info { background: #152a38; }
+html[data-theme="dark"] .rst-content .note .admonition-title,
+html[data-theme="dark"] .rst-content .seealso .admonition-title,
+html[data-theme="dark"] .wy-alert.wy-alert-info .wy-alert-title { background: #2b6284; }
+
+html[data-theme="dark"] .rst-content .hint,
+html[data-theme="dark"] .rst-content .important,
+html[data-theme="dark"] .rst-content .tip,
+html[data-theme="dark"] .wy-alert.wy-alert-success { background: #12332e; }
+html[data-theme="dark"] .rst-content .hint .admonition-title,
+html[data-theme="dark"] .rst-content .important .admonition-title,
+html[data-theme="dark"] .rst-content .tip .admonition-title,
+html[data-theme="dark"] .wy-alert.wy-alert-success .wy-alert-title { background: #177f6b; }
+
+html[data-theme="dark"] .rst-content .attention,
+html[data-theme="dark"] .rst-content .caution,
+html[data-theme="dark"] .rst-content .warning,
+html[data-theme="dark"] .rst-content .admonition-todo,
+html[data-theme="dark"] .wy-alert.wy-alert-warning { background: #3a2c14; }
+html[data-theme="dark"] .rst-content .attention .admonition-title,
+html[data-theme="dark"] .rst-content .caution .admonition-title,
+html[data-theme="dark"] .rst-content .warning .admonition-title,
+html[data-theme="dark"] .rst-content .admonition-todo .admonition-title,
+html[data-theme="dark"] .wy-alert.wy-alert-warning .wy-alert-title { background: #a06327; }
+
+html[data-theme="dark"] .rst-content .danger,
+html[data-theme="dark"] .rst-content .error,
+html[data-theme="dark"] .wy-alert.wy-alert-danger { background: #3a1f1d; }
+html[data-theme="dark"] .rst-content .danger .admonition-title,
+html[data-theme="dark"] .rst-content .error .admonition-title,
+html[data-theme="dark"] .wy-alert.wy-alert-danger .wy-alert-title { background: #a1443b; }
+
+/* --- notebooks (nbsphinx) ----------------------------------------------- */
+html[data-theme="dark"] div.nbinput.container div.input_area {
+    background: var(--lw-bg-sunken);
+    border-color: var(--lw-border);
+}
+
+html[data-theme="dark"] div.nboutput.container div.output_area pre,
+html[data-theme="dark"] div.nboutput.container div.output_area .highlight {
+    background: transparent;
+    color: var(--lw-text);
+}
+
+html[data-theme="dark"] div.nboutput.container div.output_area.stderr {
+    background: #3a1f1d;
+}
+
+/* figures are drawn for a white page, so give them one to sit on */
+html[data-theme="dark"] .nboutput img,
+html[data-theme="dark"] .plot-directive img,
+html[data-theme="dark"] img.plot-directive {
+    background: #fff;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+/* --- tabs ---------------------------------------------------------------
+   sphinx-tabs has its own dark theme keyed off body[data-theme="dark"], which
+   custom.js sets for us. Its greys are a bit lighter than ours, so match them up */
+html[data-theme="dark"] .sphinx-tabs-panel,
+html[data-theme="dark"] .sphinx-tabs-tab[aria-selected="true"] {
+    background-color: var(--lw-bg-raised);
+    border-color: var(--lw-border);
+}
+
+html[data-theme="dark"] .sphinx-tabs-tab[aria-selected="true"] {
+    border-bottom-color: var(--lw-bg-raised);
+}
+
+html[data-theme="dark"] [role="tablist"] {
+    border-bottom-color: var(--lw-border);
+}
+
+/* --- buttons and nav boxes ---------------------------------------------- */
+html[data-theme="dark"] .btn-neutral,
+html[data-theme="dark"] .btn-neutral:visited {
+    background: var(--lw-bg-raised) !important;
+    color: var(--lw-text) !important;
+}
+
+html[data-theme="dark"] .btn-neutral:hover {
+    background: #2c3033 !important;
+}
+
+html[data-theme="dark"] .toms-nav-container .box,
+html[data-theme="dark"] .toms-nav-box {
+    background-color: var(--lw-bg-raised);
+}
+/* shrink on hover */
+html[data-theme="dark"] .toms-nav-container .box:hover, .toms-nav-box:hover {
+    transform: scale(0.9);
+    background-color: #2980b9;
+}
