@@ -86,7 +86,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_theme = 'sphinx_rtd_theme'
 
-html_theme_options = {"display_version": True, "logo_only" : True}
+html_theme_options = {"version_selector": True, "logo_only" : True}
 html_last_updated_fmt = "%Y %b %d at %H:%M:%S UTC"
 html_show_sourcelink = False
 html_favicon = "_static/images/shoe_logo.ico"
