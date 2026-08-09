@@ -331,7 +331,7 @@ class Test(unittest.TestCase):
 
         # erase interpolation
         sources.interpolate_sc = False
-        sources.update_sc_params(None)
+        sources.sc_params = None
 
         snr = sources.get_snr(verbose=True)
 
@@ -452,7 +452,8 @@ class Test(unittest.TestCase):
         sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.2, dist=10*u.kpc,
                                 sc_params=original_sc_params)
 
-        sources.update_sc_params({"instrument": "TianQin"})
+        # assigning a new set of params should reset anything that isn't supplied to its default
+        sources.sc_params = {"instrument": "TianQin"}
 
         correct_final_sc_params = {
             "instrument": "TianQin",
@@ -462,7 +463,101 @@ class Test(unittest.TestCase):
             "confusion_noise": "auto",
             "custom_psd": None,
         }
-        self.assertTrue(correct_final_sc_params == sources._sc_params)
+        self.assertTrue(correct_final_sc_params == sources.sc_params)
+
+    def test_sc_params_re_interpolation(self):
+        """check that the sensitivity curve is re-interpolated when the params change"""
+        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.0, dist=10 * u.kpc,
+                                interpolate_g=False, sc_params={"instrument": "LISA"})
+
+        # changing a single value should re-interpolate the curve
+        original_sc = sources.sc
+        original_value = sources.sc(1e-3 * u.Hz)
+        sources.sc_params["instrument"] = "TianQin"
+
+        self.assertTrue(sources.sc_params["instrument"] == "TianQin")
+        self.assertTrue(sources.sc is not original_sc)
+        # (atol=0 since the PSD values are tiny, so everything is "close" by default)
+        self.assertFalse(np.isclose(sources.sc(1e-3 * u.Hz), original_value, atol=0))
+
+        # everything else should be left alone
+        self.assertTrue(sources.sc_params["t_obs"] == "auto")
+
+        # setting the same value again shouldn't bother re-interpolating
+        unchanged_sc = sources.sc
+        sources.sc_params["instrument"] = "TianQin"
+        self.assertTrue(sources.sc is unchanged_sc)
+
+        # changing several values at once should only re-interpolate once
+        n_interpolations = [0]
+        real_set_sc = sources.set_sc
+
+        def counting_set_sc():
+            n_interpolations[0] += 1
+            real_set_sc()
+        sources.set_sc = counting_set_sc
+
+        sources.sc_params.update({"instrument": "LISA", "t_obs": 2 * u.yr})
+        self.assertTrue(n_interpolations[0] == 1)
+        self.assertTrue(sources.sc_params["t_obs"] == 2 * u.yr)
+
+    def test_bad_sc_params(self):
+        """check that only real sensitivity curve params can be set"""
+        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.0, dist=10 * u.kpc,
+                                interpolate_g=False, interpolate_sc=False)
+
+        # a parameter that isn't used for the sensitivity curve should be rejected
+        for bad_params in [{"not_a_param": 42}, {"instrument": "LISA", "t_ob": 4 * u.yr}]:
+            it_broke = False
+            try:
+                sources.sc_params = bad_params
+            except KeyError:
+                it_broke = True
+            self.assertTrue(it_broke)
+
+        it_broke = False
+        try:
+            sources.sc_params["nonsense"] = 42
+        except KeyError:
+            it_broke = True
+        self.assertTrue(it_broke)
+
+        # params can be changed but not removed
+        it_broke = False
+        try:
+            del sources.sc_params["instrument"]
+        except TypeError:
+            it_broke = True
+        self.assertTrue(it_broke)
+
+    def test_updating_gw_lum_tol(self):
+        """check that changing the GW luminosity tolerance updates the cached calculations"""
+        sources = source.Source(m_1=np.repeat(1, 5) * u.Msun, m_2=np.repeat(1, 5) * u.Msun,
+                                f_orb=np.repeat(1e-3, 5) * u.Hz, ecc=np.repeat(0.2, 5),
+                                dist=np.repeat(10, 5) * u.kpc, interpolate_g=False, interpolate_sc=False)
+
+        original_ecc_tol = sources.ecc_tol
+        original_harmonics = sources.harmonics_required(0.3)
+
+        # a tighter tolerance means more harmonics are needed and eccentricity matters sooner
+        sources.gw_lum_tol = 0.001
+
+        self.assertTrue(sources.gw_lum_tol == 0.001)
+        self.assertTrue(sources.ecc_tol < original_ecc_tol)
+        self.assertTrue(sources.harmonics_required(0.3) > original_harmonics)
+
+    def test_deprecated_update_functions(self):
+        """check that the old update functions still work but warn the user"""
+        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.2, dist=10 * u.kpc,
+                                interpolate_g=False, interpolate_sc=False)
+
+        with self.assertWarns(DeprecationWarning):
+            sources.update_sc_params({"instrument": "TianQin"})
+        self.assertTrue(sources.sc_params["instrument"] == "TianQin")
+
+        with self.assertWarns(DeprecationWarning):
+            sources.update_gw_lum_tol(0.01)
+        self.assertTrue(sources.gw_lum_tol == 0.01)
 
     @staticmethod
     def _random_sources(n_values=20, positions=False, **kwargs):
@@ -516,8 +611,8 @@ class Test(unittest.TestCase):
 
         # changing the sc params of the mask shouldn't affect the original class
         masked = sources[mask]
-        masked.update_sc_params({"instrument": "TianQin"})
-        self.assertTrue(sources._sc_params["instrument"] == "LISA")
+        masked.sc_params["instrument"] = "TianQin"
+        self.assertTrue(sources.sc_params["instrument"] == "LISA")
 
     def test_masking_positions(self):
         """check that positions, inclinations and polarisations are masked too"""
