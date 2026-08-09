@@ -200,9 +200,13 @@ having two when we could just set `f_dom=2 f_orb`
 
 - Features/enhancements:
     - New LISA confusion noise model "karnesis21" added, set as the new default for all LISA calculations
-    - `Source` classes can now be masked with any index identifier (e.g. `sources[0]`, `sources[[1, 2]]`, `sources[:10]`, `sources[sources.snr > 7]`), which returns a new class containing only the masked sources. Any interpolated `g(n,e)` and sensitivity curve functions are passed directly to the new class so no interpolation is repeated.
+    - `Source` classes can now be masked with any index identifier (e.g. `sources[0]`, `sources[[1, 2]]`, `sources[:10]`, `sources[sources.snr > 7]`), which returns a new class containing only the masked sources. Any interpolated `g(n,e)` and sensitivity curve functions are passed directly to the new class so no interpolation is repeated, but the arrays are separate copies/masks.
     - Sources can be saved to an HDF5 file with `Source.save()` and read back in with `Source.from_file()`. The version of LEGWORK used to create the sources is recorded in the file and a warning is shown on load if it differs from the installed version (this adds `h5py` as a new dependency).
-    - `Source.m_c` and `Source.a` are now derived properties rather than stored variables, so they always stay consistent with `m_1`, `m_2` and `f_orb`. Note that this means they can no longer be assigned to directly.
+    - `Source.m_c`, `Source.a`, `Source.n_sources` and `Source.ecc_tol` are now derived properties rather than stored variables, so they always stay consistent with the values they're calculated from. `m_c`, `n_sources` and `ecc_tol` are read-only (change `m_1`/`m_2`, the number of sources, or `gw_lum_tol` instead), whilst assigning to `a` updates `f_orb` to match.
+    - Added `Source.interpolate_g`, which reports whether the g(n,e) function is interpolated for a set of sources
+    - `Source.gw_lum_tol` and `Source.sc_params` are now properties, so they can be changed directly instead of through separate update functions. Assigning to `Source.gw_lum_tol` recalculates `ecc_tol` and `harmonics_required`, and changing `Source.sc_params` re-interpolates the sensitivity curve — either by assigning a whole new dictionary (anything left out reverts to its default), or by changing a single value with e.g. `sources.sc_params["t_obs"] = 5 * u.yr`.
+    - **Breaking**: `Source.update_gw_lum_tol()` and `Source.update_sc_params()` have been removed, assign to `Source.gw_lum_tol` and `Source.sc_params` instead.
+    - **Breaking**: the `re_interpolate_sc` argument has been removed from `get_snr()`, `get_snr_stationary()` and `get_snr_evolving()`. These functions now always keep `sc_params` in sync with the values they are given, and the sensitivity curve is only re-interpolated when something actually changes.
 
 - Code clean up and package modernisation:
     - Consolidate all packaging/tooling config into `pyproject.toml` (PEP 621) — `setup.py`, `setup.cfg`, `requirements.txt`, `environment.yml` and `docs/requirements.txt` have been removed
