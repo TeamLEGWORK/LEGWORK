@@ -205,6 +205,7 @@ having two when we could just set `f_dom=2 f_orb`
     - Consolidate all packaging/tooling config into `pyproject.toml` (PEP 621) — `setup.py`, `setup.cfg`, `requirements.txt`, `environment.yml` and `docs/requirements.txt` have been removed
     - Move the package to a `src/` layout (`legwork/` -> `src/legwork/`)
     - Replace `flake8` with `ruff` (configured under `[tool.ruff]` in `pyproject.toml`) and fix the lint errors it surfaced
+    - Standardise the imports within the package on explicit relative imports (`from . import utils`) instead of a mix of `import legwork.utils as utils` and `from legwork import utils` (the tests still import the package absolutely, since they should test the installed version)
     - Build releases with `python -m build` instead of `python setup.py sdist bdist_wheel`
     - Split CI into separate `Lint`, `Tests` and `Docs notebooks` workflows so a failure says what broke
     - Add `.pre-commit-config.yaml` so lint problems are caught locally before they reach CI

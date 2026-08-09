@@ -1,13 +1,14 @@
 """Functions using equations from Peters and Mathews (1964) to calculate inspiral times and evolve
 binary parameters."""
 
-import legwork.utils as utils
 from numba import jit, njit
 from scipy.integrate import odeint, quad
 import numpy as np
 import astropy.units as u
 import astropy.constants as c
 from schwimmbad import MultiPool
+
+from . import utils
 
 __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc', 'get_t_merge_circ', 'get_t_merge_ecc',
            't_merge_mandel_fit', 'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array',

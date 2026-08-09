@@ -6,9 +6,9 @@ from importlib import resources
 from scipy.interpolate import interp1d, RectBivariateSpline
 import os
 
-from legwork import utils, strain, psd, evol
-import legwork.snr as sn
-import legwork.visualisation as vis
+from . import utils, strain, psd, evol
+from . import snr as sn
+from . import visualisation as vis
 
 __all__ = ['Source', 'Stationary', 'Evolving', 'VerificationBinaries']
 

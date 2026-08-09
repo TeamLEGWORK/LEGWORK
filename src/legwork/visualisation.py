@@ -2,9 +2,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import astropy.units as u
-import legwork.psd as psd
 from astropy.visualization import quantity_support
 import warnings
+
+from . import psd
 
 fs = 24
 style_params = {
