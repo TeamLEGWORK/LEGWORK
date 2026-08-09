@@ -207,7 +207,6 @@ class Source():
         self.t_merge = None
         self.snr = None
         self.max_snr_harmonic = None
-        self.n_sources = len(m_1)
 
         self.merged = np.repeat(False, self.n_sources)
 
@@ -288,7 +287,6 @@ class Source():
 
         # give the new class its own params (bound to itself, so it re-interpolates its own curve)
         masked_sources._sc_params = SensitivityCurveParams(self.sc_params, source=masked_sources)
-        masked_sources.n_sources = len(masked_sources.m_1)
 
         return masked_sources
 
@@ -474,6 +472,11 @@ class Source():
         return sources
 
     @property
+    def n_sources(self):
+        """Number of sources in class"""
+        return len(self.m_1)
+
+    @property
     def m_c(self):
         """Chirp mass. Set using ``m_1`` and ``m_2`` in :meth:`legwork.utils.chirp_mass`"""
         return utils.chirp_mass(self.m_1, self.m_2)
@@ -569,6 +572,10 @@ class Source():
 
     @gw_lum_tol.setter
     def gw_lum_tol(self, gw_lum_tol):
+        # don't repeat the calculations if the tolerance isn't actually changing
+        if gw_lum_tol == getattr(self, "_gw_lum_tol", None):
+            return
+
         self._gw_lum_tol = gw_lum_tol
         self.create_harmonics_functions()
         self.find_eccentric_transition()

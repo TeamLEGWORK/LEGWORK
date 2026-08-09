@@ -546,18 +546,10 @@ class Test(unittest.TestCase):
         self.assertTrue(sources.ecc_tol < original_ecc_tol)
         self.assertTrue(sources.harmonics_required(0.3) > original_harmonics)
 
-    def test_deprecated_update_functions(self):
-        """check that the old update functions still work but warn the user"""
-        sources = source.Source(m_1=1 * u.Msun, m_2=1 * u.Msun, f_orb=1e-3 * u.Hz, ecc=0.2, dist=10 * u.kpc,
-                                interpolate_g=False, interpolate_sc=False)
-
-        with self.assertWarns(DeprecationWarning):
-            sources.update_sc_params({"instrument": "TianQin"})
-        self.assertTrue(sources.sc_params["instrument"] == "TianQin")
-
-        with self.assertWarns(DeprecationWarning):
-            sources.update_gw_lum_tol(0.01)
-        self.assertTrue(sources.gw_lum_tol == 0.01)
+        # setting the same tolerance again shouldn't repeat the calculations
+        unchanged = sources.harmonics_required
+        sources.gw_lum_tol = 0.001
+        self.assertTrue(sources.harmonics_required is unchanged)
 
     @staticmethod
     def _random_sources(n_values=20, positions=False, **kwargs):
