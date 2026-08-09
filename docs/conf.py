@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # HACKS - credit to "https://github.com/rodluger/starry_process"
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
-import hacks
+import hacks  # noqa: F401  (imported for its side effects)
 
 # -- Project information -----------------------------------------------------
 
 project = 'LEGWORK'
-copyright = '2021, Tom Wagg, Katie Breivik'
+copyright = '2021-2026, Tom Wagg, Katie Breivik'
 author = 'Tom Wagg, Katie Breivik'
 
 
@@ -153,9 +153,9 @@ def linkcode_resolve(domain, info):
     try:
         file, start, end = find_func()
         # stitch together a github link with specific lines
-        filename = "legwork/{}.py#L{}-L{}".format(file, start, end)
+        filename = "src/legwork/{}.py#L{}-L{}".format(file, start, end)
 
     # if you can't find it in the file then just link to the correct file
     except Exception:
-        filename = info['module'].replace('.', '/') + '.py'
+        filename = "src/" + info['module'].replace('.', '/') + '.py'
     return "https://github.com/TeamLEGWORK/LEGWORK/blob/main/{}".format(filename)
