@@ -150,3 +150,7 @@ a.copybtn > img {
 form input[type="text"] {
     box-shadow: none!important;
 }
+
+.wy-side-nav-search input[type=text] {
+    border: 0;
+}
