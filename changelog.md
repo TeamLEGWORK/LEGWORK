@@ -8,11 +8,10 @@ This log keeps track of the changes implemented in each version of LEGWORK. It's
     - Updated LISA confusion noise model "karnesis21" added, **set as the new default for all LISA calculations**
 
 - Features/enhancements:
-    ``test``
     - *Indexing and masking*: ``Source`` classes can now be masked with any index identifier (e.g. ``sources[0]``, ``sources[[1, 2]]``, ``sources[:10]``, ``sources[sources.snr > 7]``), which returns a new class containing only the masked sources. Any interpolated ``g(n,e)`` and sensitivity curve functions are passed directly to the new class so no interpolation is repeated, but the arrays are separate copies/masks. You can also copy ``Source`` instances with ``Source.copy()``
     - *Saving and loading*: Sources can be saved to an HDF5 file with ``Source.save()`` and read back in with ``Source.from_file()``. The version of LEGWORK used to create the sources is recorded in the file and a warning is shown on load if it differs from the installed version (this adds ``h5py`` as a new dependency).
     - *New class properties*
-        - ``Source.m_c``, ``Source.a``, ``Source.n_sources`` and ``Source.ecc_tol`` are now derived properties rather than stored variables, so they always stay consistent with the values they're calculated from. ``m_c``, ``n_sources`` and ``ecc_tol`` are read-only (change ``m_1``/``m_2``, the number of sources, or ``gw_lum_tol`` instead), whilst assigning to ``a`` updates ``f_orb`` to match.
+        - ``Source.m_c``, ``Source.a``, ``Source.n_sources`` and ``Source.ecc_tol`` are now derived properties rather than stored variables, so they always stay consistent with the values they're calculated from. ``m_c``, ``n_sources`` and ``ecc_tol`` are read-only (change ``m_1`` or ``m_2``, the number of sources, or ``gw_lum_tol`` instead), whilst assigning to ``a`` updates ``f_orb`` to match.
         - Added ``Source.interpolate_g``, which reports whether the g(n,e) function is interpolated for a set of sources
         - ``Source.gw_lum_tol`` and ``Source.sc_params`` are now properties, so they can be changed directly instead of through separate update functions. Assigning to ``Source.gw_lum_tol`` recalculates ``ecc_tol`` and ``harmonics_required``, and changing ``Source.sc_params`` re-interpolates the sensitivity curve — either by assigning a whole new dictionary (anything left out reverts to its default), or by changing a single value with e.g. ``sources.sc_params["t_obs"] = 5 * u.yr``.
     - **Breaking change**: ``Source.update_gw_lum_tol()`` and ``Source.update_sc_params()`` have been removed, assign to ``Source.gw_lum_tol`` and ``Source.sc_params`` instead.
@@ -53,7 +52,7 @@ This log keeps track of the changes implemented in each version of LEGWORK. It's
 
 - Update to Python 3.11 and various dependencies
     - Fix deprecations based on these updates
-- Add __repr__ and __len__ functions for the Source class and its subclasses
+- Add ``__repr__`` and ``__len__`` functions for the Source class and its subclasses
 
 ## 0.4.7
 *TW 12/10/23*

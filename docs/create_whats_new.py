@@ -41,7 +41,7 @@ def parse_changelog(changelog_path):
 
 def generate_rst(parsed_sections, output_path):
     lines = [".. _whats_new:\n\nWhat's New in LEGWORK\n=====================\n"]
-    lines.append("This log keeps track of the changes implemented in each version of LEGWORK.\n")
+    lines.append("This log keeps track of the changes implemented in each version of LEGWORK.\n\n|\n")
 
     for heading, features in parsed_sections:
         # lines.append(f"v{heading}\n{'-' * (len(heading) + 1)}\n")
