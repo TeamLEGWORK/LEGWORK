@@ -6,6 +6,7 @@ from astropy.visualization import quantity_support
 import warnings
 
 from . import psd
+from ._logging import logger
 
 fs = 24
 style_params = {
@@ -482,7 +483,7 @@ def plot_sources_on_sc(f_dom, snr, weights=None, snr_cutoff=0, t_obs="auto",
     # work out which binaries are above the cutoff
     detectable = snr > snr_cutoff
     if not detectable.any():
-        print("ERROR: There are no binaries above provided `snr_cutoff`")
+        logger.error("There are no binaries above provided `snr_cutoff`")
         return fig, ax
 
     # calculate asd that makes it so height above curve is snr

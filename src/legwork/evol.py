@@ -9,6 +9,7 @@ import astropy.constants as c
 from schwimmbad import MultiPool
 
 from . import utils
+from ._logging import logger
 
 __all__ = ['de_dt', 'integrate_de_dt', 'evol_circ', 'evol_ecc', 'get_t_merge_circ', 'get_t_merge_ecc',
            't_merge_mandel_fit', 'evolve_f_orb_circ', 'check_mass_freq_input', 'create_timesteps_array',
@@ -365,9 +366,9 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None
 
         # warn the user if they are evolving past the merger
         if np.any(timesteps > t_merge[:, np.newaxis]):
-            print("WARNING: Some timesteps are past the merger of the source and this may produce erroneous",
-                  "results in combination with `avoid_merger=True`. Only evolve sources until their merger",
-                  "or set `avoid_merger=False`.")
+            logger.warning("Some timesteps are past the merger of the source and this may produce "
+                           "erroneous results in combination with `avoid_merger=True`. Only evolve sources "
+                           "until their merger or set `avoid_merger=False`.")
 
         # make a mask for any timesteps that are too close to the merger
         too_close = timesteps >= t_merge[:, np.newaxis] - t_before
@@ -375,9 +376,8 @@ def evol_ecc(ecc_i, t_evol=None, n_step=100, timesteps=None, beta=None, m_1=None
         check = too_close
         check[:, 0] = True
         if np.all(check):           # pragma: no cover
-            print("WARNING: All timesteps are too close to merger so",
-                  "evolution is not possible. Either set `t_before` to a",
-                  "smaller time or turn off `avoid_merger`")
+            logger.warning("All timesteps are too close to merger so evolution is not possible. Either "
+                           "set `t_before` to a smaller time or turn off `avoid_merger`")
 
         # ensure that the first timestep is always valid
         too_close[:, 0] = False
