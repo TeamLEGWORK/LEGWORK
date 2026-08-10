@@ -194,6 +194,74 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=5 * u.yr, approximate_R=None
     return psd.to(u.Hz**(-1))
 
 
+def decigo_psd(f, flow=1e-3 * u.Hz, fhigh=1e2 * u.Hz, confusion_noise="karnesis21"):
+    """Calculates the effective DECIGO power spectral density sensitivity curve
+
+    Uses equations from Yagi & Seto 2011 [2011PhRvD..83d4011Y]
+    with update from erratum Yagi & Seto 2017 [2017PhRvD..95j9901Y]
+
+    Parameters
+    ----------
+    f : `float/array`
+        Frequencies at which to evaluate the sensitivity curve
+
+    flow : `float`
+        Assumed minimum frequency sensitivity (default = 10^-3 Hz)
+
+    fhigh : `float`
+        Assumed maximum frequency sensitivity (default = 10^2 Hz)
+
+    confusion_noise : `various`
+        Galactic confusion noise. Acceptable inputs are one of the values listed in
+        :meth:`legwork.psd.get_confusion_noise` or a custom function that gives the confusion noise at each
+        frequency for a given mission length where it would be called by running `noise(f, t_obs)` and return
+        a value with units of inverse Hertz
+
+    Returns
+    -------
+    Sn : `float/array`
+        Effective power strain spectral density
+    """
+    # convert frequency from Hz to float for calculations
+    f = f.to(u.Hz).value
+
+    # scaling frequency from Yagi & Seto 2011
+    fp = 7.36   # Hz
+
+    # convert scaling frequency, min frequency, and max frequency to floats
+    MIN_F = f_min.to(u.Hz).value
+    MAX_F = f_max.to(u.Hz).value
+
+    # overwrite frequencies outside the range to prevent error
+    f = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), f, 1e-8)
+
+    # shot noise
+    def Pshot(f):
+        return (6.53e-48) * (1 + (f/fp)**2)
+
+    # radiation pressure noise
+    def Prad(f):
+        return (4.8e-51) * f**(-4) * (1 + (f/fp)**2)**(-1)
+
+    # acceleration noise
+    def Pacc(f)
+        return (5.33e-52) * f**(-4)
+
+    # get confusion noise
+    if isinstance(confusion_noise, str) or confusion_noise is None:
+        cn = get_confusion_noise(f=f * u.Hz, t_obs=t_obs, model=confusion_noise).value
+    else:
+        cn = confusion_noise(f, t_obs).value
+
+
+    # calculate sensitivity curve
+    psd = Pshot(f) + Prad(f) + Pacc(F) + cn
+
+    # replace values for bad frequencies (set to extremely high value)
+    psd = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), psd, np.inf)
+    return psd / u.Hz
+
+
 def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs="auto", L="auto",
                            approximate_R=False, confusion_noise="auto"):
     """Calculates the effective power spectral density for all instruments.
