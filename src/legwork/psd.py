@@ -11,7 +11,7 @@ import os
 from ._logging import logger
 
 __all__ = ['load_response_function', 'approximate_response_function', 'power_spectral_density',
-           'lisa_psd', 'tianqin_psd', 'get_confusion_noise', 'get_confusion_noise_robson19',
+           'lisa_psd', 'tianqin_psd', 'decigo_psd', 'get_confusion_noise', 'get_confusion_noise_robson19',
            'get_confusion_noise_huang20', 'get_confusion_noise_thiele21', 'get_confusion_noise_karnesis21']
 
 
@@ -194,7 +194,8 @@ def tianqin_psd(f, L=np.sqrt(3) * 1e5 * u.km, t_obs=5 * u.yr, approximate_R=None
     return psd.to(u.Hz**(-1))
 
 
-def decigo_psd(f, flow=1e-3 * u.Hz, fhigh=1e2 * u.Hz, confusion_noise="karnesis21"):
+def decigo_psd(f, L=None, t_obs=4 * u.yr, approximate_R=None, confusion_noise="karnesis21",
+               f_low=1e-3 * u.Hz, f_high=1e2 * u.Hz):
     """Calculates the effective DECIGO power spectral density sensitivity curve
 
     Uses equations from Yagi & Seto 2011 [2011PhRvD..83d4011Y]
@@ -205,17 +206,26 @@ def decigo_psd(f, flow=1e-3 * u.Hz, fhigh=1e2 * u.Hz, confusion_noise="karnesis2
     f : `float/array`
         Frequencies at which to evaluate the sensitivity curve
 
-    flow : `float`
-        Assumed minimum frequency sensitivity (default = 10^-3 Hz)
+    L : `float`
+        Arm length
 
-    fhigh : `float`
-        Assumed maximum frequency sensitivity (default = 10^2 Hz)
+    t_obs : `float`
+        Observation time (default 5 years)
+
+    approximate_R : `boolean`
+        Ignored for this function
 
     confusion_noise : `various`
         Galactic confusion noise. Acceptable inputs are one of the values listed in
         :meth:`legwork.psd.get_confusion_noise` or a custom function that gives the confusion noise at each
         frequency for a given mission length where it would be called by running `noise(f, t_obs)` and return
         a value with units of inverse Hertz
+
+    f_low : `float`
+        Assumed minimum frequency sensitivity (default = 10^-3 Hz)
+
+    f_high : `float`
+        Assumed maximum frequency sensitivity (default = 10^2 Hz)
 
     Returns
     -------
@@ -229,8 +239,8 @@ def decigo_psd(f, flow=1e-3 * u.Hz, fhigh=1e2 * u.Hz, confusion_noise="karnesis2
     fp = 7.36   # Hz
 
     # convert scaling frequency, min frequency, and max frequency to floats
-    MIN_F = f_min.to(u.Hz).value
-    MAX_F = f_max.to(u.Hz).value
+    MIN_F = f_low.to(u.Hz).value
+    MAX_F = f_high.to(u.Hz).value
 
     # overwrite frequencies outside the range to prevent error
     f = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), f, 1e-8)
@@ -244,7 +254,7 @@ def decigo_psd(f, flow=1e-3 * u.Hz, fhigh=1e2 * u.Hz, confusion_noise="karnesis2
         return (4.8e-51) * f**(-4) * (1 + (f/fp)**2)**(-1)
 
     # acceleration noise
-    def Pacc(f)
+    def Pacc(f):
         return (5.33e-52) * f**(-4)
 
     # get confusion noise
@@ -255,7 +265,7 @@ def decigo_psd(f, flow=1e-3 * u.Hz, fhigh=1e2 * u.Hz, confusion_noise="karnesis2
 
 
     # calculate sensitivity curve
-    psd = Pshot(f) + Prad(f) + Pacc(F) + cn
+    psd = Pshot(f) + Prad(f) + Pacc(f) + cn
 
     # replace values for bad frequencies (set to extremely high value)
     psd = np.where(np.logical_and(f >= MIN_F, f <= MAX_F), psd, np.inf)
@@ -315,6 +325,12 @@ def power_spectral_density(f, instrument="LISA", custom_psd=None, t_obs="auto", 
 
         # calculate psd
         psd = tianqin_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
+    elif instrument == "DECIGO":
+        confusion_noise = "karnesis21" if confusion_noise == "auto" else confusion_noise
+        t_obs = 4 * u.yr if t_obs == "auto" else t_obs
+
+        # calculate psd
+        psd = decigo_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     elif instrument == "custom":
         psd = custom_psd(f=f, L=L, t_obs=t_obs, approximate_R=approximate_R, confusion_noise=confusion_noise)
     else:
