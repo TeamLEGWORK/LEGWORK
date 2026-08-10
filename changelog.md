@@ -5,7 +5,8 @@ This log keeps track of the changes implemented in each version of LEGWORK. It's
 *UNRELEASED*
 
 - New science changes:
-    - Updated LISA confusion noise model "karnesis21" added, **set as the new default for all LISA calculations**
+    - Updated LISA confusion noise model "karnesis21" added, based on https://scixplorer.org/abs/2021PhRvD.104d3019K/abstract, **set as the new default for all LISA calculations**
+    - Added ``DECIGO`` as an instrument for PSD calculations based on Yagi & Seto 2011 [2011PhRvD..83d4011Y] with update from erratum Yagi & Seto 2017 [2017PhRvD..95j9901Y]. It uses the same confusion noise model as LISA by default.
 
 - Features/enhancements:
     - *Indexing and masking*: ``Source`` classes can now be masked with any index identifier (e.g. ``sources[0]``, ``sources[[1, 2]]``, ``sources[:10]``, ``sources[sources.snr > 7]``), which returns a new class containing only the masked sources. Any interpolated ``g(n,e)`` and sensitivity curve functions are passed directly to the new class so no interpolation is repeated, but the arrays are separate copies/masks. You can also copy ``Source`` instances with ``Source.copy()``

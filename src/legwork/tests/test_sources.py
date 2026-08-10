@@ -724,6 +724,13 @@ class Test(unittest.TestCase):
         masked.sc_params["instrument"] = "TianQin"
         self.assertTrue(sources.sc_params["instrument"] == "LISA")
 
+        # copying the class should give a new instance with the same values but no shared references
+        copied = sources.copy()
+        self.assertTrue(np.all(copied.m_1 == sources.m_1))
+        self.assertTrue(copied.sc_params == sources.sc_params)
+        copied.sc_params["instrument"] = "TianQin"
+        self.assertTrue(sources.sc_params["instrument"] == "LISA")
+
     def test_masking_positions(self):
         """check that positions, inclinations and polarisations are masked too"""
         sources = self._random_sources(positions=True)
