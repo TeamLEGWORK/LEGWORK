@@ -12,7 +12,8 @@
 
 import re
 from pathlib import Path
-from os.path import exists
+from os.path import exists, join
+from os import makedirs
 
 def parse_changelog(changelog_path):
     with open(changelog_path, 'r') as f:
@@ -70,8 +71,11 @@ def generate_rst(parsed_sections, output_path):
         f.write(content)
 
 if __name__ == "__main__":
-    changelog_path = Path("../changelog.md")
-    output_path = Path("_generated/whats_new.rst")
+    docs_dir = Path(__file__).parent
+    changelog_path = join(docs_dir.parent, "changelog.md")
+    output_path = join(docs_dir, "_generated/whats_new.rst")
+
+    makedirs(join(docs_dir, "_generated"), exist_ok=True)
 
     parsed_sections = parse_changelog(changelog_path)
     generate_rst(parsed_sections, output_path)
