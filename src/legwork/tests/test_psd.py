@@ -76,6 +76,14 @@ class Test(unittest.TestCase):
             all_good = False
         self.assertFalse(all_good)
 
+    def test_decigo(self):
+        """check that decigo_psd works"""
+        frequencies = np.logspace(-6, 0, 100) * u.Hz
+
+        decigo = psd.power_spectral_density(frequencies, instrument="DECIGO")
+
+        self.assertTrue(np.all(decigo > 0 * u.Hz**(-1)))
+
     def test_custom_confusion_noise(self):
         """ check that using custom confusion noise works """
         frequencies = np.logspace(-6, 0, 100) * u.Hz
