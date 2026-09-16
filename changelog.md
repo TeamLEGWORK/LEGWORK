@@ -2,7 +2,6 @@
 This log keeps track of the changes implemented in each version of LEGWORK. It's sorted in reverse order so that the most recent changes are at the top.
 
 ## 1.0.0
-*UNRELEASED*
 
 - New science changes:
     - Updated LISA confusion noise model "karnesis21" added, based on https://scixplorer.org/abs/2021PhRvD.104d3019K/abstract, **set as the new default for all LISA calculations**
